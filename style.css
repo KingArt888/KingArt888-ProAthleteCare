@@ -18,7 +18,7 @@ header {
 .logo {
     height: 70px;
     margin-right: 15px;
-    border-radius: 50%; /* Робимо логотип круглим, якщо він квадратний */
+    border-radius: 50%; 
 }
 
 .project-title {
@@ -51,7 +51,7 @@ header {
 /* Стилі для кожного пункту меню */
 .sidebar a {
     display: flex;
-    justify-content: flex-start; /* Вирівнюємо вміст зліва */
+    justify-content: flex-start;
     align-items: center;
     color: #CCCCCC;
     text-decoration: none;
@@ -80,23 +80,60 @@ header {
 /* Основний вміст */
 .main-content {
     flex-grow: 1;
-    padding: 30px;
+    padding: 30px; 
     background-color: #000000;
 }
 
-.hero-image {
-    max-width: 100%;
-    height: auto;
+/* --- HERO SECTION: КАРТИНКА + ТЕКСТ ЗВЕРХУ --- */
+.hero {
+    position: relative; 
+    max-width: 80%; /* Зменшення ширини до 80% */
+    margin: 0 auto 20px auto; /* Вирівнювання по центру */
+    height: 400px; /* Фіксована висота */
     border-radius: 10px;
-    margin-bottom: 20px;
+    overflow: hidden; 
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
 }
 
-/* Стилі для заголовків та абзаців */
-h2 {
-    color: #FFC72C;
-    border-bottom: 2px solid #1f1f1f;
-    padding-bottom: 10px;
+.hero-image {
+    width: 100%;
+    height: 100%;
+    display: block; 
+    object-fit: cover; 
+    filter: brightness(60%); /* Затемнюємо картинку для кращої читабельності тексту */
+}
+
+/* Оверлей з текстом поверх картинки */
+.hero-overlay {
+    position: absolute; 
+    bottom: 0; /* Текст розташований знизу */
+    left: 0;
+    width: 100%;
+    height: 45%; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: flex-end; 
+    padding: 30px 40px;
+    text-align: left; 
+    color: #ffffff; 
+    /* Градієнт для плавного переходу тексту до нижньої частини картинки */
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0)); 
+}
+
+.hero-overlay h2 {
+    color: #FFC72C; 
+    margin-bottom: 5px;
+    font-size: 2.2em; 
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7); 
+    border-bottom: none; 
+    padding-bottom: 0;
+}
+
+.hero-overlay p {
+    font-size: 1.1em;
+    line-height: 1.5;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
+    margin: 0;
 }
 
 /* Футер */
