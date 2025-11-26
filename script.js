@@ -19,11 +19,10 @@ let chartInstances = {};
  */
 
 function getTodayDate() {
-    // Формат YYYY-MM-DD для коректного порівняння та сортування
     return new Date().toISOString().split('T')[0];
 }
 
-// Функція генерації фіктивних даних (для першого запуску)
+// Залишаємо mock data для першого запуску
 function generateMockData() {
     const data = [];
     for (let i = 14; i >= 1; i--) {
@@ -31,7 +30,6 @@ function generateMockData() {
         date.setDate(date.getDate() - i);
         const dateString = date.toISOString().split('T')[0];
         
-        // Мокування даних
         const mockEntry = {
             date: dateString,
             sleep: Math.floor(Math.random() * 3) + 7, 
@@ -51,9 +49,10 @@ function generateMockData() {
 function loadData() {
     let data = JSON.parse(localStorage.getItem(STORAGE_KEY));
     if (!data || data.length === 0) {
+        // Якщо немає реальних даних, використовуємо фіктивні
         data = generateMockData();
     }
-    // Обмежуємо дані останніми 14 записами для чистоти графіків
+    // Обмежуємо дані останніми 14 записами
     if (data.length > 14) {
         data = data.slice(data.length - 14);
     }
@@ -70,7 +69,11 @@ function renderLineCharts(data) {
         const ctx = document.getElementById(indicator.chartId);
         if (!ctx) return;
 
-        // Показуємо лише MM-DD для хронології
+        // Знищуємо старий екземпляр, щоб запобігти помилкам
+        if (chartInstances[indicator.key]) {
+            chartInstances[indicator.key].destroy();
+        }
+
         const labels = data.map(entry => entry.date.substring(5)); 
         const scores = data.map(entry => entry[indicator.key] || 0);
 
@@ -83,9 +86,9 @@ function renderLineCharts(data) {
                     data: scores,
                     borderColor: indicator.color,
                     backgroundColor: indicator.color.replace('rgb', 'rgba').replace(')', ', 0.2)'),
-                    borderWidth: 2,
-                    tension: 0.2, 
-                    pointRadius: 3,
+                    borderWidth: 1.5,
+                    tension: 0.3, 
+                    pointRadius: 0, // Приховуємо точки для мінімалізму
                     fill: true
                 }]
             },
@@ -94,27 +97,30 @@ function renderLineCharts(data) {
                 maintainAspectRatio: false,
                 scales: {
                     y: {
-                        display: false, // Приховуємо вісь Y
+                        display: false, 
                         min: 1,
                         max: 10
                     },
                     x: {
-                        display: false // Приховуємо вісь X
+                        display: false 
                     }
                 },
                 plugins: {
                     legend: { display: false },
-                    tooltip: { enabled: true } 
+                    tooltip: { 
+                        enabled: false // Вимикаємо тултіпи, щоб не заважали дизайну
+                    } 
+                },
+                elements: {
+                    line: {
+                        borderWidth: 1.5
+                    }
                 }
             }
         };
 
-        if (chartInstances[indicator.key]) {
-            chartInstances[indicator.key].data = config.data;
-            chartInstances[indicator.key].update();
-        } else {
-            chartInstances[indicator.key] = new Chart(ctx, config);
-        }
+        // Створюємо новий екземпляр
+        chartInstances[indicator.key] = new Chart(ctx, config);
     });
 }
 
@@ -122,6 +128,10 @@ function renderLineCharts(data) {
 function renderRadarChart(latestData) {
     const ctx = document.getElementById('wellnessRadarChart');
     if (!ctx) return;
+    
+    if (chartInstances['radar']) {
+        chartInstances['radar'].destroy();
+    }
 
     const labels = INDICATORS.map(ind => ind.title);
     const dataValues = INDICATORS.map(ind => latestData[ind.key] || 0);
@@ -166,12 +176,7 @@ function renderRadarChart(latestData) {
         }
     };
     
-    if (chartInstances['radar']) {
-        chartInstances['radar'].data = config.data;
-        chartInstances['radar'].update();
-    } else {
-        chartInstances['radar'] = new Chart(ctx, config);
-    }
+    chartInstances['radar'] = new Chart(ctx, config);
 }
 
 /**
@@ -184,21 +189,34 @@ function checkDailyEntry() {
     const form = document.getElementById('wellness-form');
     const statusHeader = document.getElementById('daily-entry-status');
     const submitButton = document.getElementById('submit-button');
+    const radioInputs = form.querySelectorAll('input[type="radio"]');
 
     if (isSubmitted) {
-        // Якщо дані за сьогодні вже є, деактивуємо форму
-        form.querySelectorAll('input[type="radio"]').forEach(input => input.disabled = true);
+        radioInputs.forEach(input => input.disabled = true);
         submitButton.disabled = true;
         submitButton.textContent = "Дані за сьогодні вже записано";
         submitButton.style.backgroundColor = '#4CAF50'; 
         statusHeader.textContent = "Щоденне опитування: Дані записано! ✅";
+        
+        // Відображаємо записані дані на формі
+        const currentEntry = dailyScores.find(entry => entry.date === today);
+        if (currentEntry) {
+            INDICATORS.forEach(indicator => {
+                const radio = form.querySelector(`input[name="${indicator.key}"][value="${currentEntry[indicator.key]}"]`);
+                if (radio) {
+                    radio.checked = true;
+                }
+            });
+        }
+
     } else {
-        // Активуємо форму
-        form.querySelectorAll('input[type="radio"]').forEach(input => input.disabled = false);
+        // Якщо дані можна вводити
+        radioInputs.forEach(input => input.disabled = false);
         submitButton.disabled = false;
         submitButton.textContent = "Записати дані за сьогодні";
         submitButton.style.backgroundColor = '#FFC72C'; 
         statusHeader.textContent = "Щоденне опитування: Введіть дані";
+        form.reset(); // Очищаємо форму, якщо чекаємо на новий запис
     }
 }
 
@@ -208,7 +226,7 @@ function handleFormSubmit(event) {
     const form = event.target;
     const today = getTodayDate();
     
-    // Повторна перевірка
+    // Перевірка
     if (dailyScores.some(entry => entry.date === today)) {
         alert("Ви можете залишити оцінку лише один раз на день.");
         return;
@@ -256,11 +274,13 @@ function renderAllCharts() {
     const radarContainer = document.getElementById('radar-container');
     
     if (dailyScores.length > 0) {
+        // Оновлюємо, якщо є дані
         const latestData = dailyScores[dailyScores.length - 1];
         renderLineCharts(dailyScores);
         renderRadarChart(latestData);
         if (radarContainer) radarContainer.style.display = 'block';
     } else {
+        // Приховуємо, якщо даних немає
         document.getElementById('main-chart-title').innerHTML = 'Wellness Snapshot: Дані відсутні';
         if (radarContainer) radarContainer.style.display = 'none'; 
     }
