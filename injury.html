@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProAthleteCare | Injury Story</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <img src="AK_logo.png" alt="ProAthleteCare Logo" class="logo">
+        <h1 class="project-title">ProAthleteCare</h1>
+        <p class="tagline">Онлайн-тренінг та професійний супровід атлетів</p>
+    </header>
+    
+    <div class="content-wrapper">
+        <nav class="sidebar">
+            <a href="wellness.html">Wellness Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="injury.html" class="active">Injury Story <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="#">Load Season <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="#">Daily Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="#">Weekly Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="#">Weight Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="#">Velocity Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+        </nav>
+        
+        <main class="main-content">
+            <h2>Injury Story 🩹: Карта травм</h2>
+            <div class="injury-dashboard-container">
+                
+                <div class="human-model-card">
+                    <h3>Клікніть на зону травми</h3>
+                    <div class="human-model-area">
+                        
+
+[Image of male athlete body outline front view]
+ 
+
+                        <div class="injury-marker" id="marker-shoulder" style="top: 15%; left: 60%;" data-zone="Плече"></div>
+                        <div class="injury-marker" id="marker-hip" style="top: 45%; left: 40%;" data-zone="Стегно/Пах"></div>
+                        <div class="injury-marker" id="marker-knee" style="top: 65%; left: 60%;" data-zone="Коліно"></div>
+                        <div class="injury-marker" id="marker-ankle" style="top: 85%; left: 45%;" data-zone="Гомілкостоп"></div>
+                        </div>
+                </div>
+                
+                <div class="injury-list-card">
+                    <h3>Журнал зареєстрованих травм</h3>
+                    <div id="injury-list-display">
+                        <p class="placeholder-text">Травми відсутні. Клікніть на силуеті, щоб додати першу.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="injury-modal" class="modal">
+                <div class="modal-content">
+                    <span class="close-button">&times;</span>
+                    <h4>Реєстрація травми: <span id="injury-zone-title"></span></h4>
+                    <form id="injury-form">
+                        <label for="injury-date">Дата травми:</label>
+                        <input type="date" id="injury-date" name="date" required>
+                        
+                        <label for="injury-type">Тип травми (М'яз, Зв'язка, Суглоб, Інше):</label>
+                        <input type="text" id="injury-type" name="type" placeholder="Наприклад: Розтягнення м'язу задньої поверхні стегна" required>
+                        
+                        <label for="injury-severity">Ступінь (1-10):</label>
+                        <input type="number" id="injury-severity" name="severity" min="1" max="10" required>
+
+                        <label for="injury-description">Детальний опис та лікування:</label>
+                        <textarea id="injury-description" name="description" rows="4" required></textarea>
+                        
+                        <label for="injury-status">Поточний статус:</label>
+                        <select id="injury-status" name="status" required>
+                            <option value="Active">Активне відновлення</option>
+                            <option value="Recovered">Відновлено (повернення до гри)</option>
+                            <option value="Chronic">Хронічне/Моніторинг</option>
+                        </select>
+
+                        <input type="hidden" id="injury-zone-input" name="zone">
+                        
+                        <button type="submit" class="gold-button">Зберегти травму</button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <footer>
+        &copy; 2025 ProAthleteCare. Створено з Gemini.
+    </footer>
+    <script src="injury.js"></script>
+</body>
+</html>
