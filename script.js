@@ -2,7 +2,7 @@
 let dailyScores = JSON.parse(localStorage.getItem('athleteWellnessScores')) || [];
 
 /**
- * Рендерить один маленький лінійний графік для заданої метрики.
+ * Рендерить один маленький лінійний графік для заданої метрики. (Логіка без змін)
  */
 function renderSmallChart(metricKey, canvasId, chartColor, labelText) {
     const chartCanvas = document.getElementById(canvasId);
@@ -71,94 +71,22 @@ function renderSmallChart(metricKey, canvasId, chartColor, labelText) {
 }
 
 /**
- * Рендерить головний графік (Динаміка середнього Wellness).
+ * Оновлює текстове відображення середнього показника Wellness.
  */
-function renderMainChart(scores) {
-    const chartCanvas = document.getElementById('wellnessChart');
-    if (!chartCanvas) return;
-
-    if (window.myWellnessChart) {
-        window.myWellnessChart.destroy();
+function updateAverageDisplay(scores) {
+    const scoreElement = document.getElementById('latest-average-score');
+    if (scoreElement) {
+        const latestAverage = scores.length > 0 ? scores[scores.length - 1].average.toFixed(1) : 'Н/Д';
+        scoreElement.textContent = latestAverage;
     }
-
-    const dates = scores.map(score => score.date);
-    const averages = scores.map(score => score.average.toFixed(1));
-
-    const chartArea = chartCanvas.getContext('2d');
-
-    window.myWellnessChart = new Chart(chartArea, {
-        type: 'line', // Лінійний графік для хронології середнього
-        data: {
-            labels: dates,
-            datasets: [{
-                label: 'Середній рівень Wellness (1-10)',
-                data: averages,
-                borderColor: '#FFC72C', // Золотий
-                backgroundColor: 'rgba(255, 199, 44, 0.3)',
-                tension: 0.4,
-                fill: true,
-                pointBackgroundColor: '#FFC72C',
-                pointRadius: 5
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 10,
-                    title: {
-                        display: true,
-                        text: 'Середній рівень (1-10)',
-                        color: '#CCCCCC'
-                    },
-                    grid: {
-                        color: 'rgba(255, 255, 255, 0.1)'
-                    },
-                    ticks: {
-                        color: '#CCCCCC'
-                    }
-                },
-                x: {
-                    grid: {
-                        color: 'rgba(255, 255, 255, 0.1)'
-                    },
-                    ticks: {
-                        color: '#CCCCCC'
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    display: true,
-                    labels: { color: '#CCCCCC' }
-                }
-            }
-        }
-    });
-    
-    // Оновлюємо заголовок з останнім середнім показником
-    const latestAverage = scores.length > 0 ? scores[scores.length - 1].average.toFixed(1) : 'Н/Д';
-    document.querySelector('.chart-card h3').innerHTML = `Індивідуальна динаміка Wellness (Останнє Середнє: ${latestAverage})`;
 }
 
 /**
- * Загальна функція для рендерингу всіх графіків.
+ * Загальна функція для рендерингу всіх графіків та оновлення показників.
  */
 function renderAllCharts(scores) {
-    const chartArea = document.querySelector('.chart-area');
-    if (scores.length === 0) {
-        chartArea.innerHTML = '<p class="placeholder-text">Заповніть форму, щоб побачити графік динаміки стану.</p>';
-        return;
-    }
-    // Перевіряємо, чи є canvas для головного графіка, інакше вставляємо його назад
-    if (!document.getElementById('wellnessChart')) {
-        chartArea.innerHTML = '<canvas id="wellnessChart"></canvas>';
-    }
-
-    // 1. Рендеримо Головний графік (Середнє)
-    renderMainChart(scores);
+    // 1. Оновлюємо показник середнього балу
+    updateAverageDisplay(scores);
 
     // 2. Рендеримо всі 6 малих графіків
     const metrics = [
@@ -224,7 +152,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // Збираємо дані та перевіряємо, чи всі 6 показників заповнені
             for (const [key, value] of formData.entries()) {
                 const numericValue = parseInt(value);
-                // Ми впевнені, що тут є тільки 6 показників і 1 date.
                 data[key] = numericValue;
                 sum += numericValue;
                 count++;
