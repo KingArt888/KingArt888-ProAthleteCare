@@ -171,10 +171,13 @@ header {
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 }
 
-/* Зміна: робимо картку форми та загальний контейнер графіків на всю ширину */
-.form-card, .full-width-card {
-    width: 100%; 
-    min-width: 100%;
+.form-card {
+    width: 35%; 
+    min-width: 350px;
+}
+
+.chart-card {
+    flex-grow: 1; 
 }
 
 .form-card h3, .chart-card h3 {
@@ -211,37 +214,112 @@ header {
     background-color: #E6B800;
 }
 
-/* --- СТИЛІ ДЛЯ ІНТЕРАКТИВНОГО МАКЕТА: ПИТАННЯ + ГРАФІК --- */
-
-.questions-and-charts-container {
-    display: flex;
-    flex-direction: column;
-    gap: 15px; 
+/* Місце для графіка */
+.chart-area {
+    min-height: 300px;
+    background-color: #000000;
+    border: 1px solid #333333;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.question-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    border-bottom: 1px solid #1a1a1a;
-    padding-bottom: 15px;
+.placeholder-text {
+    color: #888888;
+    font-style: italic;
+    font-size: 1.2em;
 }
 
-.rating-column {
-    flex: 0 0 55%; 
+/* --- СТИЛІ ДЛЯ ВСІХ РЕЙТИНГІВ ІКОНОК (ЗАГАЛЬНІ) --- */
+.rating-group {
+    display: flex;
+    flex-direction: row-reverse; 
+    justify-content: flex-end; 
+    direction: ltr; 
+    /* Оптимізований розмір для розміщення 10 іконок у рядку */
+    font-size: 1.5em; 
+    margin: 10px 0 20px 0;
 }
 
-.chart-column {
-    flex: 0 0 40%; 
-    height: 100px; /* Фіксована висота контейнера графіка */
-    position: relative;
-    padding-top: 15px;
+.rating-group input {
+    display: none; 
 }
 
-/* **КРИТИЧНО:** Забезпечуємо повну висоту Canvas */
-.small-line-chart {
-    height: 100% !important; 
-    width: 100% !important;
+.rating-group label {
+    color: #333; /* Колір незаповнених іконок */
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+/* Зірки (Сон) */
+.star-group label:before {
+    content: '★'; 
+    margin-right: 2px;
+}
+.star-group input:checked ~ label:before,
+.star-group label:hover:before,
+.star-group label:hover ~ label:before {
+    color: #FFC72C; 
+}
+
+/* Хрестики (Біль/Втома) */
+.pain-group label:before {
+    content: '✖'; 
+    margin-right: 5px;
+}
+.pain-group input:checked ~ label:before,
+.pain-group label:hover:before,
+.pain-group label:hover ~ label:before {
+    color: #DA3E52; /* Червоний для болю */
+}
+
+/* Блискавки (Енергія/Настрій) */
+.energy-group label:before {
+    content: '⚡'; 
+    margin-right: 5px;
+    filter: grayscale(100%); 
+}
+.energy-group input:checked ~ label:before,
+.energy-group label:hover:before,
+.energy-group label:hover ~ label:before {
+    filter: none; 
+}
+
+/* Краплі (Гідратація) */
+.hydration-group label:before {
+    content: '💧'; 
+    margin-right: 5px;
+    filter: grayscale(100%); 
+}
+.hydration-group input:checked ~ label:before,
+.hydration-group label:hover:before,
+.hydration-group label:hover ~ label:before {
+    filter: none; 
+}
+
+/* Вогник (Стрес) */
+.stress-group label:before {
+    content: '🔥'; 
+    margin-right: 5px;
+    filter: grayscale(100%); 
+}
+.stress-group input:checked ~ label:before,
+.stress-group label:hover:before,
+.stress-group label:hover ~ label:before {
+    filter: none; 
+}
+
+/* Галочка (Готовність) */
+.ready-group label:before {
+    content: '✅'; 
+    margin-right: 5px;
+    filter: grayscale(100%); 
+}
+.ready-group input:checked ~ label:before,
+.ready-group label:hover:before,
+.ready-group label:hover ~ label:before {
+    filter: none; 
 }
 
 /* Футер */
@@ -252,78 +330,4 @@ footer {
     font-size: 0.8em;
     color: #888888;
     border-top: 1px solid #1a1a1a;
-}
-
-/* --- СТИЛІ ДЛЯ ВСІХ РЕЙТИНГІВ ІКОНОК (ЗАГАЛЬНІ) --- */
-.rating-group {
-    display: flex;
-    flex-direction: row-reverse; 
-    justify-content: flex-end; 
-    direction: ltr; 
-    font-size: 1.5em; 
-    margin: 10px 0 20px 0;
-}
-
-.rating-group input {
-    display: none; 
-}
-
-.rating-group label {
-    color: #333;
-    cursor: pointer;
-    transition: color 0.2s;
-}
-
-/* Зірки (Сон) */
-.star-group label:before { content: '★'; margin-right: 2px; }
-.star-group input:checked ~ label:before,
-.star-group label:hover:before,
-.star-group label:hover ~ label:before { color: #FFC72C; }
-
-/* Хрестики (Біль/Втома) */
-.pain-group label:before { content: '✖'; margin-right: 5px; }
-.pain-group input:checked ~ label:before,
-.pain-group label:hover:before,
-.pain-group label:hover ~ label:before { color: #DA3E52; } 
-
-/* Блискавки (Енергія/Настрій) */
-.energy-group label:before { content: '⚡'; margin-right: 5px; filter: grayscale(100%); }
-.energy-group input:checked ~ label:before,
-.energy-group label:hover:before,
-.energy-group label:hover ~ label:before { filter: none; }
-
-/* Краплі (Гідратація) */
-.hydration-group label:before { content: '💧'; margin-right: 5px; filter: grayscale(100%); }
-.hydration-group input:checked ~ label:before,
-.hydration-group label:hover:before,
-.hydration-group label:hover ~ label:before { filter: none; }
-
-/* Вогник (Стрес) */
-.stress-group label:before { content: '🔥'; margin-right: 5px; filter: grayscale(100%); }
-.stress-group input:checked ~ label:before,
-.stress-group label:hover:before,
-.stress-group label:hover ~ label:before { filter: none; }
-
-/* Галочка (Готовність) */
-.ready-group label:before { content: '✅'; margin-right: 5px; filter: grayscale(100%); }
-.ready-group input:checked ~ label:before,
-.ready-group label:hover:before,
-.ready-group label:hover ~ label:before { filter: none; }
-
-/* Адаптивність: на малих екранах графік переходить під питання */
-@media (max-width: 768px) {
-    .question-row {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .rating-column, .chart-column {
-        flex: 0 0 100%;
-        width: 100%;
-    }
-    
-    .chart-column {
-        height: 150px; 
-        padding-top: 5px;
-    }
 }
