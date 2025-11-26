@@ -1,104 +1,24 @@
-<!DOCTYPE html>
-<html lang="uk">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProAthleteCare | Injury Story</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <header>
-        <img src="AK_logo.png" alt="ProAthleteCare Logo" class="logo">
-        <h1 class="project-title">ProAthleteCare</h1>
-        <p class="tagline">Онлайн-тренінг та професійний супровід атлетів</p>
-    </header>
-    
-    <div class="content-wrapper">
-        <nav class="sidebar">
-            <a href="wellness.html">Wellness Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="injury.html" class="active">Injury Story <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="load.html">Load Season <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="#">Daily Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="#">Weekly Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="#">Weight Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="#">Velocity Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-        </nav>
+<div class="human-model-card">
+    <h3>Клікніть на зону травми</h3>
+    <div class="human-model-area">
         
-        <main class="main-content">
-            <h2>Injury Story 🩹: Карта травм</h2>
-            <div class="injury-dashboard-container">
-                
-                <div class="human-model-card">
-                    <h3>Клікніть на зону травми</h3>
-                    <div class="human-model-area">
-                        
-
-[Image of male athlete body outline front view]
- 
-
-                        <div class="injury-marker" style="top: 10%; left: 30%;" data-zone="Голова/Шия"></div>
-                        <div class="injury-marker" style="top: 20%; left: 40%;" data-zone="Груди/Пекторальні"></div>
-                        <div class="injury-marker" style="top: 30%; left: 65%;" data-zone="Лікоть/Рука"></div>
-                        <div class="injury-marker" style="top: 40%; left: 30%;" data-zone="Живіт/Пресс"></div>
-                        <div class="injury-marker" style="top: 50%; left: 40%;" data-zone="Пах/Згиначі стегна"></div>
-                        <div class="injury-marker" style="top: 60%; left: 35%;" data-zone="Квадріцепс"></div>
-                        <div class="injury-marker" style="top: 75%; left: 30%;" data-zone="Коліно (перед)"></div>
-                        <div class="injury-marker" style="top: 90%; left: 45%;" data-zone="Гомілкостоп (перед)"></div>
-                        
-                        <div class="injury-marker" style="top: 15%; left: 75%;" data-zone="Верхня Спина/Трапеція"></div>
-                        <div class="injury-marker" style="top: 30%; left: 78%;" data-zone="Поперек"></div>
-                        <div class="injury-marker" style="top: 45%; left: 85%;" data-zone="Ягодиці/Гамстрінг (верх)"></div>
-                        <div class="injury-marker" style="top: 60%; left: 80%;" data-zone="Гамстрінг (середина)"></div>
-                        <div class="injury-marker" style="top: 75%; left: 75%;" data-zone="Литковий м'яз"></div>
-                        <div class="injury-marker" style="top: 90%; left: 80%;" data-zone="Ахіллове сухожилля"></div>
-                        
-                    </div>
-                </div>
-                
-                <div class="injury-list-card">
-                    <h3>Журнал зареєстрованих травм</h3>
-                    <div id="injury-list-display">
-                        <p class="placeholder-text">Травми відсутні. Клікніть на силуеті, щоб додати першу.</p>
-                    </div>
-                </div>
-            </div>
-
-            <div id="injury-modal" class="modal">
-                <div class="modal-content">
-                    <span class="close-button">&times;</span>
-                    <h4>Реєстрація травми: <span id="injury-zone-title"></span></h4>
-                    <form id="injury-form">
-                        <label for="injury-date">Дата травми:</label>
-                        <input type="date" id="injury-date" name="date" required>
-                        
-                        <label for="injury-type">Тип травми (М'яз, Зв'язка, Суглоб, Інше):</label>
-                        <input type="text" id="injury-type" name="type" placeholder="Наприклад: Розтягнення м'язу задньої поверхні стегна" required>
-                        
-                        <label for="injury-severity">Ступінь (1-10):</label>
-                        <input type="number" id="injury-severity" name="severity" min="1" max="10" required>
-
-                        <label for="injury-description">Детальний опис та лікування:</label>
-                        <textarea id="injury-description" name="description" rows="4" required></textarea>
-                        
-                        <label for="injury-status">Поточний статус:</label>
-                        <select id="injury-status" name="status" required>
-                            <option value="Active">Активне відновлення</option>
-                            <option value="Recovered">Відновлено (повернення до гри)</option>
-                            <option value="Chronic">Хронічне/Моніторинг</option>
-                        </select>
-
-                        <input type="hidden" id="injury-zone-input" name="zone">
-                        
-                        <button type="submit" class="gold-button">Зберегти травму</button>
-                    </form>
-                </div>
-            </div>
-        </main>
+        <svg viewBox="0 0 400 800" class="athlete-silhouette" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+            <path d="M200 50 C250 10 250 150 200 150 C150 150 150 10 200 50 Z" fill="#222" stroke="#444" stroke-width="3" /> <path d="M180 150 L220 150 L250 250 L250 350 L150 350 L150 250 Z" fill="#222" stroke="#444" stroke-width="3" /> <path d="M250 250 L350 200 L350 400 L250 400 Z" fill="#222" stroke="#444" stroke-width="3" /> <path d="M150 250 L50 200 L50 400 L150 400 Z" fill="#222" stroke="#444" stroke-width="3" /> <path d="M150 350 L150 650 L180 780 L200 800 L220 780 L250 650 L250 350 Z" fill="#222" stroke="#444" stroke-width="3" /> </svg>
+        <div class="injury-marker" style="top: 10%; left: 30%;" data-zone="Голова/Шия"></div>
+        <div class="injury-marker" style="top: 20%; left: 40%;" data-zone="Груди/Пекторальні"></div>
+        <div class="injury-marker" style="top: 30%; left: 65%;" data-zone="Лікоть/Рука"></div>
+        <div class="injury-marker" style="top: 40%; left: 30%;" data-zone="Живіт/Пресс"></div>
+        <div class="injury-marker" style="top: 50%; left: 40%;" data-zone="Пах/Згиначі стегна"></div>
+        <div class="injury-marker" style="top: 60%; left: 35%;" data-zone="Квадріцепс"></div>
+        <div class="injury-marker" style="top: 75%; left: 30%;" data-zone="Коліно (перед)"></div>
+        <div class="injury-marker" style="top: 90%; left: 45%;" data-zone="Гомілкостоп (перед)"></div>
+        
+        <div class="injury-marker" style="top: 15%; left: 75%;" data-zone="Верхня Спина/Трапеція"></div>
+        <div class="injury-marker" style="top: 30%; left: 78%;" data-zone="Поперек"></div>
+        <div class="injury-marker" style="top: 45%; left: 85%;" data-zone="Ягодиці/Гамстрінг (верх)"></div>
+        <div class="injury-marker" style="top: 60%; left: 80%;" data-zone="Гамстрінг (середина)"></div>
+        <div class="injury-marker" style="top: 75%; left: 75%;" data-zone="Литковий м'яз"></div>
+        <div class="injury-marker" style="top: 90%; left: 80%;" data-zone="Ахіллове сухожилля"></div>
+        
     </div>
-    
-    <footer>
-        &copy; 2025 ProAthleteCare. Створено з Gemini.
-    </footer>
-    <script src="injury.js"></script>
-</body>
-</html>
+</div>
