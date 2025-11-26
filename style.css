@@ -8,7 +8,7 @@ body {
 
 /* Хедер - верхня панель */
 header {
-    background-color: #0d0d0d; /* Майже чорний колір шапки */
+    background-color: #0d0d0d;
     padding: 15px 30px;
     display: flex;
     align-items: center;
@@ -24,12 +24,12 @@ header {
 .project-title {
     margin: 0;
     font-size: 1.8em;
-    color: #FFC72C; /* Золотий заголовок */
+    color: #FFC72C;
 }
 
 .tagline {
     margin-left: 20px;
-    color: #888888; /* Сірий слоган */
+    color: #888888;
     font-style: italic;
     font-size: 0.9em;
 }
@@ -37,22 +37,22 @@ header {
 /* Обгортка для вмісту та меню */
 .content-wrapper {
     display: flex;
-    min-height: calc(100vh - 100px); /* Висота мінус хедер (70+15*2) та футер (10*2) */
+    min-height: calc(100vh - 100px);
 }
 
 /* Бічне меню (Sidebar) */
 .sidebar {
     width: 250px;
-    background-color: #0d0d0d; /* Колір бокової панелі */
+    background-color: #0d0d0d;
     padding: 20px;
-    box-shadow: 2px 0 10px rgba(255, 199, 44, 0.2); /* Золота тінь */
+    box-shadow: 2px 0 10px rgba(255, 199, 44, 0.2);
 }
 
-/* Стилі для кожного пункту меню (КРИТИЧНО для розміщення іконки) */
+/* Стилі для кожного пункту меню */
 .sidebar a {
     display: flex; /* Вмикаємо flexbox */
-    justify-content: space-between; /* Розтягуємо текст та іконку по краях */
-    align-items: center; /* Вирівнюємо по центру вертикально */
+    justify-content: flex-start; /* Вирівнюємо вміст зліва */
+    align-items: center;
     color: #CCCCCC;
     text-decoration: none;
     padding: 15px 10px;
@@ -68,12 +68,12 @@ header {
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    margin-left: 10px;
+    margin-left: auto; /* ЦЕ КРИТИЧНО! Зміщує іконку вправо */
 }
 
 .sidebar a:hover {
     background-color: #1f1f1f;
-    border-left: 2px solid #FFC72C; /* Золота лінія при наведенні */
+    border-left: 2px solid #FFC72C;
     color: #FFC72C;
 }
 
@@ -94,7 +94,7 @@ header {
 
 /* Стилі для заголовків та абзаців */
 h2 {
-    color: #FFC72C; /* Золотий заголовок */
+    color: #FFC72C;
     border-bottom: 2px solid #1f1f1f;
     padding-bottom: 10px;
 }
