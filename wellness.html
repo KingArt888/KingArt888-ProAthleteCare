@@ -1,14 +1,10 @@
-<!DOCTYPE html>
-<html lang="uk">
-<head>
+<!DOCTYPE html><html lang="uk"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ProAthleteCare | Wellness Control</title>
     <link rel="stylesheet" href="style.css">
     
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
-</head>
-<body>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> </head><body>
     <header>
         <img src="AK_logo.png" alt="ProAthleteCare Logo" class="logo">
         <h1 class="project-title">ProAthleteCare</h1>
@@ -47,6 +43,9 @@
                             <input type="radio" id="sleep-r2" name="sleep" value="2" /><label for="sleep-r2" title="2"></label>
                             <input type="radio" id="sleep-r1" name="sleep" value="1" /><label for="sleep-r1" title="1"></label>
                         </div>
+                        <div class="small-chart-container">
+                            <canvas id="chart-sleep" class="small-line-chart"></canvas>
+                        </div>
                         
                         <label>2. М'язовий біль / Втома (1-10, де 10 - сильний біль):</label>
                         <div class="rating-group pain-group">
@@ -60,6 +59,9 @@
                             <input type="radio" id="soreness-r3" name="soreness" value="3" /><label for="soreness-r3" title="3"></label>
                             <input type="radio" id="soreness-r2" name="soreness" value="2" /><label for="soreness-r2" title="2"></label>
                             <input type="radio" id="soreness-r1" name="soreness" value="1" /><label for="soreness-r1" title="1"></label>
+                        </div>
+                        <div class="small-chart-container">
+                            <canvas id="chart-soreness" class="small-line-chart"></canvas>
                         </div>
                         
                         <label>3. Настрій / Рівень енергії (1-10, де 10 - відмінно):</label>
@@ -75,6 +77,9 @@
                             <input type="radio" id="mood-r2" name="mood" value="2" /><label for="mood-r2" title="2"></label>
                             <input type="radio" id="mood-r1" name="mood" value="1" /><label for="mood-r1" title="1"></label>
                         </div>
+                        <div class="small-chart-container">
+                            <canvas id="chart-mood" class="small-line-chart"></canvas>
+                        </div>
 
                         <label>4. Рівень гідратації (1-10, де 10 - норма):</label>
                         <div class="rating-group hydration-group">
@@ -88,6 +93,9 @@
                             <input type="radio" id="water-r3" name="water" value="3" /><label for="water-r3" title="3"></label>
                             <input type="radio" id="water-r2" name="water" value="2" /><label for="water-r2" title="2"></label>
                             <input type="radio" id="water-r1" name="water" value="1" /><label for="water-r1" title="1"></label>
+                        </div>
+                        <div class="small-chart-container">
+                            <canvas id="chart-water" class="small-line-chart"></canvas>
                         </div>
                         
                         <label>5. Психологічний стрес (1-10, де 10 - максимальний):</label>
@@ -103,6 +111,9 @@
                             <input type="radio" id="stress-r2" name="stress" value="2" /><label for="stress-r2" title="2"></label>
                             <input type="radio" id="stress-r1" name="stress" value="1" /><label for="stress-r1" title="1"></label>
                         </div>
+                        <div class="small-chart-container">
+                            <canvas id="chart-stress" class="small-line-chart"></canvas>
+                        </div>
 
                         <label>6. Суб'єктивна готовність до тренування (1-10, де 10 - повна готовність):</label>
                         <div class="rating-group ready-group">
@@ -116,6 +127,9 @@
                             <input type="radio" id="ready-r3" name="ready" value="3" /><label for="ready-r3" title="3"></label>
                             <input type="radio" id="ready-r2" name="ready" value="2" /><label for="ready-r2" title="2"></label>
                             <input type="radio" id="ready-r1" name="ready" value="1" /><label for="ready-r1" title="1"></label>
+                        </div>
+                        <div class="small-chart-container">
+                            <canvas id="chart-ready" class="small-line-chart"></canvas>
                         </div>
                         
                         <button type="submit" class="gold-button">Записати 6 точок даних</button>
@@ -135,6 +149,4 @@
     <footer>
         &copy; 2025 ProAthleteCare. Створено з Gemini.
     </footer>
-    <script src="script.js"></script>
-</body>
-</html>
+    <script src="script.js"></script></body></html>
