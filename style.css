@@ -69,6 +69,8 @@ header {
     height: 24px;
     border-radius: 50%;
     margin-left: auto;
+    /* ФІЛЬТР ДЛЯ ЗОЛОТОГО КОЛЬОРУ */
+    filter: invert(80%) sepia(100%) saturate(2000%) hue-rotate(0deg) brightness(120%) contrast(100%);
 }
 
 .sidebar a:hover {
@@ -115,7 +117,7 @@ header {
     bottom: 0; 
     left: 0;
     width: 100%;
-    height: 35%; /* Фінальна висота для опущеного тексту */
+    height: 35%; 
     display: flex; 
     flex-direction: column; 
     justify-content: flex-end; 
@@ -145,13 +147,13 @@ header {
 
 /* Активний пункт меню */
 .sidebar a.active {
-    background-color: #FFC72C; /* Золотий фон для активного пункту */
-    color: #000000; /* Чорний текст */
+    background-color: #FFC72C; 
+    color: #000000; 
     border-left: 2px solid #000000;
 }
 
 .sidebar a.active img {
-    filter: none; /* Видаляємо золотий фільтр для іконки на золотому фоні */
+    filter: none; 
 }
 
 /* Контейнер для форми та графіка */
@@ -159,6 +161,7 @@ header {
     display: flex;
     gap: 30px;
     margin-top: 20px;
+    flex-wrap: wrap; 
 }
 
 /* Картки для форми та графіка */
@@ -196,16 +199,6 @@ header {
     font-weight: bold;
 }
 
-#wellness-form input[type="range"] {
-    width: 80%;
-    margin-right: 10px;
-}
-
-#wellness-form span {
-    color: #FFC72C;
-    font-weight: bold;
-}
-
 .gold-button {
     background-color: #FFC72C;
     color: #000000;
@@ -238,6 +231,104 @@ header {
     color: #888888;
     font-style: italic;
     font-size: 1.2em;
+}
+
+/* --- СТИЛІ ДЛЯ ВСІХ РЕЙТИНГІВ ІКОНОК (ЗАГАЛЬНІ) --- */
+.rating-group {
+    display: flex;
+    flex-direction: row-reverse; 
+    justify-content: flex-end; 
+    direction: ltr; 
+    font-size: 2em;
+    margin: 10px 0 20px 0;
+}
+
+.rating-group input {
+    display: none; 
+}
+
+.rating-group label {
+    color: #333; /* Колір незаповнених іконок */
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+/* Зірки */
+.star-group label:before {
+    content: '★'; 
+    margin-right: 2px;
+}
+.star-group input:checked ~ label,
+.star-group label:hover,
+.star-group label:hover ~ label {
+    color: #FFC72C; 
+}
+
+/* Хрестики (Біль/Втома) */
+.pain-group { font-size: 1.5em; }
+.pain-group label:before {
+    content: '✖'; 
+    margin-right: 5px;
+}
+.pain-group input:checked ~ label,
+.pain-group label:hover,
+.pain-group label:hover ~ label {
+    color: #DA3E52; /* Червоний для болю */
+}
+
+/* Блискавки (Енергія/Настрій) */
+.energy-group { font-size: 1.5em; }
+.energy-group label:before {
+    content: '⚡'; 
+    margin-right: 5px;
+    filter: grayscale(100%); 
+}
+.energy-group input:checked ~ label:before,
+.energy-group label:hover:before,
+.energy-group label:hover ~ label:before {
+    filter: none; /* Відновлюємо колір при виборі */
+}
+.energy-group label {
+    color: transparent; 
+}
+
+/* Краплі (Гідратація) */
+.hydration-group { font-size: 1.5em; }
+.hydration-group label:before {
+    content: '💧'; 
+    margin-right: 5px;
+    filter: grayscale(100%); 
+}
+.hydration-group input:checked ~ label:before,
+.hydration-group label:hover:before,
+.hydration-group label:hover ~ label:before {
+    filter: none; 
+}
+
+/* Вогник (Стрес) */
+.stress-group { font-size: 1.5em; }
+.stress-group label:before {
+    content: '🔥'; 
+    margin-right: 5px;
+    filter: grayscale(100%); 
+}
+.stress-group input:checked ~ label:before,
+.stress-group label:hover:before,
+.stress-group label:hover ~ label:before {
+    filter: none; 
+}
+
+/* Галочка (Готовність) */
+.ready-group { font-size: 1.5em; }
+.ready-group label:before {
+    content: '✅'; 
+    margin-right: 5px;
+    filter: grayscale(100%); 
+}
+.ready-group input:checked ~ label:before,
+.ready-group label:hover:before,
+.ready-group label:hover ~ label:before {
+    filter: none; 
 }
 
 /* Футер */
