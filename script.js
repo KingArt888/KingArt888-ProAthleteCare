@@ -22,7 +22,7 @@ function getTodayDate() {
     return new Date().toISOString().split('T')[0];
 }
 
-// Залишаємо mock data для першого запуску
+// Функція генерації фіктивних даних (для першого запуску)
 function generateMockData() {
     const data = [];
     for (let i = 14; i >= 1; i--) {
@@ -49,10 +49,8 @@ function generateMockData() {
 function loadData() {
     let data = JSON.parse(localStorage.getItem(STORAGE_KEY));
     if (!data || data.length === 0) {
-        // Якщо немає реальних даних, використовуємо фіктивні
         data = generateMockData();
     }
-    // Обмежуємо дані останніми 14 записами
     if (data.length > 14) {
         data = data.slice(data.length - 14);
     }
@@ -69,7 +67,7 @@ function renderLineCharts(data) {
         const ctx = document.getElementById(indicator.chartId);
         if (!ctx) return;
 
-        // Знищуємо старий екземпляр, щоб запобігти помилкам
+        // **КРИТИЧНО:** Знищуємо старий екземпляр перед створенням нового
         if (chartInstances[indicator.key]) {
             chartInstances[indicator.key].destroy();
         }
@@ -88,7 +86,7 @@ function renderLineCharts(data) {
                     backgroundColor: indicator.color.replace('rgb', 'rgba').replace(')', ', 0.2)'),
                     borderWidth: 1.5,
                     tension: 0.3, 
-                    pointRadius: 0, // Приховуємо точки для мінімалізму
+                    pointRadius: 0, 
                     fill: true
                 }]
             },
@@ -107,19 +105,11 @@ function renderLineCharts(data) {
                 },
                 plugins: {
                     legend: { display: false },
-                    tooltip: { 
-                        enabled: false // Вимикаємо тултіпи, щоб не заважали дизайну
-                    } 
-                },
-                elements: {
-                    line: {
-                        borderWidth: 1.5
-                    }
+                    tooltip: { enabled: true } // Залишаємо підказки при наведенні
                 }
             }
         };
 
-        // Створюємо новий екземпляр
         chartInstances[indicator.key] = new Chart(ctx, config);
     });
 }
@@ -129,6 +119,7 @@ function renderRadarChart(latestData) {
     const ctx = document.getElementById('wellnessRadarChart');
     if (!ctx) return;
     
+    // **КРИТИЧНО:** Знищуємо старий екземпляр
     if (chartInstances['radar']) {
         chartInstances['radar'].destroy();
     }
@@ -192,6 +183,7 @@ function checkDailyEntry() {
     const radioInputs = form.querySelectorAll('input[type="radio"]');
 
     if (isSubmitted) {
+        // Якщо дані за сьогодні вже є, деактивуємо форму
         radioInputs.forEach(input => input.disabled = true);
         submitButton.disabled = true;
         submitButton.textContent = "Дані за сьогодні вже записано";
@@ -274,13 +266,11 @@ function renderAllCharts() {
     const radarContainer = document.getElementById('radar-container');
     
     if (dailyScores.length > 0) {
-        // Оновлюємо, якщо є дані
         const latestData = dailyScores[dailyScores.length - 1];
         renderLineCharts(dailyScores);
         renderRadarChart(latestData);
         if (radarContainer) radarContainer.style.display = 'block';
     } else {
-        // Приховуємо, якщо даних немає
         document.getElementById('main-chart-title').innerHTML = 'Wellness Snapshot: Дані відсутні';
         if (radarContainer) radarContainer.style.display = 'none'; 
     }
