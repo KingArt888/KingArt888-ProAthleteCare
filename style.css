@@ -2,34 +2,34 @@
 body {
     margin: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #1a1a2e; /* Темний фон */
-    color: #e4e4e4; /* Світлий текст */
+    background-color: #000000; /* Чорний фон */
+    color: #CCCCCC; /* Сріблястий текст */
 }
 
 /* Хедер - верхня панель */
 header {
-    background-color: #0f4c75; /* Колір шапки (синій) */
+    background-color: #0d0d0d; /* Майже чорний колір шапки */
     padding: 15px 30px;
     display: flex;
     align-items: center;
-    border-bottom: 3px solid #ff5722; /* Помаранчевий акцент */
+    border-bottom: 3px solid #FFC72C; /* Золотий акцент */
 }
 
 .logo {
-    height: 50px; /* Розмір логотипу */
+    height: 50px;
     margin-right: 15px;
-    border-radius: 50%; /* Кругле лого */
+    border-radius: 50%;
 }
 
 .project-title {
     margin: 0;
     font-size: 1.8em;
-    color: #ffffff;
+    color: #FFC72C; /* Золотий заголовок */
 }
 
 .tagline {
     margin-left: 20px;
-    color: #bdbdbd;
+    color: #888888; /* Сірий слоган */
     font-style: italic;
     font-size: 0.9em;
 }
@@ -37,44 +37,46 @@ header {
 /* Обгортка для вмісту та меню */
 .content-wrapper {
     display: flex;
-    min-height: calc(100vh - 84px - 40px); /* Вся висота мінус хедер і футер */
+    min-height: calc(100vh - 84px - 40px);
 }
 
 /* Бічне меню (Sidebar) */
 .sidebar {
     width: 250px;
-    background-color: #1f305e; /* Колір бокової панелі */
+    background-color: #0d0d0d; /* Колір бокової панелі */
     padding: 20px;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+    box-shadow: 2px 0 10px rgba(255, 199, 44, 0.2); /* Золота тінь */
 }
 
 .sidebar a {
     display: block;
-    color: #ffffff;
+    color: #CCCCCC;
     text-decoration: none;
     padding: 15px 10px;
     margin-bottom: 10px;
-    background-color: #27496d;
+    background-color: #1a1a1a;
     border-radius: 8px;
     transition: background-color 0.3s, transform 0.1s;
+    border-left: 2px solid transparent;
 }
 
 .sidebar a:hover {
-    background-color: #ff5722; /* Помаранчевий при наведенні */
-    transform: translateX(5px);
+    background-color: #1f1f1f;
+    border-left: 2px solid #FFC72C; /* Золота лінія при наведенні */
+    color: #FFC72C;
 }
 
 /* Основний вміст */
 .main-content {
     flex-grow: 1;
     padding: 30px;
-    background-color: #1a1a2e;
+    background-color: #000000;
 }
 
 /* Стилі для заголовків та абзаців */
 h2 {
-    color: #ff5722;
-    border-bottom: 2px solid #27496d;
+    color: #FFC72C; /* Золотий заголовок */
+    border-bottom: 2px solid #1f1f1f;
     padding-bottom: 10px;
 }
 
@@ -82,8 +84,8 @@ h2 {
 footer {
     text-align: center;
     padding: 10px;
-    background-color: #0f4c75;
+    background-color: #0d0d0d;
     font-size: 0.8em;
-    color: #bdbdbd;
-    border-top: 1px solid #1f305e;
+    color: #888888;
+    border-top: 1px solid #1a1a1a;
 }
