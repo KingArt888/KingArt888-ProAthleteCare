@@ -15,13 +15,13 @@
     
     <div class="content-wrapper">
         <nav class="sidebar">
-            <a href="wellness.html" class="active">Wellness Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="#">Injury Story <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="#">Load Season <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="#">Daily Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="#">Weekly Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="#">Weight Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="#">Velocity Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="wellness.html" class="active">Wellness Control <img src="icon_heart.png" class="menu-icon" alt="Здоров'я"></a>
+            <a href="#">Injury Story <img src="icon_bandage.png" class="menu-icon" alt="Травми"></a>
+            <a href="#">Load Season <img src="icon_dumbbell.png" class="menu-icon" alt="Навантаження"></a>
+            <a href="#">Daily Individual <img src="icon_day.png" class="menu-icon" alt="День"></a>
+            <a href="#">Weekly Individual <img src="icon_week.png" class="menu-icon" alt="Тиждень"></a>
+            <a href="#">Weight Control <img src="icon_scale.png" class="menu-icon" alt="Вага"></a>
+            <a href="#">Velocity Control <img src="icon_speed.png" class="menu-icon" alt="Швидкість"></a>
         </nav>
         
         <main class="main-content">
@@ -32,19 +32,66 @@
                     <h3>Щоденне опитування</h3>
                     <form id="wellness-form">
                         
-                        <label for="sleep">Якість сну (1-5, де 5 - ідеально):</label>
-                        <input type="range" id="sleep" name="sleep" min="1" max="5" value="3" oninput="document.getElementById('sleep-value').innerText = this.value">
-                        <span id="sleep-value">3</span>
+                        <label>1. Якість сну (1-10, де 10 - ідеально):</label>
+                        <div class="rating-group star-group">
+                            <input type="radio" id="sleep-r10" name="sleep" value="10" /><label for="sleep-r10" title="10"></label>
+                            <input type="radio" id="sleep-r9" name="sleep" value="9" /><label for="sleep-r9" title="9"></label>
+                            <input type="radio" id="sleep-r8" name="sleep" value="8" /><label for="sleep-r8" title="8"></label>
+                            <input type="radio" id="sleep-r7" name="sleep" value="7" /><label for="sleep-r7" title="7"></label>
+                            <input type="radio" id="sleep-r6" name="sleep" value="6" /><label for="sleep-r6" title="6"></label>
+                            <input type="radio" id="sleep-r5" name="sleep" value="5" /><label for="sleep-r5" title="5"></label>
+                            <input type="radio" id="sleep-r4" name="sleep" value="4" /><label for="sleep-r4" title="4"></label>
+                            <input type="radio" id="sleep-r3" name="sleep" value="3" /><label for="sleep-r3" title="3"></label>
+                            <input type="radio" id="sleep-r2" name="sleep" value="2" /><label for="sleep-r2" title="2"></label>
+                            <input type="radio" id="sleep-r1" name="sleep" value="1" /><label for="sleep-r1" title="1"></label>
+                        </div>
                         
-                        <label for="soreness">М'язовий біль / Втома (1-5, де 5 - сильний біль):</label>
-                        <input type="range" id="soreness" name="soreness" min="1" max="5" value="3" oninput="document.getElementById('soreness-value').innerText = this.value">
-                        <span id="soreness-value">3</span>
+                        <label>2. М'язовий біль / Втома (1-5, де 5 - сильний біль):</label>
+                        <div class="rating-group pain-group">
+                            <input type="radio" id="soreness-r5" name="soreness" value="5" /><label for="soreness-r5" title="5"></label>
+                            <input type="radio" id="soreness-r4" name="soreness" value="4" /><label for="soreness-r4" title="4"></label>
+                            <input type="radio" id="soreness-r3" name="soreness" value="3" /><label for="soreness-r3" title="3"></label>
+                            <input type="radio" id="soreness-r2" name="soreness" value="2" /><label for="soreness-r2" title="2"></label>
+                            <input type="radio" id="soreness-r1" name="soreness" value="1" /><label for="soreness-r1" title="1"></label>
+                        </div>
                         
-                        <label for="mood">Настрій / Рівень енергії (1-5, де 5 - відмінно):</label>
-                        <input type="range" id="mood" name="mood" min="1" max="5" value="3" oninput="document.getElementById('mood-value').innerText = this.value">
-                        <span id="mood-value">3</span>
+                        <label>3. Настрій / Рівень енергії (1-5, де 5 - відмінно):</label>
+                        <div class="rating-group energy-group">
+                            <input type="radio" id="mood-r5" name="mood" value="5" /><label for="mood-r5" title="5"></label>
+                            <input type="radio" id="mood-r4" name="mood" value="4" /><label for="mood-r4" title="4"></label>
+                            <input type="radio" id="mood-r3" name="mood" value="3" /><label for="mood-r3" title="3"></label>
+                            <input type="radio" id="mood-r2" name="mood" value="2" /><label for="mood-r2" title="2"></label>
+                            <input type="radio" id="mood-r1" name="mood" value="1" /><label for="mood-r1" title="1"></label>
+                        </div>
+
+                        <label>4. Рівень гідратації (1-5, де 5 - норма):</label>
+                        <div class="rating-group hydration-group">
+                            <input type="radio" id="water-r5" name="water" value="5" /><label for="water-r5" title="5"></label>
+                            <input type="radio" id="water-r4" name="water" value="4" /><label for="water-r4" title="4"></label>
+                            <input type="radio" id="water-r3" name="water" value="3" /><label for="water-r3" title="3"></label>
+                            <input type="radio" id="water-r2" name="water" value="2" /><label for="water-r2" title="2"></label>
+                            <input type="radio" id="water-r1" name="water" value="1" /><label for="water-r1" title="1"></label>
+                        </div>
                         
-                        <button type="submit" class="gold-button">Записати дані</button>
+                        <label>5. Психологічний стрес (1-5, де 5 - максимальний):</label>
+                        <div class="rating-group stress-group">
+                            <input type="radio" id="stress-r5" name="stress" value="5" /><label for="stress-r5" title="5"></label>
+                            <input type="radio" id="stress-r4" name="stress" value="4" /><label for="stress-r4" title="4"></label>
+                            <input type="radio" id="stress-r3" name="stress" value="3" /><label for="stress-r3" title="3"></label>
+                            <input type="radio" id="stress-r2" name="stress" value="2" /><label for="stress-r2" title="2"></label>
+                            <input type="radio" id="stress-r1" name="stress" value="1" /><label for="stress-r1" title="1"></label>
+                        </div>
+
+                        <label>6. Суб'єктивна готовність до тренування (1-5, де 5 - повна готовність):</label>
+                        <div class="rating-group ready-group">
+                            <input type="radio" id="ready-r5" name="ready" value="5" /><label for="ready-r5" title="5"></label>
+                            <input type="radio" id="ready-r4" name="ready" value="4" /><label for="ready-r4" title="4"></label>
+                            <input type="radio" id="ready-r3" name="ready" value="3" /><label for="ready-r3" title="3"></label>
+                            <input type="radio" id="ready-r2" name="ready" value="2" /><label for="ready-r2" title="2"></label>
+                            <input type="radio" id="ready-r1" name="ready" value="1" /><label for="ready-r1" title="1"></label>
+                        </div>
+                        
+                        <button type="submit" class="gold-button">Записати 6 точок даних</button>
                     </form>
                 </div>
                 
@@ -52,7 +99,6 @@
                     <h3>Індивідуальна динаміка Wellness</h3>
                     <div class="chart-area">
                         <p class="placeholder-text">Місце для графіка динаміки стану (JS Chart)</p>
-                        <img src="chart_placeholder.png" alt="Приклад графіка" style="max-width:100%; height:auto;">
                     </div>
                 </div>
             </div>
