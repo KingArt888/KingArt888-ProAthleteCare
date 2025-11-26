@@ -4,258 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ProAthleteCare | Wellness Control</title>
+    <link rel="stylesheet" href="style.css">
     
     <!-- ПІДКЛЮЧЕННЯ БІБЛІОТЕКИ CHART.JS -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
-
-    <!-- СТИЛІ (CSS) -->
-    <style>
-        /* Базові стилі */
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #000000;
-            color: #CCCCCC;
-        }
-
-        /* Хедер - верхня панель */
-        header {
-            background-color: #0d0d0d;
-            padding: 15px 30px;
-            display: flex;
-            align-items: center;
-            border-bottom: 3px solid #FFC72C;
-        }
-
-        .logo {
-            height: 70px;
-            margin-right: 15px;
-            border-radius: 50%; 
-            /* Використовуємо тут тимчасовий плейсхолдер, оскільки реальний файл AK_logo.png недоступний */
-            content: url(https://placehold.co/70x70/FFC72C/000000?text=AK);
-        }
-
-        .project-title {
-            margin: 0;
-            font-size: 1.8em;
-            color: #FFC72C;
-        }
-
-        .tagline {
-            margin-left: 20px;
-            color: #888888;
-            font-style: italic;
-            font-size: 0.9em;
-        }
-
-        /* Обгортка для вмісту та меню */
-        .content-wrapper {
-            display: flex;
-            min-height: calc(100vh - 100px);
-        }
-
-        /* Бічне меню (Sidebar) */
-        .sidebar {
-            width: 250px;
-            background-color: #0d0d0d;
-            padding: 20px;
-            box-shadow: 2px 0 10px rgba(255, 199, 44, 0.2);
-        }
-
-        /* Стилі для кожного пункту меню */
-        .sidebar a {
-            display: flex;
-            justify-content: flex-start;
-            align-items: center;
-            color: #CCCCCC;
-            text-decoration: none;
-            padding: 15px 10px;
-            margin-bottom: 10px;
-            background-color: #1a1a1a;
-            border-radius: 8px;
-            transition: background-color 0.3s, border-left 0.3s, color 0.3s;
-            border-left: 2px solid transparent;
-        }
-
-        /* Стилі для маленької КАРТИНКИ "АК" у меню */
-        .menu-icon {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            margin-left: auto;
-            /* Використовуємо тут тимчасовий плейсхолдер */
-            content: url(https://placehold.co/24x24/FFC72C/000000?text=A);
-        }
-
-        .sidebar a:hover {
-            background-color: #1f1f1f;
-            border-left: 2px solid #FFC72C;
-            color: #FFC72C;
-        }
-
-        /* Основний вміст */
-        .main-content {
-            flex-grow: 1;
-            padding: 30px; 
-            background-color: #000000;
-        }
-
-        /* Стиль для заголовків основного контенту */
-        .main-content h2 {
-            color: #FFC72C;
-            margin-bottom: 20px;
-        }
-
-        /* --- СТИЛІ ДЛЯ ФАЙЛУ WELLNESS.HTML (DASHBOARD) --- */
-
-        /* Активний пункт меню */
-        .sidebar a.active {
-            background-color: #FFC72C; 
-            color: #000000; 
-            border-left: 2px solid #000000;
-        }
-
-        .sidebar a.active img {
-            filter: none; 
-        }
-
-        /* Контейнер для форми та графіків */
-        .dashboard-container {
-            display: flex;
-            gap: 30px;
-            margin-top: 20px;
-            flex-wrap: wrap; 
-        }
-
-        /* Картки для форми та графіків */
-        .form-card {
-            background-color: #0d0d0d;
-            border: 1px solid #1a1a1a;
-            border-radius: 10px;
-            padding: 25px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-            width: 350px; /* Фіксована ширина для форми */
-            min-width: 350px;
-        }
-
-        /* НОВА СІТКА ГРАФІКІВ */
-        .chart-grid-container {
-            flex-grow: 1; /* Займає решту простору */
-            display: grid;
-            /* 2 графіки на рядок для більшого простору */
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
-            gap: 20px;
-            background-color: #0d0d0d;
-            border: 1px solid #1a1a1a;
-            border-radius: 10px;
-            padding: 25px;
-        }
-
-        .chart-grid-container h3 {
-            grid-column: 1 / -1; /* Заголовок на всю ширину сітки */
-            color: #FFC72C;
-            margin-top: 0;
-            border-bottom: 1px solid #333333;
-            padding-bottom: 10px;
-            margin-bottom: 10px;
-        }
-
-        .chart-area-small {
-            background-color: #000000;
-            border: 1px solid #333333;
-            border-radius: 5px;
-            padding: 15px;
-            height: 250px; /* Фіксована висота для міні-графіка */
-        }
-
-        .chart-area-small h4 {
-            color: #CCCCCC;
-            margin: 0 0 10px 0;
-            font-size: 1em;
-        }
-
-        /* Стилі для форми */
-        .form-card h3 {
-            color: #FFC72C;
-            margin-top: 0;
-            border-bottom: 1px solid #333333;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-
-        #wellness-form label {
-            display: block;
-            color: #CCCCCC;
-            margin-top: 15px;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        .gold-button {
-            background-color: #FFC72C;
-            color: #000000;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 5px;
-            margin-top: 30px;
-            cursor: pointer;
-            font-size: 1.1em;
-            font-weight: bold;
-            transition: background-color 0.3s;
-        }
-
-        .gold-button:hover {
-            background-color: #E6B800;
-        }
-
-        /* --- СТИЛІ ДЛЯ РЕЙТИНГІВ ІКОНОК --- */
-        .rating-group {
-            display: flex;
-            flex-direction: row-reverse; 
-            justify-content: flex-end; 
-            direction: ltr; 
-            font-size: 1.5em; 
-            margin: 10px 0 20px 0;
-        }
-
-        .rating-group input {
-            display: none; 
-        }
-
-        .rating-group label {
-            color: #333; 
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-
-        .star-group label:before { content: '★'; margin-right: 2px;}
-        .star-group input:checked ~ label:before, .star-group label:hover:before, .star-group label:hover ~ label:before { color: #FFC72C; }
-
-        .pain-group label:before { content: '✖'; margin-right: 5px;}
-        .pain-group input:checked ~ label:before, .pain-group label:hover:before, .pain-group label:hover ~ label:before { color: #DA3E52; }
-
-        .energy-group label:before { content: '⚡'; margin-right: 5px; filter: grayscale(100%); }
-        .energy-group input:checked ~ label:before, .energy-group label:hover:before, .energy-group label:hover ~ label:before { filter: none; }
-
-        .hydration-group label:before { content: '💧'; margin-right: 5px; filter: grayscale(100%); }
-        .hydration-group input:checked ~ label:before, .hydration-group label:hover:before, .hydration-group label:hover ~ label:before { filter: none; }
-
-        .stress-group label:before { content: '🔥'; margin-right: 5px; filter: grayscale(100%); }
-        .stress-group input:checked ~ label:before, .stress-group label:hover:before, .stress-group label:hover ~ label:before { filter: none; }
-
-        .ready-group label:before { content: '✅'; margin-right: 5px; filter: grayscale(100%); }
-        .ready-group input:checked ~ label:before, .ready-group label:hover:before, .ready-group label:hover ~ label:before { filter: none; }
-
-        /* Футер */
-        footer {
-            text-align: center;
-            padding: 10px;
-            background-color: #0d0d0d;
-            font-size: 0.8em;
-            color: #888888;
-            border-top: 1px solid #1a1a1a;
-        }
-    </style>
 </head>
 <body>
     <header>
@@ -265,9 +17,8 @@
     </header>
     
     <div class="content-wrapper">
-        <!-- БІЧНЕ МЕНЮ (НАВІГАЦІЯ) -->
         <nav class="sidebar">
-            <a href="#" class="active">Wellness Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="wellness.html" class="active">Wellness Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
             <a href="#">Injury Story <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
             <a href="#">Load Season <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
             <a href="#">Daily Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
@@ -321,4 +72,101 @@
                             <input type="radio" id="mood-r10" name="mood" value="10" /><label for="mood-r10" title="10"></label>
                             <input type="radio" id="mood-r9" name="mood" value="9" /><label for="mood-r9" title="9"></label>
                             <input type="radio" id="mood-r8" name="mood" value="8" /><label for="mood-r8" title="8"></label>
-                            <input type="radio" id="mood-r7" name="mood" value="7" /><label for="mood-r7" title="7"></
+                            <input type="radio" id="mood-r7" name="mood" value="7" /><label for="mood-r7" title="7"></label>
+                            <input type="radio" id="mood-r6" name="mood" value="6" /><label for="mood-r6" title="6"></label>
+                            <input type="radio" id="mood-r5" name="mood" value="5" /><label for="mood-r5" title="5"></label>
+                            <input type="radio" id="mood-r4" name="mood" value="4" /><label for="mood-r4" title="4"></label>
+                            <input type="radio" id="mood-r3" name="mood" value="3" /><label for="mood-r3" title="3"></label>
+                            <input type="radio" id="mood-r2" name="mood" value="2" /><label for="mood-r2" title="2"></label>
+                            <input type="radio" id="mood-r1" name="mood" value="1" /><label for="mood-r1" title="1"></label>
+                        </div>
+
+                        <!-- 4. Гідратація -->
+                        <label>4. Рівень гідратації (1-10, де 10 - норма):</label>
+                        <div class="rating-group hydration-group">
+                            <input type="radio" id="water-r10" name="water" value="10" /><label for="water-r10" title="10"></label>
+                            <input type="radio" id="water-r9" name="water" value="9" /><label for="water-r9" title="9"></label>
+                            <input type="radio" id="water-r8" name="water" value="8" /><label for="water-r8" title="8"></label>
+                            <input type="radio" id="water-r7" name="water" value="7" /><label for="water-r7" title="7"></label>
+                            <input type="radio" id="water-r6" name="water" value="6" /><label for="water-r6" title="6"></label>
+                            <input type="radio" id="water-r5" name="water" value="5" /><label for="water-r5" title="5"></label>
+                            <input type="radio" id="water-r4" name="water" value="4" /><label for="water-r4" title="4"></label>
+                            <input type="radio" id="water-r3" name="water" value="3" /><label for="water-r3" title="3"></label>
+                            <input type="radio" id="water-r2" name="water" value="2" /><label for="water-r2" title="2"></label>
+                            <input type="radio" id="water-r1" name="water" value="1" /><label for="water-r1" title="1"></label>
+                        </div>
+                        
+                        <!-- 5. Стрес -->
+                        <label>5. Психологічний стрес (1-10, де 10 - максимальний):</label>
+                        <div class="rating-group stress-group">
+                            <input type="radio" id="stress-r10" name="stress" value="10" /><label for="stress-r10" title="10"></label>
+                            <input type="radio" id="stress-r9" name="stress" value="9" /><label for="stress-r9" title="9"></label>
+                            <input type="radio" id="stress-r8" name="stress" value="8" /><label for="stress-r8" title="8"></label>
+                            <input type="radio" id="stress-r7" name="stress" value="7" /><label for="stress-r7" title="7"></label>
+                            <input type="radio" id="stress-r6" name="stress" value="6" /><label for="stress-r6" title="6"></label>
+                            <input type="radio" id="stress-r5" name="stress" value="5" /><label for="stress-r5" title="5"></label>
+                            <input type="radio" id="stress-r4" name="stress" value="4" /><label for="stress-r4" title="4"></label>
+                            <input type="radio" id="stress-r3" name="stress" value="3" /><label for="stress-r3" title="3"></label>
+                            <input type="radio" id="stress-r2" name="stress" value="2" /><label for="stress-r2" title="2"></label>
+                            <input type="radio" id="stress-r1" name="stress" value="1" /><label for="stress-r1" title="1"></label>
+                        </div>
+
+                        <!-- 6. Готовність -->
+                        <label>6. Суб'єктивна готовність до тренування (1-10, де 10 - повна готовність):</label>
+                        <div class="rating-group ready-group">
+                            <input type="radio" id="ready-r10" name="ready" value="10" /><label for="ready-r10" title="10"></label>
+                            <input type="radio" id="ready-r9" name="ready" value="9" /><label for="ready-r9" title="9"></label>
+                            <input type="radio" id="ready-r8" name="ready" value="8" /><label for="ready-r8" title="8"></label>
+                            <input type="radio" id="ready-r7" name="ready" value="7" /><label for="ready-r7" title="7"></label>
+                            <input type="radio" id="ready-r6" name="ready" value="6" /><label for="ready-r6" title="6"></label>
+                            <input type="radio" id="ready-r5" name="ready" value="5" /><label for="ready-r5" title="5"></label>
+                            <input type="radio" id="ready-r4" name="ready" value="4" /><label for="ready-r4" title="4"></label>
+                            <input type="radio" id="ready-r3" name="ready" value="3" /><label for="ready-r3" title="3"></label>
+                            <input type="radio" id="ready-r2" name="ready" value="2" /><label for="ready-r2" title="2"></label>
+                            <input type="radio" id="ready-r1" name="ready" value="1" /><label for="ready-r1" title="1"></label>
+                        </div>
+                        
+                        <button type="submit" class="gold-button">Записати дані та оновити графіки</button>
+                    </form>
+                </div>
+                
+                <!-- БЛОК 2: 6 ОКРЕМИХ ГРАФІКІВ -->
+                <div class="chart-grid-container">
+                    <h3>Індивідуальна динаміка Wellness за показниками</h3>
+
+                    <!-- КОНТЕЙНЕРИ ДЛЯ КОЖНОГО ГРАФІКА -->
+                    <div class="chart-area-small">
+                        <h4>1. Якість сну</h4>
+                        <canvas id="chart-sleep"></canvas>
+                    </div>
+                    <div class="chart-area-small">
+                        <h4>2. Біль / Втома</h4>
+                        <canvas id="chart-soreness"></canvas>
+                    </div>
+                    <div class="chart-area-small">
+                        <h4>3. Настрій / Енергія</h4>
+                        <canvas id="chart-mood"></canvas>
+                    </div>
+                    <div class="chart-area-small">
+                        <h4>4. Рівень гідратації</h4>
+                        <canvas id="chart-water"></canvas>
+                    </div>
+                    <div class="chart-area-small">
+                        <h4>5. Психологічний стрес</h4>
+                        <canvas id="chart-stress"></canvas>
+                    </div>
+                    <div class="chart-area-small">
+                        <h4>6. Готовність до тренування</h4>
+                        <canvas id="chart-ready"></canvas>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <footer>
+        &copy; 2025 ProAthleteCare. Створено з Gemini.
+    </footer>
+    <script src="script.js"></script>
+</body>
+</html>
