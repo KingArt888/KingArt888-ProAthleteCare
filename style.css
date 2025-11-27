@@ -1,263 +1,237 @@
-/* style.css - ЧОРНО-ЗОЛОТИЙ ДИЗАЙН */
-
-/* --- ЗМІННІ ТА ОСНОВНІ СКИДИ --- */
-:root {
-    --header-footer-bg: #111;        /* Чорний / Темний фон */
-    --main-bg: #222;                 /* Темно-сірий фон для основного контенту */
-    --accent-color: #FFD700;         /* Золотий акцент */
-    --text-color: #EEE;              /* Світлий текст */
-    --sidebar-bg: #333;              /* Фон меню */
-    --border-radius: 8px;
-    --shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-    --sidebar-width-desktop: 250px;
-}
-
-* {
-    box-sizing: border-box;
-}
-
-body {
-    font-family: 'Arial', sans-serif;
+/* Базові стилі */body {
     margin: 0;
-    padding: 0;
-    background-color: var(--main-bg); /* Темний фон тіла */
-    color: var(--text-color); /* Світлий текст */
-    line-height: 1.6;
-}
-
-/* --- ШАПКА (HEADER) --- */
-header {
-    background-color: var(--header-footer-bg);
-    color: white;
-    padding: 15px 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #000000;
+    color: #CCCCCC;
+}/* Хедер - верхня панель */header {
+    background-color: #0d0d0d;
+    padding: 15px 30px;
     display: flex;
     align-items: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-}
-
-.logo-link {
-    text-decoration: none; 
-    display: inline-block;
-    cursor: pointer;
-}
-
-.logo {
-    width: 40px; 
-    height: 40px;
+    border-bottom: 3px solid #FFC72C;
+}.logo {
+    height: 70px;
     margin-right: 15px;
-    filter: invert(100%); /* Робить логотип світлим на темному фоні, якщо він був темним */
-}
-
-.project-title {
+    border-radius: 50%; 
+}.project-title {
     margin: 0;
-    font-size: 1.5em;
-    font-weight: bold;
-    color: var(--accent-color); /* Золотий заголовок */
-}
-
-.tagline {
-    margin-left: auto;
+    font-size: 1.8em;
+    color: #FFC72C;
+}.tagline {
+    margin-left: 20px;
+    color: #888888;
+    font-style: italic;
     font-size: 0.9em;
-    opacity: 0.7;
-}
-
-/* --- ОБГОРТКА КОНТЕНТУ І МЕНЮ --- */
-.content-wrapper {
+}/* Обгортка для вмісту та меню */.content-wrapper {
     display: flex;
     min-height: calc(100vh - 100px);
-}
-
-/* --- БІЧНЕ МЕНЮ (SIDEBAR) --- */
-.sidebar {
-    width: var(--sidebar-width-desktop); 
-    background-color: var(--sidebar-bg); /* Темний фон меню */
-    padding: 20px 0;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
-    flex-shrink: 0;
-}
-
-.sidebar a {
+}/* Бічне меню (Sidebar) */.sidebar {
+    width: 250px;
+    background-color: #0d0d0d;
+    padding: 20px;
+    box-shadow: 2px 0 10px rgba(255, 199, 44, 0.2);
+}/* Стилі для кожного пункту меню */.sidebar a {
     display: flex;
+    justify-content: flex-start;
     align-items: center;
-    padding: 15px 20px;
+    color: #CCCCCC;
     text-decoration: none;
-    color: var(--text-color);
-    border-left: 5px solid transparent; 
-    transition: background-color 0.3s, border-left-color 0.3s;
-}
-
-.sidebar a:hover {
-    background-color: #444; /* Світліший темний при наведенні */
-}
-
-/* Активний пункт - Золота лінія та фон */
-.sidebar a.active {
-    background-color: #444; 
-    border-left-color: var(--accent-color);
-    font-weight: bold;
-    color: var(--accent-color);
-}
-
-.menu-icon {
-    width: 20px;
-    height: 20px;
+    padding: 15px 10px;
+    margin-bottom: 10px;
+    background-color: #1a1a1a;
+    border-radius: 8px;
+    transition: background-color 0.3s, border-left 0.3s, color 0.3s;
+    border-left: 2px solid transparent;
+}/* Стилі для маленької КАРТИНКИ "АК" у меню */.menu-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
     margin-left: auto;
-    opacity: 0.7;
-    filter: invert(100%); /* Робимо іконки світлими */
-}
-
-/* --- ОСНОВНИЙ КОНТЕНТ (MAIN) --- */
-.main-content {
+}.sidebar a:hover {
+    background-color: #1f1f1f;
+    border-left: 2px solid #FFC72C;
+    color: #FFC72C;
+}/* Основний вміст */.main-content {
     flex-grow: 1;
-    padding: 30px;
-    background-color: var(--main-bg); 
-}
-
-/* --- СТИЛІ ДЛЯ INDEX.HTML (Hero Section) --- */
-.hero {
-    position: relative;
-    border-radius: var(--border-radius);
-    overflow: hidden;
-    box-shadow: var(--shadow);
-    height: 400px;
-    background-color: #000;
-}
-
-.hero-overlay {
-    /* Фон залишається темним, щоб добре читався текст */
-    background: rgba(0, 0, 0, 0.7); 
-    color: white;
-    /* ... інші стилі hero-overlay ... */
-}
-
-.hero-overlay h2 {
-    color: var(--accent-color);
-}
-
-/* --- СТИЛІ ДЛЯ WELLNESS.HTML (Dashboard) --- */
-.dashboard-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    padding: 30px; 
+    background-color: #000000;
+}/* Стиль для заголовків основного контенту */.main-content h2 {
+    color: #FFC72C;
+    margin-bottom: 20px;
+}/* --- HERO SECTION: КАРТИНКА + ТЕКСТ ЗВЕРХУ --- */.hero {
+    position: relative; 
+    max-width: 80%; 
+    margin: 0 auto 20px auto; 
+    height: 400px; 
+    border-radius: 10px;
+    overflow: hidden; 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+}.hero-image {
+    width: 100%;
+    height: 100%;
+    display: block; 
+    object-fit: cover; 
+    filter: brightness(60%);
+}/* Оверлей з текстом поверх картинки */.hero-overlay {
+    position: absolute; 
+    bottom: 0; 
+    left: 0;
+    width: 100%;
+    height: 35%; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: flex-end; 
+    padding: 30px 40px;
+    text-align: left; 
+    color: #ffffff; 
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0)); 
+}.hero-overlay h2 {
+    color: #FFC72C; 
+    margin-bottom: 5px;
+    font-size: 2.2em; 
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7); 
+    border-bottom: none; 
+    padding-bottom: 0;
+}.hero-overlay p {
+    font-size: 1.1em;
+    line-height: 1.5;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
+    margin: 0;
+}/* --- СТИЛІ ДЛЯ ФАЙЛУ WELLNESS.HTML (DASHBOARD) --- *//* Активний пункт меню */.sidebar a.active {
+    background-color: #FFC72C; 
+    color: #000000; 
+    border-left: 2px solid #000000;
+}.sidebar a.active img {
+    filter: none; 
+}/* Контейнер для форми та графіка */.dashboard-container {
+    display: flex;
     gap: 30px;
     margin-top: 20px;
-}
-
-.form-card, .chart-card {
-    background: var(--sidebar-bg); /* Темні картки */
+    flex-wrap: wrap; 
+}/* Картки для форми та графіка */.form-card, .chart-card {
+    background-color: #0d0d0d;
+    border: 1px solid #1a1a1a;
+    border-radius: 10px;
     padding: 25px;
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow);
-}
-
-.form-card h3, .chart-card h3 {
-    border-bottom: 2px solid #444;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}.form-card {
+    width: 35%; 
+    min-width: 350px;
+}.chart-card {
+    flex-grow: 1; 
+}.form-card h3, .chart-card h3 {
+    color: #FFC72C;
+    margin-top: 0;
+    border-bottom: 1px solid #333333;
     padding-bottom: 10px;
-    color: var(--accent-color);
-}
-
-/* Кнопка "Записати 6 точок даних" */
-.gold-button {
+    margin-bottom: 20px;
+}/* Стилі для форми */#wellness-form label {
     display: block;
-    width: 100%;
-    padding: 12px;
-    background-color: var(--accent-color);
-    color: var(--header-footer-bg); /* Чорний текст на золотій кнопці */
+    color: #CCCCCC;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    font-weight: bold;
+}.gold-button {
+    background-color: #FFC72C;
+    color: #000000;
     border: none;
-    border-radius: var(--border-radius);
-    font-size: 1.1em;
-    cursor: pointer;
+    padding: 12px 25px;
+    border-radius: 5px;
     margin-top: 30px;
-    transition: background-color 0.3s;
-    font-weight: bold;
-}
-
-.gold-button:hover {
-    background-color: #ccb000; /* Темніше золото */
-}
-
-
-/* --- ТЕМАТИЧНІ ПОЗНАЧКИ (WELLNESS FORM) --- */
-
-.rating-group label {
-    /* Стилі для іконок/чисел 1-10 */
     cursor: pointer;
-    width: 28px; /* Трохи збільшено для символів */
-    height: 28px;
-    text-align: center;
-    line-height: 28px;
-    font-size: 1.1em; /* Збільшено розмір іконок */
-    border: 1px solid #555;
-    background-color: #3a3a3a;
-    color: var(--text-color);
-    margin-right: 2px;
-    border-radius: 4px;
-    transition: background-color 0.1s, color 0.1s;
-}
-
-.rating-group input:checked ~ label {
-    background-color: var(--accent-color);
-    color: var(--header-footer-bg);
-    border-color: var(--accent-color);
+    font-size: 1.1em;
     font-weight: bold;
-}
-
-/* Спеціальні стилі для кожної групи (щоб відображати іконки замість чисел) */
-.sleep-group input[type="radio"] + label::before { content: '☽'; } /* Напівмісяць */
-.pain-group input[type="radio"] + label::before { content: '💥'; } /* Вибух/Біль */
-.energy-group input[type="radio"] + label::before { content: '⚡'; } /* Блискавка/Енергія */
-.hydration-group input[type="radio"] + label::before { content: '💧'; } /* Крапля/Вода */
-.stress-group input[type="radio"] + label::before { content: '💢'; } /* Стрес/Злість */
-.ready-group input[type="radio"] + label::before { content: '🚀'; } /* Ракета/Готовність */
-
-
-/* Щоб відображати цифру 1-10 поверх іконки, коли вона не обрана, 
-   потрібно було б складніше JS або інше позиціонування.
-   Залишимо тільки іконку, яка золотіє при виборі.
-*/
-.rating-group label {
-    content: none; /* Прибираємо стандартний вміст */
-    padding: 0; /* Прибираємо стандартний паддинг */
-}
-
-
-/* --- ПІДВАЛ (FOOTER) --- */
-footer {
+    transition: background-color 0.3s;
+}.gold-button:hover {
+    background-color: #E6B800;
+}/* Стиль для ВИМКНЕНОЇ (disabled) кнопки після щоденного подання */.disabled-button {
+    background-color: #333333 !important;
+    color: #999999 !important;
+    cursor: not-allowed !important;
+}/* Місце для графіка */.chart-area {
+    min-height: 350px; /* Збільшено для кращого вигляду основного графіка */
+    background-color: #000000;
+    border: 1px solid #333333;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}.placeholder-text {
+    color: #888888;
+    font-style: italic;
+    font-size: 1.2em;
+}/* --- НОВІ СТИЛІ ДЛЯ МАЛИХ ГРАФІКІВ У ФОРМІ --- */.small-chart-container {
+    height: 60px; /* Фіксована висота для міні-графіка (подібно до питання) */
+    width: 100%;
+    margin-top: -10px; /* Зменшуємо відступ від рейтингу */
+    margin-bottom: 20px;
+    padding: 5px;
+    background-color: #000000;
+    border-radius: 5px;
+}/* Стилі для ВСІХ РЕЙТИНГІВ ІКОНОК (ЗАГАЛЬНІ) - БЕЗ ЗМІН */.rating-group {
+    display: flex;
+    flex-direction: row-reverse; 
+    justify-content: flex-end; 
+    direction: ltr; 
+    font-size: 1.5em; 
+    margin: 10px 0 20px 0;
+}.rating-group input {
+    display: none; 
+}.rating-group label {
+    color: #333; 
+    cursor: pointer;
+    transition: color 0.2s;
+}/* Зірки (Сон) */.star-group label:before {
+    content: '★'; 
+    margin-right: 2px;
+}.star-group input:checked ~ label:before,
+.star-group label:hover:before,
+.star-group label:hover ~ label:before {
+    color: #FFC72C; 
+}/* Хрестики (Біль/Втома) */.pain-group label:before {
+    content: '✖'; 
+    margin-right: 5px;
+}.pain-group input:checked ~ label:before,
+.pain-group label:hover:before,
+.pain-group label:hover ~ label:before {
+    color: #DA3E52; 
+}/* Блискавки (Енергія/Настрій) */.energy-group label:before {
+    content: '⚡'; 
+    margin-right: 5px;
+    filter: grayscale(100%); 
+}.energy-group input:checked ~ label:before,
+.energy-group label:hover:before,
+.energy-group label:hover ~ label:before {
+    filter: none; 
+}/* Краплі (Гідратація) */.hydration-group label:before {
+    content: '💧'; 
+    margin-right: 5px;
+    filter: grayscale(100%); 
+}.hydration-group input:checked ~ label:before,
+.hydration-group label:hover:before,
+.hydration-group label:hover ~ label:before {
+    filter: none; 
+}/* Вогник (Стрес) */.stress-group label:before {
+    content: '🔥'; 
+    margin-right: 5px;
+    filter: grayscale(100%); 
+}.stress-group input:checked ~ label:before,
+.stress-group label:hover:before,
+.stress-group label:hover ~ label:before {
+    filter: none; 
+}/* Галочка (Готовність) */.ready-group label:before {
+    content: '✅'; 
+    margin-right: 5px;
+    filter: grayscale(100%); 
+}.ready-group input:checked ~ label:before,
+.ready-group label:hover:before,
+.ready-group label:hover ~ label:before {
+    filter: none; 
+}/* Футер */footer {
     text-align: center;
-    padding: 15px;
-    background-color: var(--header-footer-bg);
-    color: var(--text-color);
-    font-size: 0.85em;
-    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.5);
-}
-
-/* --- МЕДІА-ЗАПИТИ (АДАПТАЦІЯ РОЗМІРУ) --- */
-/* (Залишаються без змін, оскільки вони стосуються розмірів, а не кольорів) */
-
-@media (max-width: 992px) {
-    .dashboard-container { grid-template-columns: 1fr; } 
-    .sidebar { width: 180px; }
-}
-
-@media (max-width: 768px) {
-    .content-wrapper { flex-direction: column; }
-    .sidebar {
-        width: 100%; 
-        display: flex; 
-        overflow-x: auto;
-        white-space: nowrap;
-    }
-    .sidebar a {
-        border-left: none; 
-        border-bottom: 3px solid transparent; 
-        flex-shrink: 0;
-    }
-    .sidebar a.active {
-        border-bottom-color: var(--accent-color);
-        border-left: none;
-    }
-    .menu-icon { display: none; }
-    .tagline { display: none; }
+    padding: 10px;
+    background-color: #0d0d0d;
+    font-size: 0.8em;
+    color: #888888;
+    border-top: 1px solid #1a1a1a;
 }
