@@ -1,5 +1,14 @@
 // script.js
 
+// Функція для отримання поточної дати у форматі YYYY-MM-DD
+function getTodayDateString() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 // 1. КОД ДЛЯ ГРАФІКІВ (ТІЛЬКИ ДЛЯ wellness.html)
 function initCharts() {
     // Приклад даних для візуалізації
@@ -75,34 +84,27 @@ function initCharts() {
                 },
                 scales: {
                     r: {
-                        // === ЗМІНИ ПОЧИНАЮТЬСЯ ТУТ ===
-                        
-                        // 1. СІТКА (GRID)
+                        // === СІТКА ТА ОСІ ЗІ СВІТЛО-СІРИМ КОЛЬОРОМ ===
                         grid: {
-                            color: 'rgba(255, 255, 255, 0.8)', // Біла сітка з прозорістю
+                            color: '#CCCCCC', // Світло-сірий для сітки
                         },
-                        // 2. ЛІНІЇ КУТІВ (ANGLE LINES)
                         angleLines: {
-                            display: true, // Вмикаємо їх, якщо вони потрібні для розділення секторів
-                            color: 'rgba(255, 255, 255, 0.5)' // Білі лінії кутів
+                            display: true,
+                            color: '#CCCCCC' // Світло-сірий для кутових ліній
                         },
-                        // 3. ПІДПИСИ МАРКЕРІВ (Сон, Біль, Настрій...)
                         pointLabels: {
-                            color: 'white', // Білий колір тексту
+                            color: 'white', // Білий для назв категорій
                             font: { size: 12 }
                         },
-                        // 4. ПІДПИСИ ОСЕЙ (ЧИСЛА 1-10)
                         ticks: {
-                            color: 'white', // Білий колір чисел
-                            backdropColor: 'rgba(0, 0, 0, 0)', // Прозорий фон для чисел
+                            color: 'white', // Білий для чисел на осі
+                            backdropColor: 'rgba(0, 0, 0, 0)', // Прозорий фон чисел
                             stepSize: 1,
                             min: 0,
                             max: 10,
                         },
-                        
                         suggestedMin: 1,
                         suggestedMax: 10
-                        // === ЗМІНИ ЗАКІНЧУЮТЬСЯ ТУТ ===
                     }
                 },
                 plugins: {
@@ -120,23 +122,105 @@ function initCharts() {
     }
 }
 
-// 2. АКТИВАЦІЯ МЕНЮ
+// Функція перевірки та застосування обмеження "раз на день"
+function checkDailyRestriction() {
+    const form = document.getElementById('wellness-form');
+    const button = document.querySelector('.gold-button');
+    // Ключ у localStorage для зберігання дати
+    const lastDate = localStorage.getItem('lastWellnessSubmissionDate');
+    const today = getTodayDateString();
+
+    if (form && lastDate === today) {
+        // Якщо дата сьогоднішня, вимикаємо форму
+        const inputs = form.querySelectorAll('input, button');
+        inputs.forEach(input => {
+            input.disabled = true;
+        });
+        
+        // Змінюємо кнопку
+        button.textContent = "Дані на сьогодні вже записані.";
+        button.style.backgroundColor = '#6c757d'; 
+        button.style.cursor = 'not-allowed';
+        
+        // Додаємо повідомлення
+        if (!document.getElementById('restriction-message')) {
+            const message = document.createElement('p');
+            message.id = 'restriction-message';
+            message.style.marginTop = '15px';
+            message.style.color = '#dc3545';
+            message.style.fontWeight = 'bold';
+            message.textContent = "Ви можете надіслати опитування лише раз на день. Приходьте завтра!";
+            form.prepend(message);
+        }
+        return true; // Повертаємо true, якщо обмеження застосовано
+    }
+    return false; // Повертаємо false, якщо обмеження не застосовано
+}
+
+
+// 2. АКТИВАЦІЯ МЕНЮ ТА ІНІЦІАЛІЗАЦІЯ
 document.addEventListener('DOMContentLoaded', function() {
-    // Отримуємо назву поточного файлу (наприклад, 'wellness.html' або 'index.html')
+    // Отримуємо назву поточного файлу
     const currentPath = window.location.pathname.split('/').pop();
     const sidebarLinks = document.querySelectorAll('.sidebar a');
 
+    // Логіка підсвічування активного пункту меню
     sidebarLinks.forEach(link => {
         link.classList.remove('active'); 
-        
-        // Встановлюємо 'active' для поточної сторінки
         if (link.getAttribute('href') === currentPath) {
             link.classList.add('active');
         }
     });
 
-    // Ініціалізація графіків, якщо ми на сторінці Wellness Control
+    // Ініціалізація графіків та обмежень, якщо ми на сторінці Wellness Control
     if (currentPath === 'wellness.html') {
         initCharts();
+        
+        // Перевірка обмеження при завантаженні сторінки
+        checkDailyRestriction(); 
+
+        const form = document.getElementById('wellness-form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Повторна перевірка перед відправкою, щоб уникнути подвійного кліку
+                if (checkDailyRestriction()) {
+                    return;
+                }
+                
+                // --- ПРОСТА ВАЛІДАЦІЯ ---
+                const requiredRatings = form.querySelectorAll('.rating-group');
+                let allChecked = true;
+                requiredRatings.forEach(group => {
+                    if (!group.querySelector('input:checked')) {
+                        allChecked = false;
+                    }
+                });
+
+                if (!allChecked) {
+                    alert("Будь ласка, заповніть усі 6 точок даних перед відправкою.");
+                    return; 
+                }
+                
+                // --- СИМУЛЯЦІЯ ЗБЕРЕЖЕННЯ ---
+                
+                // У реальному проекті тут потрібно зібрати всі значення та надіслати їх на сервер.
+                const submissionData = {};
+                form.querySelectorAll('input[type="radio"]:checked').forEach(input => {
+                    submissionData[input.name] = input.value;
+                });
+                console.log("Дані для відправки:", submissionData);
+
+
+                // 1. Збереження дати відправки в localStorage
+                localStorage.setItem('lastWellnessSubmissionDate', getTodayDateString());
+                
+                // 2. Застосування обмеження (вимикаємо форму)
+                checkDailyRestriction(); 
+                
+                alert("Ваші дані Wellness успішно записані!");
+            });
+        }
     }
 });
