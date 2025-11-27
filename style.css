@@ -120,6 +120,9 @@
     min-width: 350px;
 }.chart-card {
     flex-grow: 1; 
+    max-width: 400px; /* <--- ДОДАТИ: Обмежити максимальну ширину */
+    /* Виберіть інше значення, наприклад, 500px, 450px, якщо 600px забагато. */
+ 
 }.form-card h3, .chart-card h3 {
     color: #FFC72C;
     margin-top: 0;
