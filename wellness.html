@@ -1,159 +1,602 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProAthleteCare | Wellness Control</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProAthleteCare | Wellness Control</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
 </head>
 <body>
-    <header>
-        <a href="index.html" class="logo-link">
-            <img src="AK_logo.png" alt="ProAthleteCare Logo" class="logo">
-        </a>
-        <h1 class="project-title">ProAthleteCare</h1>
-        <p class="tagline">Онлайн-тренінг та професійний супровід атлетів</p>
-    </header>
-    
-    <div class="content-wrapper">
-        <nav class="sidebar">
-            <a href="wellness.html">Wellness Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="#">Injury Story <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="#">Load Season <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="#">Daily Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="#">Weekly Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="#">Weight Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="#">Velocity Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-        </nav>
+    <header>
+        <a href="index.html" class="logo-link">
+            <img src="AK_logo.png" alt="ProAthleteCare Logo" class="logo">
+        </a>
+        <h1 class="project-title">ProAthleteCare</h1>
+        <p class="tagline">Онлайн-тренінг та професійний супровід атлетів</p>
+    </header>
+    
+    <div class="content-wrapper">
+        <nav class="sidebar">
+            <a href="wellness.html" class="active">Wellness Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="#">Injury Story <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="#">Load Season <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="#">Daily Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="#">Weekly Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="#">Weight Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="#">Velocity Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+        </nav>
+        
+        <main class="main-content">
+            <h2>Wellness Control: Моніторинг стану</h2>
+            <div class="dashboard-container">
+                
+                <!-- 💥 ЕЛЕМЕНТ 1: ФОРМА ОПИТУВАННЯ (Ліворуч) -->
+                <div class="form-card">
+                    <h3>Щоденне опитування</h3>
+                    <form id="wellness-form">
+                        
+                        <label>1. Якість сну (1-10, де 10 - ідеально):</label>
+                        <div class="rating-group star-group">
+                            <input type="radio" id="sleep-r10" name="sleep" value="10" /><label for="sleep-r10" title="10"></label>
+                            <input type="radio" id="sleep-r9" name="sleep" value="9" /><label for="sleep-r9" title="9"></label>
+                            <input type="radio" id="sleep-r8" name="sleep" value="8" /><label for="sleep-r8" title="8"></label>
+                            <input type="radio" id="sleep-r7" name="sleep" value="7" /><label for="sleep-r7" title="7"></label>
+                            <input type="radio" id="sleep-r6" name="sleep" value="6" /><label for="sleep-r6" title="6"></label>
+                            <input type="radio" id="sleep-r5" name="sleep" value="5" /><label for="sleep-r5" title="5"></label>
+                            <input type="radio" id="sleep-r4" name="sleep" value="4" /><label for="sleep-r4" title="4"></label>
+                            <input type="radio" id="sleep-r3" name="sleep" value="3" /><label for="sleep-r3" title="3"></label>
+                            <input type="radio" id="sleep-r2" name="sleep" value="2" /><label for="sleep-r2" title="2"></label>
+                            <input type="radio" id="sleep-r1" name="sleep" value="1" /><label for="sleep-r1" title="1"></label>
+                        </div>
+                        <div class="small-chart-container">
+                            <canvas id="chart-sleep" class="small-line-chart"></canvas>
+                        </div>
+                        
+                        <label>2. М'язовий біль / Втома (1-10, де 10 - сильний біль):</label>
+                        <div class="rating-group pain-group">
+                            <input type="radio" id="soreness-r10" name="soreness" value="10" /><label for="soreness-r10" title="10"></label>
+                            <input type="radio" id="soreness-r9" name="soreness" value="9" /><label for="soreness-r9" title="9"></label>
+                            <input type="radio" id="soreness-r8" name="soreness" value="8" /><label for="soreness-r8" title="8"></label>
+                            <input type="radio" id="soreness-r7" name="soreness" value="7" /><label for="soreness-r7" title="7"></label>
+                            <input type="radio" id="soreness-r6" name="soreness" value="6" /><label for="soreness-r6" title="6"></label>
+                            <input type="radio" id="soreness-r5" name="soreness" value="5" /><label for="soreness-r5" title="5"></label>
+                            <input type="radio" id="soreness-r4" name="soreness" value="4" /><label for="soreness-r4" title="4"></label>
+                            <input type="radio" id="soreness-r3" name="soreness" value="3" /><label for="soreness-r3" title="3"></label>
+                            <input type="radio" id="soreness-r2" name="soreness" value="2" /><label for="soreness-r2" title="2"></label>
+                            <input type="radio" id="soreness-r1" name="soreness" value="1" /><label for="soreness-r1" title="1"></label>
+                        </div>
+                        <div class="small-chart-container">
+                            <canvas id="chart-soreness" class="small-line-chart"></canvas>
+                        </div>
+                        
+                        <label>3. Настрій / Рівень енергії (1-10, де 10 - відмінно):</label>
+                        <div class="rating-group energy-group">
+                            <input type="radio" id="mood-r10" name="mood" value="10" /><label for="mood-r10" title="10"></label>
+                            <input type="radio" id="mood-r9" name="mood" value="9" /><label for="mood-r9" title="9"></label>
+                            <input type="radio" id="mood-r8" name="mood" value="8" /><label for="mood-r8" title="8"></label>
+                            <input type="radio" id="mood-r7" name="mood" value="7" /><label for="mood-r7" title="7"></label>
+                            <input type="radio" id="mood-r6" name="mood" value="6" /><label for="mood-r6" title="6"></label>
+                            <input type="radio" id="mood-r5" name="mood" value="5" /><label for="mood-r5" title="5"></label>
+                            <input type="radio" id="mood-r4" name="mood" value="4" /><label for="mood-r4" title="4"></label>
+                            <input type="radio" id="mood-r3" name="mood" value="3" /><label for="mood-r3" title="3"></label>
+                            <input type="radio" id="mood-r2" name="mood" value="2" /><label for="mood-r2" title="2"></label>
+                            <input type="radio" id="mood-r1" name="mood" value="1" /><label for="mood-r1" title="1"></label>
+                        </div>
+                        <div class="small-chart-container">
+                            <canvas id="chart-mood" class="small-line-chart"></canvas>
+                        </div>
+
+                        <label>4. Рівень гідратації (1-10, де 10 - норма):</label>
+                        <div class="rating-group hydration-group">
+                            <input type="radio" id="water-r10" name="water" value="10" /><label for="water-r10" title="10"></label>
+                            <input type="radio" id="water-r9" name="water" value="9" /><label for="water-r9" title="9"></label>
+                            <input type="radio" id="water-r8" name="water" value="8" /><label for="water-r8" title="8"></label>
+                            <input type="radio" id="water-r7" name="water" value="7" /><label for="water-r7" title="7"></label>
+                            <input type="radio" id="water-r6" name="water" value="6" /><label for="water-r6" title="6"></label>
+                            <input type="radio" id="water-r5" name="water" value="5" /><label for="water-r5" title="5"></label>
+                            <input type="radio" id="water-r4" name="water" value="4" /><label for="water-r4" title="4"></label>
+                            <input type="radio" id="water-r3" name="water" value="3" /><label for="water-r3" title="3"></label>
+                            <input type="radio" id="water-r2" name="water" value="2" /><label for="water-r2" title="2"></label>
+                            <input type="radio" id="water-r1" name="water" value="1" /><label for="water-r1" title="1"></label>
+                        </div>
+                        <div class="small-chart-container">
+                            <canvas id="chart-water" class="small-line-chart"></canvas>
+                        </div>
+                        
+                        <label>5. Психологічний стрес (1-10, де 10 - максимальний):</label>
+                        <div class="rating-group stress-group">
+                            <input type="radio" id="stress-r10" name="stress" value="10" /><label for="stress-r10" title="10"></label>
+                            <input type="radio" id="stress-r9" name="stress" value="9" /><label for="stress-r9" title="9"></label>
+                            <input type="radio" id="stress-r8" name="stress" value="8" /><label for="stress-r8" title="8"></label>
+                            <input type="radio" id="stress-r7" name="stress" value="7" /><label for="stress-r7" title="7"></label>
+                            <input type="radio" id="stress-r6" name="stress" value="6" /><label for="stress-r6" title="6"></label>
+                            <input type="radio" id="stress-r5" name="stress" value="5" /><label for="stress-r5" title="5"></label>
+                            <input type="radio" id="stress-r4" name="stress" value="4" /><label for="stress-r4" title="4"></label>
+                            <input type="radio" id="stress-r3" name="stress" value="3" /><label for="stress-r3" title="3"></label>
+                            <input type="radio" id="stress-r2" name="stress" value="2" /><label for="stress-r2" title="2"></label>
+                            <input type="radio" id="stress-r1" name="stress" value="1" /><label for="stress-r1" title="1"></label>
+                        </div>
+                        <div class="small-chart-container">
+                            <canvas id="chart-stress" class="small-line-chart"></canvas>
+                        </div>
+
+                        <label>6. Суб'єктивна готовність до тренування (1-10, де 10 - повна готовність):</label>
+                        <div class="rating-group ready-group">
+                            <input type="radio" id="ready-r10" name="ready" value="10" /><label for="ready-r10" title="10"></label>
+                            <input type="radio" id="ready-r9" name="ready" value="9" /><label for="ready-r9" title="9"></label>
+                            <input type="radio" id="ready-r8" name="ready" value="8" /><label for="ready-r8" title="8"></label>
+                            <input type="radio" id="ready-r7" name="ready" value="7" /><label for="ready-r7" title="7"></label>
+                            <input type="radio" id="ready-r6" name="ready" value="6" /><label for="ready-r6" title="6"></label>
+                            <input type="radio" id="ready-r5" name="ready" value="5" /><label for="ready-r5" title="5"></label>
+                            <input type="radio" id="ready-r4" name="ready" value="4" /><label for="ready-r4" title="4"></label>
+                            <input type="radio" id="ready-r3" name="ready" value="3" /><label for="ready-r3" title="3"></label>
+                            <input type="radio" id="ready-r2" name="ready" value="2" /><label for="ready-r2" title="2"></label>
+                            <input type="radio" id="ready-r1" name="ready" value="1" /><label for="ready-r1" title="1"></label>
+                        </div>
+                        <div class="small-chart-container">
+                            <canvas id="chart-ready" class="small-line-chart"></canvas>
+                        </div>
+                        
+                        <button type="submit" id="submit-button" class="gold-button">Записати 6 точок даних</button>
+                        <div id="status-message" style="margin-top: 15px; text-align: center; color: var(--accent-color);"></div>
+                    </form>
+                </div>
+                
+                <!-- 💥 ЕЛЕМЕНТ 2: РАДАРНИЙ ГРАФІК (Праворуч) -->
+                <div class="chart-card">
+                    <h3>Індивідуальна динаміка Wellness</h3>
+                    <div class="chart-area">
+                        <!-- Тут буде відображено великий радарний графік -->
+                        <canvas id="wellnessChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <footer>
+        &copy; 2025 ProAthleteCare. Створено з Gemini.
+    </footer>
+    
+    <!-- Firebase SDK Imports (Module) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, query, orderBy, limit, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global variables for Firebase and App context
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let db = null;
+        let auth = null;
+        let userId = null;
+        let isAuthReady = false;
+
+        // Configuration for charts
+        const chartColors = [
+            'rgba(255, 199, 44, 1)', 
+            'rgba(180, 50, 50, 1)', 
+            'rgba(50, 180, 50, 1)', 
+            'rgba(50, 50, 180, 1)', 
+            'rgba(180, 50, 180, 1)', 
+            'rgba(50, 180, 180, 1)'
+        ];
+
+        // Chart instances
+        let wellnessChartInstance = null;
+        const smallChartInstances = {};
+
+        // Utility: Exponential backoff for Firebase writes
+        async function setDocWithRetry(docRef, data, options = {}, maxRetries = 5) {
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    await setDoc(docRef, data, options);
+                    return true;
+                } catch (error) {
+                    if (i < maxRetries - 1) {
+                        const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                        console.warn(`Firestore write failed. Retrying in ${delay / 1000}s...`, error.code);
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                    } else {
+                        console.error("Firestore write failed after multiple retries:", error);
+                        return false;
+                    }
+                }
+            }
+        }
         
-        <main class="main-content">
-            <h2>Wellness Control: Моніторинг стану</h2>
-            <div class="dashboard-container">
-                
-                <div class="form-card">
-                    <h3>Щоденне опитування</h3>
-                    <form id="wellness-form">
-                        
-                        <label>1. Якість сну (1-10, де 10 - ідеально):</label>
-                        <div class="rating-group star-group">
-                            <input type="radio" id="sleep-r10" name="sleep" value="10" /><label for="sleep-r10" title="10"></label>
-                            <input type="radio" id="sleep-r9" name="sleep" value="9" /><label for="sleep-r9" title="9"></label>
-                            <input type="radio" id="sleep-r8" name="sleep" value="8" /><label for="sleep-r8" title="8"></label>
-                            <input type="radio" id="sleep-r7" name="sleep" value="7" /><label for="sleep-r7" title="7"></label>
-                            <input type="radio" id="sleep-r6" name="sleep" value="6" /><label for="sleep-r6" title="6"></label>
-                            <input type="radio" id="sleep-r5" name="sleep" value="5" /><label for="sleep-r5" title="5"></label>
-                            <input type="radio" id="sleep-r4" name="sleep" value="4" /><label for="sleep-r4" title="4"></label>
-                            <input type="radio" id="sleep-r3" name="sleep" value="3" /><label for="sleep-r3" title="3"></label>
-                            <input type="radio" id="sleep-r2" name="sleep" value="2" /><label for="sleep-r2" title="2"></label>
-                            <input type="radio" id="sleep-r1" name="sleep" value="1" /><label for="sleep-r1" title="1"></label>
-                        </div>
-                        <div class="small-chart-container">
-                            <canvas id="chart-sleep" class="small-line-chart"></canvas>
-                        </div>
-                        
-                        <label>2. М'язовий біль / Втома (1-10, де 10 - сильний біль):</label>
-                        <div class="rating-group pain-group">
-                            <input type="radio" id="soreness-r10" name="soreness" value="10" /><label for="soreness-r10" title="10"></label>
-                            <input type="radio" id="soreness-r9" name="soreness" value="9" /><label for="soreness-r9" title="9"></label>
-                            <input type="radio" id="soreness-r8" name="soreness" value="8" /><label for="soreness-r8" title="8"></label>
-                            <input type="radio" id="soreness-r7" name="soreness" value="7" /><label for="soreness-r7" title="7"></label>
-                            <input type="radio" id="soreness-r6" name="soreness" value="6" /><label for="soreness-r6" title="6"></label>
-                            <input type="radio" id="soreness-r5" name="soreness" value="5" /><label for="soreness-r5" title="5"></label>
-                            <input type="radio" id="soreness-r4" name="soreness" value="4" /><label for="soreness-r4" title="4"></label>
-                            <input type="radio" id="soreness-r3" name="soreness" value="3" /><label for="soreness-r3" title="3"></label>
-                            <input type="radio" id="soreness-r2" name="soreness" value="2" /><label for="soreness-r2" title="2"></label>
-                            <input type="radio" id="soreness-r1" name="soreness" value="1" /><label for="soreness-r1" title="1"></label>
-                        </div>
-                        <div class="small-chart-container">
-                            <canvas id="chart-soreness" class="small-line-chart"></canvas>
-                        </div>
-                        
-                        <label>3. Настрій / Рівень енергії (1-10, де 10 - відмінно):</label>
-                        <div class="rating-group energy-group">
-                            <input type="radio" id="mood-r10" name="mood" value="10" /><label for="mood-r10" title="10"></label>
-                            <input type="radio" id="mood-r9" name="mood" value="9" /><label for="mood-r9" title="9"></label>
-                            <input type="radio" id="mood-r8" name="mood" value="8" /><label for="mood-r8" title="8"></label>
-                            <input type="radio" id="mood-r7" name="mood" value="7" /><label for="mood-r7" title="7"></label>
-                            <input type="radio" id="mood-r6" name="mood" value="6" /><label for="mood-r6" title="6"></label>
-                            <input type="radio" id="mood-r5" name="mood" value="5" /><label for="mood-r5" title="5"></label>
-                            <input type="radio" id="mood-r4" name="mood" value="4" /><label for="mood-r4" title="4"></label>
-                            <input type="radio" id="mood-r3" name="mood" value="3" /><label for="mood-r3" title="3"></label>
-                            <input type="radio" id="mood-r2" name="mood" value="2" /><label for="mood-r2" title="2"></label>
-                            <input type="radio" id="mood-r1" name="mood" value="1" /><label for="mood-r1" title="1"></label>
-                        </div>
-                        <div class="small-chart-container">
-                            <canvas id="chart-mood" class="small-line-chart"></canvas>
-                        </div>
+        // --- 1. FIREBASE INITIALIZATION AND AUTHENTICATION ---
+        async function initializeFirebase() {
+            try {
+                if (firebaseConfig) {
+                    // Initialize Firebase services
+                    const app = initializeApp(firebaseConfig);
+                    db = getFirestore(app);
+                    auth = getAuth(app);
+                    
+                    // Set log level for debugging
+                    setLogLevel('error');
 
-                        <label>4. Рівень гідратації (1-10, де 10 - норма):</label>
-                        <div class="rating-group hydration-group">
-                            <input type="radio" id="water-r10" name="water" value="10" /><label for="water-r10" title="10"></label>
-                            <input type="radio" id="water-r9" name="water" value="9" /><label for="water-r9" title="9"></label>
-                            <input type="radio" id="water-r8" name="water" value="8" /><label for="water-r8" title="8"></label>
-                            <input type="radio" id="water-r7" name="water" value="7" /><label for="water-r7" title="7"></label>
-                            <input type="radio" id="water-r6" name="water" value="6" /><label for="water-r6" title="6"></label>
-                            <input type="radio" id="water-r5" name="water" value="5" /><label for="water-r5" title="5"></label>
-                            <input type="radio" id="water-r4" name="water" value="4" /><label for="water-r4" title="4"></label>
-                            <input type="radio" id="water-r3" name="water" value="3" /><label for="water-r3" title="3"></label>
-                            <input type="radio" id="water-r2" name="water" value="2" /><label for="water-r2" title="2"></label>
-                            <input type="radio" id="water-r1" name="water" value="1" /><label for="water-r1" title="1"></label>
-                        </div>
-                        <div class="small-chart-container">
-                            <canvas id="chart-water" class="small-line-chart"></canvas>
-                        </div>
-                        
-                        <label>5. Психологічний стрес (1-10, де 10 - максимальний):</label>
-                        <div class="rating-group stress-group">
-                            <input type="radio" id="stress-r10" name="stress" value="10" /><label for="stress-r10" title="10"></label>
-                            <input type="radio" id="stress-r9" name="stress" value="9" /><label for="stress-r9" title="9"></label>
-                            <input type="radio" id="stress-r8" name="stress" value="8" /><label for="stress-r8" title="8"></label>
-                            <input type="radio" id="stress-r7" name="stress" value="7" /><label for="stress-r7" title="7"></label>
-                            <input type="radio" id="stress-r6" name="stress" value="6" /><label for="stress-r6" title="6"></label>
-                            <input type="radio" id="stress-r5" name="stress" value="5" /><label for="stress-r5" title="5"></label>
-                            <input type="radio" id="stress-r4" name="stress" value="4" /><label for="stress-r4" title="4"></label>
-                            <input type="radio" id="stress-r3" name="stress" value="3" /><label for="stress-r3" title="3"></label>
-                            <input type="radio" id="stress-r2" name="stress" value="2" /><label for="stress-r2" title="2"></label>
-                            <input type="radio" id="stress-r1" name="stress" value="1" /><label for="stress-r1" title="1"></label>
-                        </div>
-                        <div class="small-chart-container">
-                            <canvas id="chart-stress" class="small-line-chart"></canvas>
-                        </div>
+                    // Authentication logic
+                    onAuthStateChanged(auth, async (user) => {
+                        if (user) {
+                            userId = user.uid;
+                            isAuthReady = true;
+                            console.log("Firebase Auth Ready. User ID:", userId);
+                            
+                            // Load data and setup listeners after auth is ready
+                            setupDataListeners();
+                        } else {
+                            // Sign in using custom token or anonymously if token is unavailable
+                            try {
+                                if (initialAuthToken) {
+                                    await signInWithCustomToken(auth, initialAuthToken);
+                                } else {
+                                    await signInAnonymously(auth);
+                                }
+                            } catch (e) {
+                                console.error("Authentication failed:", e);
+                            }
+                        }
+                    });
+                } else {
+                    console.error("Firebase configuration is missing.");
+                }
+            } catch (error) {
+                console.error("Error during Firebase initialization:", error);
+            }
+        }
+        
+        // --- 2. DATA MANIPULATION (Firestore) ---
 
-                        <label>6. Суб'єктивна готовність до тренування (1-10, де 10 - повна готовність):</label>
-                        <div class="rating-group ready-group">
-                            <input type="radio" id="ready-r10" name="ready" value="10" /><label for="ready-r10" title="10"></label>
-                            <input type="radio" id="ready-r9" name="ready" value="9" /><label for="ready-r9" title="9"></label>
-                            <input type="radio" id="ready-r8" name="ready" value="8" /><label for="ready-r8" title="8"></label>
-                            <input type="radio" id="ready-r7" name="ready" value="7" /><label for="ready-r7" title="7"></label>
-                            <input type="radio" id="ready-r6" name="ready" value="6" /><label for="ready-r6" title="6"></label>
-                            <input type="radio" id="ready-r5" name="ready" value="5" /><label for="ready-r5" title="5"></label>
-                            <input type="radio" id="ready-r4" name="ready" value="4" /><label for="ready-r4" title="4"></label>
-                            <input type="radio" id="ready-r3" name="ready" value="3" /><label for="ready-r3" title="3"></label>
-                            <input type="radio" id="ready-r2" name="ready" value="2" /><label for="ready-r2" title="2"></label>
-                            <input type="radio" id="ready-r1" name="ready" value="1" /><label for="ready-r1" title="1"></label>
-                        </div>
-                        <div class="small-chart-container">
-                            <canvas id="chart-ready" class="small-line-chart"></canvas>
-                        </div>
-                        
-                        <button type="submit" class="gold-button">Записати 6 точок даних</button>
-                    </form>
-                </div>
+        /**
+         * Determines the path to the user's private wellness collection.
+         */
+        function getWellnessCollectionRef() {
+            if (!db || !userId) return null;
+            // Private data path: /artifacts/{appId}/users/{userId}/{collectionName}
+            return collection(db, `artifacts/${appId}/users/${userId}/wellness_entries`);
+        }
+
+        /**
+         * Saves the daily wellness entry to Firestore.
+         */
+        async function saveWellnessEntry(data) {
+            const colRef = getWellnessCollectionRef();
+            if (!colRef) return false;
+
+            const docRef = doc(colRef, new Date().toISOString().split('T')[0]); // Use YYYY-MM-DD as document ID
+            
+            const entryData = {
+                ...data,
+                timestamp: serverTimestamp(),
+                date: new Date().toISOString().split('T')[0]
+            };
+
+            const success = await setDocWithRetry(docRef, entryData);
+
+            if (success) {
+                const statusMessage = document.getElementById('status-message');
+                statusMessage.textContent = "Дані успішно записано! 🎉";
+                setTimeout(() => statusMessage.textContent = '', 5000);
+            }
+
+            return success;
+        }
+
+        /**
+         * Checks if the user has already submitted data for today.
+         */
+        async function checkDailySubmission(dateStr) {
+            if (!db || !userId) return false;
+            const docRef = doc(getWellnessCollectionRef(), dateStr);
+            
+            // Using onSnapshot with limit=1 to check for today's entry
+            return new Promise((resolve) => {
+                const unsubscribe = onSnapshot(docRef, (docSnap) => {
+                    unsubscribe(); // Stop listening after first check
+                    resolve(docSnap.exists());
+                }, (error) => {
+                    console.error("Error checking daily submission:", error);
+                    resolve(false);
+                });
+            });
+        }
+
+
+        // --- 3. CHARTING & RENDERING ---
+
+        /**
+         * Initializes or updates the main Radar Chart.
+         */
+        function updateWellnessRadarChart(allData) {
+            const chartArea = document.getElementById('wellnessChart');
+            if (!chartArea) return;
+
+            // Get last entry for current data display
+            const latestEntry = allData.length > 0 ? allData[allData.length - 1] : null;
+
+            if (wellnessChartInstance) {
+                wellnessChartInstance.destroy();
+            }
+
+            if (!latestEntry) {
+                chartArea.style.display = 'none';
+                const placeholder = document.createElement('p');
+                placeholder.className = 'placeholder-text';
+                placeholder.textContent = "Наразі немає даних для відображення динаміки. Заповніть форму!";
+                const parent = chartArea.parentElement;
+                parent.innerHTML = ''; 
+                parent.appendChild(chartArea); // Re-add canvas
+                parent.appendChild(placeholder);
+                return;
+            } else {
+                chartArea.style.display = 'block';
+                const placeholder = chartArea.parentElement.querySelector('.placeholder-text');
+                if (placeholder) placeholder.remove();
+            }
+
+            // Radar Chart Data preparation
+            const labels = ["Сон", "Біль / Втома", "Настрій", "Гідратація", "Стрес", "Готовність"];
+            const dataValues = [
+                latestEntry.sleep,
+                10 - latestEntry.soreness, // Інверсія: 10 - це добре, 1 - це погано
+                latestEntry.mood,
+                latestEntry.water,
+                10 - latestEntry.stress, // Інверсія: 10 - це добре, 1 - це погано
+                latestEntry.ready
+            ];
+
+            const ctx = chartArea.getContext('2d');
+            wellnessChartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Поточний Wellness (Оцінка 1-10)',
+                        data: dataValues,
+                        backgroundColor: 'rgba(255, 199, 44, 0.4)',
+                        borderColor: chartColors[0],
+                        borderWidth: 2,
+                        pointBackgroundColor: chartColors[0],
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: chartColors[0]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(255, 255, 255, 0.2)' },
+                            grid: { color: 'rgba(255, 255, 255, 0.2)' },
+                            pointLabels: { color: 'var(--text-color)', font: { size: 14 } },
+                            min: 1, 
+                            max: 10,
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                backdropColor: 'var(--header-footer-bg)',
+                                stepSize: 1,
+                                showLabelBackdrop: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { mode: 'index', intersect: false }
+                    }
+                }
+            });
+        }
+
+        /**
+         * Initializes or updates the small Line Chart for a single metric.
+         */
+        function updateSmallLineChart(metric, data) {
+            const canvasId = `chart-${metric}`;
+            const chartArea = document.getElementById(canvasId);
+            if (!chartArea) return;
+
+            const dates = data.map(d => d.date.substring(5)); // M-D format
+            let values = data.map(d => d[metric]);
+
+            // Invert Soreness and Stress for display (higher is better)
+            if (metric === 'soreness' || metric === 'stress') {
+                values = values.map(v => 10 - v + 1); // 10 -> 1, 1 -> 10 
+            }
+
+            const ctx = chartArea.getContext('2d');
+
+            if (smallChartInstances[metric]) {
+                smallChartInstances[metric].destroy();
+            }
+
+            // Assign color based on index
+            let colorIndex;
+            switch(metric) {
+                case 'sleep': colorIndex = 0; break;
+                case 'soreness': colorIndex = 1; break;
+                case 'mood': colorIndex = 2; break;
+                case 'water': colorIndex = 3; break;
+                case 'stress': colorIndex = 4; break;
+                case 'ready': colorIndex = 5; break;
+                default: colorIndex = 0;
+            }
+            const borderColor = chartColors[colorIndex];
+            
+            smallChartInstances[metric] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        data: values,
+                        borderColor: borderColor,
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.4,
+                        pointRadius: 3,
+                        pointBackgroundColor: borderColor
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { display: false },
+                        y: { 
+                            display: false,
+                            min: 1,
+                            max: 10 
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: true }
+                    },
+                    layout: { padding: 0 }
+                }
+            });
+        }
+        
+        // --- 4. DATA LISTENER ---
+
+        /**
+         * Attaches real-time listener to Firestore to update charts.
+         */
+        function setupDataListeners() {
+            const colRef = getWellnessCollectionRef();
+            if (!colRef) return;
+
+            // Query for the last 10 entries, ordered by date
+            const q = query(colRef, orderBy("date", "desc"), limit(10));
+
+            onSnapshot(q, (snapshot) => {
+                const wellnessData = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    // Ensure all metrics are numbers for charting
+                    const numericData = {
+                        date: data.date,
+                        sleep: Number(data.sleep),
+                        soreness: Number(data.soreness),
+                        mood: Number(data.mood),
+                        water: Number(data.water),
+                        stress: Number(data.stress),
+                        ready: Number(data.ready),
+                    };
+                    wellnessData.push(numericData);
+                });
+
+                // Sort ascending by date for correct line chart rendering (oldest first)
+                wellnessData.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                // 1. Update Radar Chart (shows current state)
+                updateWellnessRadarChart(wellnessData);
+
+                // 2. Update Small Line Charts (shows trend over time)
+                updateSmallLineChart('sleep', wellnessData);
+                updateSmallLineChart('soreness', wellnessData);
+                updateSmallLineChart('mood', wellnessData);
+                updateSmallLineChart('water', wellnessData);
+                updateSmallLineChart('stress', wellnessData);
+                updateSmallLineChart('ready', wellnessData);
+
+                // 3. Check submission status
+                const today = new Date().toISOString().split('T')[0];
+                const alreadySubmitted = wellnessData.some(d => d.date === today);
+                updateFormStatus(alreadySubmitted);
+
+            }, (error) => {
+                console.error("Failed to fetch real-time wellness data:", error);
+            });
+        }
+
+        /**
+         * Updates the form's state (disabling/enabling).
+         */
+        function updateFormStatus(submitted) {
+            const form = document.getElementById('wellness-form');
+            const submitButton = document.getElementById('submit-button');
+            const statusMessage = document.getElementById('status-message');
+
+            if (!form || !submitButton || !statusMessage) return;
+            
+            if (submitted) {
+                // Disable form inputs
+                form.querySelectorAll('input[type="radio"]').forEach(input => input.disabled = true);
                 
-                <div class="chart-card">
-                    <h3>Індивідуальна динаміка Wellness</h3>
-                    <div class="chart-area">
-                        <canvas id="wellnessChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </main>
-    </div>
-    
-    <footer>
-        &copy; 2025 ProAthleteCare. Створено з Gemini.
-    </footer>
-    <script src="script.js"></script>
+                // Disable button
+                submitButton.disabled = true;
+                submitButton.classList.add('disabled-button');
+                submitButton.textContent = "Дані на сьогодні вже записані.";
+                statusMessage.textContent = 'Змінити дані можна лише завтра.';
+            } else {
+                // Enable form inputs
+                form.querySelectorAll('input[type="radio"]').forEach(input => input.disabled = false);
+                
+                // Enable button
+                submitButton.disabled = false;
+                submitButton.classList.remove('disabled-button');
+                submitButton.textContent = "Записати 6 точок даних";
+                statusMessage.textContent = '';
+            }
+        }
+
+        // --- 5. EVENT LISTENERS ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeFirebase();
+
+            const form = document.getElementById('wellness-form');
+            if (form) {
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(form);
+                    const data = {};
+                    
+                    // Collect data and validate all fields are checked
+                    let allChecked = true;
+                    ['sleep', 'soreness', 'mood', 'water', 'stress', 'ready'].forEach(metric => {
+                        const value = formData.get(metric);
+                        if (value === null) {
+                            allChecked = false;
+                        }
+                        data[metric] = value;
+                    });
+
+                    const statusMessage = document.getElementById('status-message');
+                    if (!allChecked) {
+                        statusMessage.textContent = "Будь ласка, оцініть усі 6 показників перед записом.";
+                        return;
+                    }
+                    
+                    statusMessage.textContent = "Зберігаємо дані...";
+
+                    const today = new Date().toISOString().split('T')[0];
+                    const alreadySubmitted = await checkDailySubmission(today);
+
+                    if (alreadySubmitted) {
+                         statusMessage.textContent = "Ви вже записали дані на сьогодні.";
+                         updateFormStatus(true);
+                         return;
+                    }
+
+                    // Save data and update UI
+                    const success = await saveWellnessEntry(data);
+                    if (success) {
+                        updateFormStatus(true); // Disable form immediately after successful save
+                    } else {
+                        statusMessage.textContent = "Помилка при записі даних. Спробуйте ще раз.";
+                    }
+                });
+            }
+        });
+
+    </script>
 </body>
 </html>
