@@ -1,16 +1,23 @@
-<!DOCTYPE html><html lang="uk"><head>
+<!DOCTYPE html>
+<html lang="uk">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ProAthleteCare | Артем Кулик</title>
-    <link rel="stylesheet" href="style.css"></head><body>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
     <header>
-        <img src="AK_logo.png" alt="ProAthleteCare Logo" class="logo">
+        <a href="index.html" class="logo-link">
+            <img src="AK_logo.png" alt="ProAthleteCare Logo" class="logo">
+        </a>
         <h1 class="project-title">ProAthleteCare</h1>
         <p class="tagline">Онлайн-тренінг та професійний супровід атлетів</p>
     </header>
     
     <div class="content-wrapper">
         <nav class="sidebar">
+            <a href="index.html" class="active">Головна <img src="AK_logo.png" class="menu-icon" alt="АК"></a> 
             <a href="wellness.html">Wellness Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
             <a href="#">Injury Story <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
             <a href="#">Load Season <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
@@ -34,4 +41,18 @@
     
     <footer>
         &copy; 2025 ProAthleteCare. Створено з Gemini.
-    </footer></body></html>
+    </footer>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Виділення активної сторінки в меню
+            const currentPath = window.location.pathname.split('/').pop() || 'index.html';
+            document.querySelectorAll('.sidebar a').forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === currentPath || link.getAttribute('href') === 'index.html' && currentPath === '') {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
