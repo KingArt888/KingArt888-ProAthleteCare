@@ -1,1 +1,54 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Velocity Control | ProAthleteCare</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+</head>
+<body>
 
+    <header>
+        <a href="index.html" class="logo-link">
+            <img src="AK_logo.png" alt="ProAthleteCare Logo" class="logo">
+        </a>
+        <h1 class="project-title">ProAthleteCare</h1>
+        <p class="tagline">Онлайн-тренінг та професійний супровід атлетів</p>
+    </header>
+    
+    <div class="content-wrapper">
+        <nav class="sidebar">
+            <a href="wellness.html">Wellness Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="injury.html">Injury Story <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="load-season.html">Load Season <img src="AK_logo.png" class="menu-icon" alt="АК"></a> 
+            <a href="daily-individual.html">Daily Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="weekly-individual.html">Weekly Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="weight-control.html">Weight Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+            
+            <a href="velocity-control.html" class="active">Velocity Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+        </nav>
+        
+        <main class="main-content">
+            <h2 style="color: #6C5CE7;">⚡ Velocity Control: Швидкість виконання вправ (VBT)</h2>
+            
+            <div class="dashboard-container">
+                
+                <div class="form-card" style="width: 40%; min-width: 350px;">
+                    <h3>Дані VBT (Velocity Based Training)</h3>
+                    <form id="velocity-form">
+                        
+                        <label for="velocity-date">Дата тренування:</label>
+                        <input type="date" id="velocity-date" name="date" required style="width: 100%; padding: 8px; margin-bottom: 15px; background-color: #1a1a1a; border: 1px solid #333; color: #CCCCCC;">
+                        
+                        <label for="velocity-exercise">Вправа:</label>
+                        <input type="text" id="velocity-exercise" name="exercise" placeholder="Наприклад, Присідання" required style="width: 100%; padding: 8px; margin-bottom: 15px; background-color: #1a1a1a; border: 1px solid #333; color: #CCCCCC;">
+                        
+                        <label for="velocity-mean">Середня швидкість (м/с):</label>
+                        <input type="number" id="velocity-mean" name="mean" min="0" step="0.01" placeholder="Наприклад, 0.55" required style="width: 100%; padding: 8px; margin-bottom: 15px; background-color: #1a1a1a; border: 1px solid #333; color: #CCCCCC;">
+
+                        <label for="velocity-weight">Вага (кг):</label>
+                        <input type="number" id="velocity-weight" name="weight" min="1" step="0.5" placeholder="Наприклад, 120" style="width: 100%; padding: 8px; margin-bottom: 15px; background-color: #1a1a1a; border: 1px solid #333; color: #CCCCCC;">
+
+
+                        <button type
