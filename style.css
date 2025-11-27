@@ -241,7 +241,7 @@
 .body-map-container {
     position: relative; 
     width: 100%;
-    max-width: 250px; /* Зменшено для меншого розміру силуету */
+    max-width: 350px; /* Зменшено для меншого розміру силуету */
     margin: 15px auto;
 }
 
