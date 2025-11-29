@@ -54,8 +54,8 @@
 
 /* Контейнер для нотаток (прихований за замовчуванням) */
 #notes-section {
-    margin-top: 20px;
-    padding: 15px;
+    margin-top: 15px;
+    padding: 10px;
     background-color: #1a1a1a;
     border-radius: 8px;
     border-left: 3px solid #FFC72C;
