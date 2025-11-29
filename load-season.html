@@ -69,27 +69,42 @@
 
                 <div class="visualization-area" style="flex-grow: 1;">
 
-                    <div class="card risk-card" style="padding: 20px; background-color: #2a2a2a; margin-bottom: 20px; text-align: center;">
-                        <h3>Acute:Chronic Workload Ratio (ACWR)</h3>
-                        <div id="acwr-status" style="padding: 10px;">
-                            <p style="color: #FFC72C;">Введіть дані за > 28 днів для розрахунку ризику.</p>
-                        </div>
-                    </div>
-
-                    <div class="card chart-card" style="height: 350px; margin-bottom: 20px;">
-                        <h3>Хронологія Ролінг Навантаження та ACWR</h3>
-                        <canvas id="rollingLoadChart"></canvas>
-                    </div>
-
-                    <div class="card chart-card" style="height: 350px;">
-                        <h3>Тижневі підсумки: Навантаження та Дистанція</h3>
-                        <canvas id="weeklyLoadChart"></canvas>
-                    </div>
-
-                </div>
+                   <div class="card risk-card" style="padding: 20px 25px; background-color: #1a1a1a; margin-bottom: 20px;">
+    
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 20px;">
+        
+        <div style="width: 150px; height: 100px; position: relative;">
+            <canvas id="acwrGaugeChart"></canvas>
+            <div style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); text-align: center;">
+                <p id="acwr-value" style="font-size: 1.8em; font-weight: bold; color: #FFC72C; margin: 0; line-height: 1;"></p>
+                <p style="font-size: 0.8em; color: #888;">ACWR</p>
             </div>
-        </main>
+        </div>
+
+        <div style="flex-grow: 1;">
+            <h3 style="text-align: left; margin-top: 0;">Acute:Chronic Workload Ratio (ACWR)</h3>
+
+            <div id="acwr-status" style="border-radius: 4px; padding: 6px 15px; font-weight: bold; color: black; min-width: 220px; text-align: center; text-transform: uppercase; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4); margin-bottom: 15px;">
+                Статус
+            </div>
+            
+            <div style="font-size: 0.9em; border-top: 1px solid #333; padding-top: 10px;">
+                 <p id="acute-workload" style="margin: 0 0 5px 0;">Гостре (7 дн.): N/A</p>
+                 <p id="chronic-workload" style="margin: 0;">Хронічне (28 дн.): N/A</p>
+            </div>
+        </div>
     </div>
+</div>
+
+<div class="card chart-card" style="height: 350px; margin-bottom: 20px;">
+    <h3>Хронологія Ролінг Навантаження та ACWR</h3>
+    <canvas id="rollingLoadChart"></canvas>
+</div>
+
+<div class="card chart-card full-width-chart" style="height: 350px;">
+    <h3>Тижневі підсумки: Навантаження та Дистанція (Лінійний графік)</h3>
+    <canvas id="weeklyLoadChart"></canvas>
+</div>
     
     <script src="load-season.js"></script>
 </body>
