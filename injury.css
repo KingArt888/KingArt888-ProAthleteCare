@@ -1,8 +1,10 @@
-/* --- СТИЛІ ДЛЯ СТОРІНКИ INJURY STORY --- */
+/* ========================================================= */
+/* 4. СТИЛІ ДЛЯ СТОРІНКИ INJURY STORY (INJURY.CSS) */
+/* ========================================================= */
 
 /* Контейнер для зображення силуету, щоб позиціонувати маркери */
 .body-map-container {
-    position: relative; 
+    position: relative;
     width: 100%;
     max-width: 400px; /* Контроль розміру зображення */
     margin: 15px auto;
@@ -21,15 +23,15 @@
     position: absolute;
     width: 15px;
     height: 15px;
-    background-color: transparent; 
+    background-color: transparent;
     border: 3px solid #DA3E52; /* Червона рамка */
     border-radius: 50%;
-    pointer-events: none; 
-    transform: translate(-50%, -50%); 
+    pointer-events: none;
+    transform: translate(-50%, -50%);
     transition: background-color 0.2s;
     z-index: 100;
     /* Початкове розміщення поза екраном, поки не клікнули */
-    left: -100px; 
+    left: -100px;
     top: -100px;
 }
 
@@ -59,6 +61,5 @@
     background-color: #1a1a1a;
     border-radius: 8px;
     border-left: 3px solid #FFC72C;
-    display: none; 
+    display: none;
 }
-
