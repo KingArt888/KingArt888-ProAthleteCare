@@ -302,4 +302,25 @@
     border-left: 3px solid #FFC72C;
     display: none; 
 }
-
+/* Динамічні стани кнопки */
+.gold-button.status-red {
+    background-color: #DA3E52; /* Червоний колір ризику */
+    color: white;
+    box-shadow: 0 4px 15px rgba(218, 62, 82, 0.4);
+}
+.gold-button.status-orange {
+    background-color: #FF9800; /* Помаранчевий для уваги */
+    color: #000;
+    box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4);
+}
+/* Для оптимальної зони можна залишити gold-button, або створити status-green, якщо потрібно */
+.gold-button.status-green {
+    background-color: #4CAF50; /* Зелений для оптимального стану */
+    color: white;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+}
+.gold-button.status-grey {
+    background-color: #333333 !important;
+    color: #999999 !important;
+    cursor: not-allowed !important;
+}
