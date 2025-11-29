@@ -199,7 +199,7 @@ input:focus {
 /* 5. АДАПТИВНІСТЬ */
 /* ============================================== */
 
-@media (max-width: 992px) {
+@media (max-width: 300px) {
     .dashboard-container {
         flex-direction: column;
         gap: 20px;
