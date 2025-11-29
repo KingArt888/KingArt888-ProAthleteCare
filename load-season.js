@@ -345,6 +345,10 @@ function getAcwrGaugeData(acwr) {
 /**
  * 💡 ФУНКЦІЯ: Преміальний Стиль Спідометра (Gauge Chart) з Тінню
  */
+/**
+ * 💡 ОНОВЛЕНА ФУНКЦІЯ: Преміальний Стиль Спідометра (Gauge Chart) з Тінню
+ * (Збільшено розмір стрілки)
+ */
 function renderGaugeChart(gaugeData) {
     const ctx = document.getElementById('acwrGaugeChart');
     if (!ctx) return;
@@ -394,22 +398,17 @@ function renderGaugeChart(gaugeData) {
             ctx.translate(xCenter, yCenter);
             
             // Малюємо маркери
-            // 0.0 (Low Blue)
             drawMarker(ctx, 0, radius, colors[0], innerRadius, markerLength); 
-            // 0.8 (Optimal Green)
             drawMarker(ctx, (zones[1] / maxVal) * 180, radius, colors[1], innerRadius, markerLength); 
-            // 1.3 (High Yellow)
             drawMarker(ctx, (zones[2] / maxVal) * 180, radius, colors[2], innerRadius, markerLength);
-            // 1.5 (Critical Red)
             drawMarker(ctx, (zones[3] / maxVal) * 180, radius, colors[3], innerRadius, markerLength);
-            // 2.0 (Critical Red)
             drawMarker(ctx, (zones[4] / maxVal) * 180, radius, colors[3], innerRadius, markerLength);
             
             ctx.restore();
         }
     };
 
-    // 💡 Плагін для відображення Стрілки та Тіні
+    // 💡 Плагін для відображення Стрілки та Тіні (ЗМІНА: -75px)
     const gaugePointerAndGlow = {
         id: 'gaugePointerAndGlow',
         afterDatasetsDraw(chart, args, options) {
@@ -425,7 +424,7 @@ function renderGaugeChart(gaugeData) {
             
             ctx.beginPath();
             ctx.moveTo(0, 0);
-            ctx.lineTo(0, -55); 
+            ctx.lineTo(0, -75); // <--- ЗБІЛЬШЕННЯ ДОВЖИНИ СТРІЛКИ
             
             // Тінь (Glow) для стрілки
             ctx.shadowBlur = 10;
@@ -476,7 +475,7 @@ function renderGaugeChart(gaugeData) {
         options: {
             responsive: true,
             maintainAspectRatio: true,
-            cutout: '75%', 
+            cutout: '70%', // <--- ЗМЕНШЕННЯ ВИРІЗУ (Збільшення товщини дуги)
             plugins: {
                 legend: { display: false },
                 tooltip: { enabled: false },
@@ -490,7 +489,6 @@ function renderGaugeChart(gaugeData) {
         plugins: [zoneMarkers, gaugePointerAndGlow] 
     });
 }
-
 // ----------------------------------------------------------
 // ФУНКЦІЇ ВІДОБРАЖЕННЯ
 // ----------------------------------------------------------
