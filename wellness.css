@@ -88,6 +88,7 @@
 }/* Зірки (Сон) */.star-group label:before {
     content: '★'; 
     margin-right: 2px;
+    filter: grayscale(100%);
 }.star-group input:checked ~ label:before,
 .star-group label:hover:before,
 .star-group label:hover ~ label:before {
@@ -95,6 +96,7 @@
 }/* Хрестики (Біль/Втома) */.pain-group label:before {
     content: '✖'; 
     margin-right: 5px;
+    filter: grayscale(100%);
 }.pain-group input:checked ~ label:before,
 .pain-group label:hover:before,
 .pain-group label:hover ~ label:before {
