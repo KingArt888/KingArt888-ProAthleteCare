@@ -1,215 +1,399 @@
-/* --- СТИЛІ ДЛЯ СТОРІНКИ LOAD SEASON (ОНОВЛЕНО: TOP DESIGN) --- */
+/* =========================================================================
+   1. БАЗОВІ СТИЛІ ТА МАКЕТ
+   ========================================================================= */
 
-/* ============================================== */
-/* 1. СТИЛІ МАКЕТА ТА КАРТОК */
-/* ============================================== */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #121212; /* Темний фон */
+    color: #CCCCCC; /* Світлий текст */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
 
-/* Контейнер для форми та графіків */
+h1, h2, h3, h4 {
+    color: #FFD700; /* Золотий акцент для заголовків */
+}
+
+.content-wrapper {
+    display: flex;
+    flex: 1;
+}
+
+/* =========================================================================
+   2. HEADER ТА НАВІГАЦІЯ
+   ========================================================================= */
+
+header {
+    background-color: #1E1E1E;
+    padding: 15px 30px;
+    border-bottom: 3px solid #4CAF50; /* Зелена смуга */
+    display: flex;
+    align-items: center;
+    position: relative;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+}
+
+.logo-link {
+    margin-right: 20px;
+}
+
+.logo {
+    height: 50px;
+    width: 50px;
+    border-radius: 50%;
+    border: 2px solid #FFD700; /* Золота обводка */
+    object-fit: cover;
+}
+
+.project-title {
+    color: #FFD700;
+    margin: 0;
+    font-size: 1.8em;
+    font-weight: 600;
+}
+
+.tagline {
+    color: #AAAAAA;
+    position: absolute;
+    right: 30px;
+    font-size: 0.9em;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 250px;
+    background-color: #1E1E1E;
+    padding: 20px 0;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+    min-height: 100%;
+}
+
+.sidebar a {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    text-decoration: none;
+    color: #CCCCCC;
+    transition: background-color 0.3s, color 0.3s;
+    font-size: 1.1em;
+}
+
+.sidebar a:hover {
+    background-color: #2A2A2A;
+    color: #FFD700;
+}
+
+.sidebar a.active {
+    background-color: #4CAF50; /* Active: зелений */
+    color: #1E1E1E;
+    font-weight: bold;
+}
+
+.menu-icon {
+    height: 20px;
+    margin-left: auto;
+    border-radius: 50%;
+    border: 1px solid #FFD700;
+}
+
+
+/* =========================================================================
+   3. КОНТЕНТ ТА ДАШБОРД
+   ========================================================================= */
+
+.main-content {
+    flex: 1;
+    padding: 30px;
+}
+
 .dashboard-container {
     display: flex;
     gap: 30px;
-    margin-top: 20px;
-    flex-wrap: wrap;
-    align-items: stretch; /* Вирівнюємо картки по висоті */
+    flex-wrap: wrap; 
 }
 
-/* Картки для відображення */
-.card, .form-card {
-    background-color: #0d0d0d;
-    border: 1px solid #1a1a1a;
-    border-radius: 10px;
+.form-card, .stats-card, .chart-card {
+    background-color: #1E1E1E;
     padding: 25px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6); /* Більш глибока тінь */
-}
-
-/* Розміри карток Load Season */
-.form-card {
-    width: 35%;
-    min-width: 350px;
-    max-width: 450px;
-    flex-shrink: 0;
-}
-
-/* Область для графіків */
-.visualization-area {
-    display: flex;
-    flex-direction: column; 
-    gap: 20px;
-    flex-grow: 1;
-    min-width: 450px; /* Достатній мінімум для графіків */
-}
-
-.chart-card {
-    padding: 15px; /* Менший внутрішній відступ для графіків */
-    height: 350px; 
-}
-
-/* Заголовки всередині карток */
-.form-card h3, .card h3 {
-    color: #FFC72C; /* Золотий акцент */
-    margin-top: 0;
-    border-bottom: 1px solid #333333;
-    padding-bottom: 10px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
     margin-bottom: 20px;
-    font-size: 1.3em;
 }
 
-/* Стилі для полів вводу */
-input[type="date"],
-input[type="number"] {
+.form-container {
+    width: 45%; 
+    min-width: 350px;
+}
+
+.stats-container {
+    flex: 1; 
+    min-width: 400px;
+}
+
+/* Стилі для елементів форми */
+label {
+    display: block;
+    margin-bottom: 8px;
+    color: #AAAAAA;
+    font-weight: 500;
+}
+
+input[type="date"], input[type="number"] {
     width: 100%;
-    padding: 10px 12px;
-    margin-bottom: 18px;
+    padding: 10px;
+    margin-bottom: 20px;
     background-color: #1a1a1a;
     border: 1px solid #333;
     color: #CCCCCC;
     border-radius: 5px;
-    box-sizing: border-box; 
+    box-sizing: border-box;
     transition: border-color 0.3s;
 }
-input:focus {
-    border-color: #4CAF50; /* Зелений фокус на полях вводу */
+
+input[type="date"]:focus, input[type="number"]:focus {
+    border-color: #FFD700;
     outline: none;
 }
 
-
-/* ============================================== */
-/* 2. СТИЛІ КНОПКИ ТА PLACEHOLDER */
-/* ============================================== */
-
-/* Кнопка Зберегти */
-.gold-button {
-    background-color: #50C878; /* Свіжий зелений для дії "Зберегти" */
-    color: #000000;
+.submit-button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 12px 20px;
     border: none;
-    padding: 12px 25px;
     border-radius: 5px;
-    margin-top: 25px;
     cursor: pointer;
     font-size: 1.1em;
-    font-weight: bold;
-    transition: background-color 0.3s, transform 0.1s;
-}
-.gold-button:hover {
-    background-color: #43A047;
-    transform: translateY(-1px);
+    width: 100%;
+    transition: background-color 0.3s;
+    margin-top: 10px;
 }
 
-/* Стилі для placeholder-тексту, коли даних недостатньо */
-.placeholder-text {
-    color: #888888;
-    font-style: italic;
-    font-size: 1.2em;
-    text-align: center;
-    padding: 20px;
+.submit-button:hover {
+    background-color: #45a049;
 }
 
-/* ============================================== */
-/* 3. УНІКАЛЬНІ СТИЛІ RPE (Rating Group) - ФІНАЛЬНА ВЕРСІЯ */
-/* ============================================== */
+/* =========================================================================
+   4. СТИЛІ RPE GROUP (1-10)
+   ========================================================================= */
 
 .rating-group {
     display: flex;
-    flex-direction: row-reverse; 
-    justify-content: flex-end;
-    direction: ltr;
-    font-size: 1.4em;
-    margin: 10px 0 20px 0;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    background-color: #1a1a1a;
+    padding: 5px;
+    border-radius: 5px;
+    flex-wrap: wrap; 
 }
-.rating-group input {
+
+.rating-group input[type="radio"] {
     display: none;
 }
+
 .rating-group label {
-    color: #333333;
     cursor: pointer;
-    transition: color 0.2s, transform 0.1s;
-    font-weight: bold;
-    padding: 0 5px;
-}
-.rating-group label:hover {
-    transform: scale(1.1);
-}
-
-/* ЛОГІКА ВИДІЛЕННЯ */
-.pain-group label:hover,
-.pain-group label:hover ~ label {
-    color: #FFC72C; 
-}
-.pain-group input:checked ~ label,
-.pain-group input:checked + label {
-    color: #FFC72C;
-}
-
-/* ЛОГІКА КОЛЬОРОВИХ ЗОН (RPE) - для кращої візуалізації */
-
-/* RPE 8-10 (Червоний - Високе навантаження) */
-.pain-group input:checked[value="10"] ~ label, .pain-group input:checked[value="10"] + label,
-.pain-group input:checked[value="9"] ~ label, .pain-group input:checked[value="9"] + label,
-.pain-group input:checked[value="8"] ~ label, .pain-group input:checked[value="8"] + label {
-    color: #DA3E52; 
-}
-
-/* RPE 3-7 (Золотий - Середнє навантаження) */
-.pain-group input:checked[value="7"] ~ label, .pain-group input:checked[value="7"] + label,
-.pain-group input:checked[value="6"] ~ label, .pain-group input:checked[value="6"] + label,
-.pain-group input:checked[value="5"] ~ label, .pain-group input:checked[value="5"] + label,
-.pain-group input:checked[value="4"] ~ label, .pain-group input:checked[value="4"] + label,
-.pain-group input:checked[value="3"] ~ label, .pain-group input:checked[value="3"] + label {
-    color: #FFC72C; 
-}
-
-/* RPE 1-2 (Зелений - Низьке навантаження) */
-.pain-group input:checked[value="2"] ~ label, .pain-group input:checked[value="2"] + label,
-.pain-group input:checked[value="1"] ~ label, .pain-group input:checked[value="1"] + label {
-    color: #50C878; 
-}
-
-/* ============================================== */
-/* 4. СТИЛІ ACWR ТА РИЗИКУ (ОНОВЛЕНО) */
-/* ============================================== */
-
-.risk-card {
-    /* Фон для ACWR виділяємо, щоб він не зливався з іншими картками */
-    background-color: #1a1a1a; 
-    border-left: 5px solid #FFC72C; /* Акцентна смуга */
-    padding: 20px 25px;
-}
-
-/* Велике значення ACWR */
-#acwr-value {
-    font-size: 2.2em;
-    font-weight: 700;
-    margin-right: 20px;
-    line-height: 1;
-}
-
-/* Статус ризику */
-#acwr-status {
-    border-radius: 4px; 
-    padding: 6px 15px; 
-    font-size: 1em;
-    font-weight: bold;
-    min-width: 220px;
+    font-size: 0.8em;
+    width: 8%; /* 10 елементів + відступи */
+    min-width: 25px;
     text-align: center;
-    text-transform: uppercase;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    padding: 5px 0;
+    border-radius: 5px;
+    background-color: #333;
+    color: #CCCCCC;
+    transition: background-color 0.2s, color 0.2s, transform 0.2s;
+    margin: 2px;
 }
 
-/* ============================================== */
-/* 5. АДАПТИВНІСТЬ */
-/* ============================================== */
+/* Спеціальні підказки для RPE (Title attributes) */
+.rpe-group label[for="rpe1"]::after { content: "1"; }
+.rpe-group label[for="rpe2"]::after { content: "2"; }
+.rpe-group label[for="rpe3"]::after { content: "3"; }
+.rpe-group label[for="rpe4"]::after { content: "4"; }
+.rpe-group label[for="rpe5"]::after { content: "5"; }
+.rpe-group label[for="rpe6"]::after { content: "6"; }
+.rpe-group label[for="rpe7"]::after { content: "7"; }
+.rpe-group label[for="rpe8"]::after { content: "8"; }
+.rpe-group label[for="rpe9"]::after { content: "9"; }
+.rpe-group label[for="rpe10"]::after { content: "10"; }
 
-@media (max-width: 300px) {
-    .dashboard-container {
-        flex-direction: column;
-        gap: 20px;
-    }
-    .form-card, .visualization-area {
-        width: 100%;
-        max-width: 100%;
-        min-width: unset;
-    }
-    .chart-card {
-        height: 300px;
-    }
+.rpe-group input[type="radio"]:checked + label {
+    background-color: #FFD700; /* Золотий колір для вибраного */
+    color: #1E1E1E;
+    font-weight: bold;
+    transform: scale(1.1);
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
 }
+
+.rpe-value-display {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #FFD700;
+    padding: 0 10px;
+    /* У поточній JS реалізації він прихований, але стилі залишаємо */
+    display: none; 
+}
+
+/* Статус повідомлення після відправки форми */
+.status-message {
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+    font-weight: bold;
+    color: #4CAF50;
+    border: 1px solid #4CAF50;
+}
+
+/* =========================================================================
+   5. СТИЛІ СПІДОМЕТРА ACWR (GOLD)
+   ========================================================================= */
+
+.speedometer-widget {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 30px;
+    padding: 15px;
+    border: 1px solid #333;
+    border-radius: 10px;
+}
+
+.gauge-display {
+    position: relative;
+    width: 250px;
+    height: 125px; /* Висота півкола */
+    overflow: hidden;
+}
+
+/* Контейнер для візуалізації дуги */
+.gauge-arc {
+    position: absolute;
+    width: 250px;
+    height: 250px;
+    border-radius: 50%;
+    top: 0;
+    left: 0;
+    /* Імітація золотої обводки */
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); 
+    z-index: 5;
+    
+    /* Конічний градієнт для кольорових зон (180deg): 
+       0.5-0.8 (Red/Yellow), 0.8-1.3 (Green), 1.3-1.5 (Yellow), 1.5+ (Red) */
+    background: conic-gradient(
+        #d9534f 0% 15%,     /* Red (0.5 - 0.8) - 0 to 27 deg */
+        #f0ad4e 15% 30%,    /* Yellow (0.8 - 1.0) - 27 to 54 deg */
+        #5cb85c 30% 65%,    /* Green (1.0 - 1.3) - 54 to 117 deg */
+        #f0ad4e 65% 85%,    /* Yellow (1.3 - 1.5) - 117 to 153 deg */
+        #d9534f 85% 100%    /* Red (1.5+) - 153 to 180 deg */
+    );
+    
+    /* Обрізаємо верхню половину */
+    clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%);
+    /* Повертаємо, щоб початок (0deg) був зліва, а кінець (180deg) справа */
+    transform: rotate(270deg); 
+}
+
+
+/* Стрілка */
+.gauge-needle-pivot {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 15px;
+    height: 15px;
+    background-color: #FFD700; /* Золотий центр */
+    border-radius: 50%;
+    z-index: 10;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+}
+
+.gauge-needle {
+    position: absolute;
+    bottom: 7.5px; 
+    left: 50%;
+    width: 3px;
+    height: 125px;
+    background-color: #FFD700; /* Золота стрілка */
+    transform-origin: bottom center;
+    transition: transform 1.5s ease-out; /* Анімація стрілки */
+    border-radius: 5px 5px 0 0;
+    z-index: 9;
+    /* Початкове положення (ACWR=1.00) = 0deg */
+    transform: translateX(-50%) rotate(0deg); 
+}
+
+/* Текст в центрі спідометра */
+.gauge-value-text {
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    z-index: 11;
+}
+
+#acwr-value {
+    font-size: 2.5em;
+    font-weight: bold;
+    color: #FFD700;
+    display: block;
+}
+
+.acwr-label {
+    margin-top: -10px;
+    font-size: 0.8em;
+    color: #AAAAAA;
+}
+
+/* Статус під спідометром */
+.gauge-status-box {
+    text-align: center;
+    margin-top: 15px;
+    font-size: 1.1em;
+}
+
+.status-safe {
+    color: #5cb85c; /* Зелений */
+    font-weight: bold;
+}
+
+.status-warning {
+    color: #f0ad4e; /* Жовтий */
+    font-weight: bold;
+}
+
+.status-danger {
+    color: #d9534f; /* Червоний */
+    font-weight: bold;
+}
+
+/* =========================================================================
+   6. СТИЛІ ГРАФІКІВ
+   ========================================================================= */
+
+.chart-card {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #1E1E1E;
+    border-radius: 10px;
+    width: 100%; 
+}
+
+.chart-card h4 {
+    color: #4CAF50;
+    margin-top: 0;
+    border-bottom: 1px solid #333;
+    padding-bottom: 10px;
+}
+
+/* =========================================================================
+   7. АДАПТИВНІСТЬ
+   ========================================================================= */
+
+@media (max-width: 1000px) {
+    .
