@@ -69,28 +69,30 @@
 
                 <div class="visualization-area" style="flex-grow: 1;">
 
-                   <div class="card risk-card" style="padding: 20px 25px; background-color: #1a1a1a; margin-bottom: 20px;">
+                  <div class="card risk-card" style="padding: 20px 25px; background-color: #1a1a1a; margin-bottom: 20px;">
     
-    <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 20px;">
         
-        <div style="flex-grow: 1; min-width: 250px;">
-            <h3 style="text-align: left; margin-top: 0; margin-bottom: 15px;">Acute:Chronic Workload Ratio (ACWR)</h3>
-
-            <div id="acwr-status" style="border-radius: 4px; padding: 6px 15px; font-weight: bold; color: black; text-align: center; text-transform: uppercase; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4); margin-bottom: 10px;">
-                Статус
-            </div>
-            
-            <div style="font-size: 0.9em; border-top: 1px solid #333; padding-top: 10px;">
-                 <p id="acute-workload" style="margin: 0 0 5px 0;">Гостре (7 дн.): N/A</p>
-                 <p id="chronic-workload" style="margin: 0;">Хронічне (28 дн.): N/A</p>
+        <div style="width: 180px; height: 120px; flex-shrink: 0; position: relative; margin-top: 10px;">
+            <canvas id="acwrGaugeChart"></canvas>
+            <div style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); text-align: center;">
+                <p id="acwr-value" style="font-size: 2.2em; font-weight: bold; color: #FFC72C; margin: 0; line-height: 1;"></p>
+                <p style="font-size: 0.9em; color: #888; margin-top: 2px;">ACWR</p>
             </div>
         </div>
 
-        <div style="width: 140px; height: 100px; flex-shrink: 0; position: relative;">
-            <canvas id="acwrGaugeChart"></canvas>
-            <div style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); text-align: center;">
-                <p id="acwr-value" style="font-size: 1.8em; font-weight: bold; color: #FFC72C; margin: 0; line-height: 1;"></p>
-                <p style="font-size: 0.8em; color: #888;">ACWR</p>
+        <div style="flex-grow: 1; min-width: 180px;">
+            <h3 style="text-align: left; margin-top: 0; margin-bottom: 10px; font-size: 1.1em;">
+                Acute:Chronic Workload Ratio
+            </h3>
+
+            <div id="acwr-status" style="border-radius: 4px; padding: 6px 15px; font-weight: bold; color: black; text-align: center; text-transform: uppercase; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4); margin-bottom: 10px; font-size: 0.9em;">
+                Статус
+            </div>
+            
+            <div style="font-size: 0.8em; border-top: 1px solid #333; padding-top: 10px;">
+                 <p id="acute-workload" style="margin: 0 0 4px 0;">Гостре (7 дн.): N/A</p>
+                 <p id="chronic-workload" style="margin: 0;">Хронічне (28 дн.): N/A</p>
             </div>
         </div>
     </div>
