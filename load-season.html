@@ -6,7 +6,7 @@
     <title>Load Season | ProAthleteCare</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
-</head>
+    </head>
 <body>
 
     <header>
@@ -47,8 +47,49 @@
 
                         <label>Суб'єктивне навантаження (RPE, 1-10):</label>
                         <div class="rating-group pain-group" id="rpe-rating-group">
-                            <input type="radio" id="rpe10" name="rpe" value="10"><label for="rpe10" title="10 (Максимально важко)"></label>
+                            <input type="radio" id="rpe10" name="rpe" value="10" required><label for="rpe10" title="10 (Максимально важко)"></label>
                             <input type="radio" id="rpe9" name="rpe" value="9"><label for="rpe9" title="9"></label>
                             <input type="radio" id="rpe8" name="rpe" value="8"><label for="rpe8" title="8 (Дуже важко)"></label>
                             <input type="radio" id="rpe7" name="rpe" value="7"><label for="rpe7" title="7"></label>
-                            <input type="radio" id="rpe6" name="rpe" value="6
+                            <input type="radio" id="rpe6" name="rpe" value="6"><label for="rpe6" title="6 (Важко)"></label>
+                            <input type="radio" id="rpe5" name="rpe" value="5"><label for="rpe5" title="5"></label>
+                            <input type="radio" id="rpe4" name="rpe" value="4"><label for="rpe4" title="4 (Помірно)"></label>
+                            <input type="radio" id="rpe3" name="rpe" value="3"><label for="rpe3" title="3"></label>
+                            <input type="radio" id="rpe2" name="rpe" value="2"><label for="rpe2" title="2 (Легко)"></label>
+                            <input type="radio" id="rpe1" name="rpe" value="1" checked><label for="rpe1" title="1 (Дуже легко)"></label>
+                        </div>
+                        
+                        <label for="load-distance" style="margin-top: 15px;">Загальна дистанція (км):</label>
+                        <input type="number" id="load-distance" name="distance" min="0" step="0.1" value="0.0" required style="width: 100%; padding: 8px; margin-bottom: 20px; background-color: #1a1a1a; border: 1px solid #333; color: #CCCCCC;">
+                        
+                        <button type="submit" class="gold-button">Зберегти дані</button>
+                    </form>
+                </div>
+
+                <div class="visualization-area" style="flex-grow: 1;">
+
+                    <div class="card risk-card" style="padding: 20px; background-color: #2a2a2a; margin-bottom: 20px; text-align: center;">
+                        <h3>Acute:Chronic Workload Ratio (ACWR)</h3>
+                        <div id="acwr-status" style="padding: 10px;">
+                            <p style="color: #FFC72C;">Введіть дані за > 28 днів для розрахунку ризику.</p>
+                        </div>
+                    </div>
+
+                    <div class="card chart-card" style="height: 350px; margin-bottom: 20px;">
+                        <h3>Хронологія Ролінг Навантаження та ACWR</h3>
+                        <canvas id="rollingLoadChart"></canvas>
+                    </div>
+
+                    <div class="card chart-card" style="height: 350px;">
+                        <h3>Тижневі підсумки: Навантаження та Дистанція</h3>
+                        <canvas id="weeklyLoadChart"></canvas>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="load-season.js"></script>
+</body>
+</html>
