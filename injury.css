@@ -123,5 +123,72 @@ textarea {
 /* ============================================== */
 /* 3. УНІКАЛЬНІ СТИЛІ КАРТИ ТІЛА */
 /* ============================================== */
+/* ============================================== */
+/* 3. УНІКАЛЬНІ СТИЛІ КАРТИ ТІЛА (ПОВНИЙ БЛОК) */
+/* ============================================== */
 
+/* Контейнер для зображення силуету, щоб позиціонувати маркери */
+.body-map-container {
+    position: relative;
+    width: 100%;
+    
+    /* ЗМЕНШУЄМО РОЗМІР КАРТИНКИ: встановіть бажане значення */
+    max-width: 150px; 
+    
+    margin: 15px auto;
+}
+
+.body-map-container img {
+    width: 100%;
+    height: auto;
+    display: block;
+    cursor: crosshair;
+    filter: invert(10%); /* Зробимо силует трохи темнішим на темному фоні */
+}
+
+/* Стиль для відображення поточної точки кліку (червоний обідок) */
+#click-marker {
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    background-color: transparent;
+    border: 3px solid #DA3E52; /* Червона рамка */
+    border-radius: 50%;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    transition: background-color 0.2s;
+    z-index: 100;
+    /* Початкове розміщення поза екраном, поки не клікнули */
+    left: -100px;
+    top: -100px;
+}
+
+/* Стиль для збережених (історичних) маркерів */
+.injury-marker {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background-color: #DA3E52; /* Червоний колір для маркерів травм */
+    border-radius: 50%;
+    cursor: pointer;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 5px rgba(218, 62, 82, 0.8);
+    z-index: 90;
+    transition: all 0.2s;
+}
+
+.injury-marker:hover {
+    background-color: #FFC72C; /* Золотий при наведенні */
+    box-shadow: 0 0 10px #FFC72C;
+}
+
+/* Контейнер для нотаток (прихований за замовчуванням) */
+#notes-section {
+    margin-top: 15px;
+    padding: 10px;
+    background-color: #1a1a1a;
+    border-radius: 8px;
+    border-left: 3px solid #FFC72C;
+    display: none;
+}
 /* Контейнер для зображення силуету
