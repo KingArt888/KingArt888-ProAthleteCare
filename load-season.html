@@ -8,27 +8,25 @@
     <style>
         body {
             font-family: 'Arial', sans-serif;
-            background-color: #121212; /* Темний фон */
+            background-color: #1a1a1a; /* Дуже темний фон */
             color: #CCCCCC;
             margin: 0;
             padding: 20px;
         }
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
         }
-        h2 {
-            color: #FFC72C; /* Золотий акцент */
-            border-bottom: 2px solid #333;
-            padding-bottom: 10px;
-            margin-bottom: 25px;
+        h2, h3 {
+            color: #EEEEEE; /* Світліший заголовок */
+            margin-top: 0;
+            margin-bottom: 15px;
         }
         .chart-card {
-            background-color: #1e1e1e;
+            background-color: #242424; /* Фон карток */
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
             margin-bottom: 20px;
         }
         .dashboard-grid {
@@ -37,28 +35,23 @@
             gap: 20px;
             margin-bottom: 20px;
         }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: #BBBBBB;
-            font-weight: bold;
-        }
+        /* Стилі для форми */
+        .form-group { margin-bottom: 10px; }
+        label { display: block; margin-bottom: 3px; color: #BBBBBB; font-size: 0.9em; }
         input[type="number"], input[type="date"] {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #333;
+            padding: 8px;
+            border: 1px solid #3a3a3a;
             border-radius: 4px;
-            background-color: #2a2a2a;
+            background-color: #333333;
             color: #FFFFFF;
             box-sizing: border-box;
         }
-        .gold-button {
-            background-color: #FFC72C;
+        /* Стилі кнопок та акцентів (як на макеті - зелений) */
+        .green-button {
+            background-color: #4CAF50; /* Зелений */
             color: #121212;
-            padding: 12px 25px;
+            padding: 10px 20px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
@@ -66,64 +59,55 @@
             font-weight: bold;
             transition: background-color 0.3s;
             width: 100%;
-            margin-top: 10px;
+            margin-top: 15px;
         }
-        .gold-button:hover {
-            background-color: #e6b800;
-        }
+        .green-button:hover { background-color: #45a049; }
+
         /* Стилі для RPE Slider */
         .rpe-slider {
             display: flex;
-            justify-content: space-between;
-            margin-top: 10px;
+            gap: 5px;
+            margin-top: 5px;
         }
         .rpe-option {
-            width: 25px;
-            height: 25px;
+            width: 20px;
+            height: 20px;
             border-radius: 50%;
-            background-color: #333;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.8em;
-            color: #BBBBBB;
+            font-size: 0.7em;
             cursor: pointer;
-            border: 2px solid #333;
-            transition: all 0.2s;
+            background-color: #555;
+            transition: background-color 0.2s;
         }
-        .rpe-option input {
-            display: none;
-        }
-        .rpe-option input:checked + span {
-            background-color: #FFC72C;
-            color: #121212;
-            border-color: #FFFFFF;
+        .rpe-option input { display: none; }
+        .rpe-option input:checked + .rpe-label {
+            background-color: #FFC72C; /* Золотий для обраного */
         }
         .rpe-label {
             display: block;
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background-color: #555;
         }
 
-        /* Стилі для карток статусу ACWR */
-        .status-optimal { border: 2px solid #4CAF50; } /* Зелений */
-        .status-warning { border: 2px solid #FF9800; } /* Помаранчевий */
-        .status-danger { border: 2px solid #DA3E52; } /* Червоний */
-        .status-grey { border: 2px solid #6c757d; } /* Сірий (Недостатньо даних) */
-
-        .status-container {
+        /* Стилі ACWR Картки */
+        .status-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            height: 100%;
+        }
+        .acwr-value-block {
+            display: flex;
+            flex-direction: column;
         }
         #acwr-rpe-value {
             font-size: 3em;
             font-weight: bold;
-            color: #FFFFFF;
+            color: #4CAF50; /* Зелений для значення */
         }
         #risk-status-card {
              display: flex;
@@ -131,21 +115,28 @@
              justify-content: center;
              align-items: center;
              text-align: center;
-             min-height: 100px;
-             padding: 10px;
+             min-height: 80px;
+             padding: 10px 15px;
              width: 45%;
+             box-sizing: border-box;
+             border-radius: 6px;
+             margin: 0;
         }
-        #acwr-rpe-trend-icon {
-            font-size: 0.9em;
-            margin-left: 10px;
-            font-weight: bold;
+        .status-optimal { background-color: #4CAF50; color: #121212; }
+        .status-warning { background-color: #FF9800; color: #121212; }
+        .status-danger { background-color: #DA3E52; color: #FFFFFF; }
+        .status-grey { background-color: #6c757d; color: #FFFFFF; }
+        
+        #trend-mini-chart-container {
+            height: 80px;
+            margin-top: 20px;
         }
     </style>
     
 </head>
 <body>
     <div class="container">
-        <h2>🏋️ Load Season Control (Контроль Тренувального Навантаження)</h2>
+        <h2>Load Season Control (Контроль Тренувального Навантаження)</h2>
         
         <div class="dashboard-grid">
             
@@ -161,35 +152,25 @@
                         <input type="number" id="duration" name="duration" min="1" required>
                     </div>
                     <div class="form-group">
-                        <label for="distance">Кілометраж (метри) (Опціонально)</label>
+                        <label for="distance">Кілометраж (метри)</label>
                         <input type="number" id="distance" name="distance" min="0">
                     </div>
                     <div class="form-group">
                         <label>Суб'єктивне навантаження (RPE, 1-10)</label>
                         <div class="rpe-slider">
-                            <div class="rpe-option" title="Дуже, дуже легко">
-                                <input type="radio" id="rpe1" name="rpe" value="1">
-                                <label class="rpe-label" for="rpe1">1</label>
-                            </div>
-                            <div class="rpe-option">
-                                <input type="radio" id="rpe3" name="rpe" value="3">
-                                <label class="rpe-label" for="rpe3">3</label>
-                            </div>
-                            <div class="rpe-option" title="Помірно важко">
-                                <input type="radio" id="rpe5" name="rpe" value="5">
-                                <label class="rpe-label" for="rpe5">5</label>
-                            </div>
-                            <div class="rpe-option">
-                                <input type="radio" id="rpe7" name="rpe" value="7">
-                                <label class="rpe-label" for="rpe7">7</label>
-                            </div>
-                             <div class="rpe-option" title="Максимально важко">
-                                <input type="radio" id="rpe9" name="rpe" value="9">
-                                <label class="rpe-label" for="rpe9">9</label>
-                            </div>
+                            <div class="rpe-option"><input type="radio" id="rpe1" name="rpe" value="1"><label class="rpe-label" for="rpe1"></label></div>
+                            <div class="rpe-option"><input type="radio" id="rpe2" name="rpe" value="2"><label class="rpe-label" for="rpe2"></label></div>
+                            <div class="rpe-option"><input type="radio" id="rpe3" name="rpe" value="3"><label class="rpe-label" for="rpe3"></label></div>
+                            <div class="rpe-option"><input type="radio" id="rpe4" name="rpe" value="4"><label class="rpe-label" for="rpe4"></label></div>
+                            <div class="rpe-option"><input type="radio" id="rpe5" name="rpe" value="5"><label class="rpe-label" for="rpe5"></label></div>
+                            <div class="rpe-option"><input type="radio" id="rpe6" name="rpe" value="6"><label class="rpe-label" for="rpe6"></label></div>
+                            <div class="rpe-option"><input type="radio" id="rpe7" name="rpe" value="7"><label class="rpe-label" for="rpe7"></label></div>
+                            <div class="rpe-option"><input type="radio" id="rpe8" name="rpe" value="8"><label class="rpe-label" for="rpe8"></label></div>
+                            <div class="rpe-option"><input type="radio" id="rpe9" name="rpe" value="9"><label class="rpe-label" for="rpe9"></label></div>
+                            <div class="rpe-option"><input type="radio" id="rpe10" name="rpe" value="10"><label class="rpe-label" for="rpe10"></label></div>
                         </div>
                     </div>
-                    <button type="submit" id="submit-load-btn" class="gold-button">
+                    <button type="submit" id="submit-load-btn" class="green-button">
                         Зафіксувати Навантаження
                     </button>
                 </form>
@@ -197,18 +178,18 @@
             
             <div class="chart-card">
                 <h3>Поточний ACWR (RPE)</h3>
-                <div class="status-container">
-                    <div>
+                <div class="status-header">
+                    <div class="acwr-value-block">
                         <span id="acwr-rpe-value">N/A</span>
-                        <span id="acwr-rpe-trend-icon" style="color: #BBBBBB;"></span>
+                        <span id="acwr-rpe-trend-icon" style="color: #BBBBBB; font-size: 0.8em;"></span>
                     </div>
-                    <div id="risk-status-card" class="chart-card status-grey" style="width: auto; margin: 0; padding: 10px 20px;">
-                         <p style="font-size: 1.1em; color: #999; font-weight: bold; margin: 0;">Збір даних</p>
-                         <p style="font-size: 0.8em; color: #888; margin: 5px 0 0 0;">(Потрібно >7 дн. для ACWR)</p>
+                    <div id="risk-status-card" class="status-grey">
+                         <p style="font-size: 1.1em; font-weight: bold; margin: 0;">Збір даних</p>
+                         <p style="font-size: 0.8em; margin: 5px 0 0 0;">(Потрібно >7 дн. для ACWR)</p>
                     </div>
                 </div>
 
-                 <div style="height: 100px; margin-top: 15px;">
+                <div id="trend-mini-chart-container">
                     <canvas id="miniLoadTrendChart"></canvas> 
                 </div>
 
@@ -216,16 +197,16 @@
         </div>
 
         <div class="chart-card">
-            <h3>Динаміка Ризику Травми (ACWR Trend)</h3>
-            <div style="height: 400px;">
-                <canvas id="acwrChart"></canvas>
+            <h3>Тренувальне Навантання (Session-RPE Trend)</h3>
+            <div style="height: 350px;">
+                <canvas id="loadTrendChart"></canvas>
             </div>
         </div>
 
         <div class="chart-card">
-            <h3>Тренувальне Навантання (Session-RPE Trend)</h3>
-            <div style="height: 300px;">
-                <canvas id="loadTrendChart"></canvas>
+            <h3>Динаміка Ризику Травми (ACWR)</h3>
+            <div style="height: 350px;">
+                <canvas id="acwrChart"></canvas>
             </div>
         </div>
         
