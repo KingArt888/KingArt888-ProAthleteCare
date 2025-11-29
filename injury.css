@@ -3,8 +3,8 @@
 /* Контейнер для зображення силуету, щоб позиціонувати маркери */
 .body-map-container {
     position: relative; 
-    width: 80%;
-    max-width: 300px; /* Контроль розміру зображення */
+    width: 100%;
+    max-width: 200px; /* Контроль розміру зображення */
     margin: 15px auto;
 }
 
