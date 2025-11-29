@@ -552,6 +552,244 @@ document.addEventListener('DOMContentLoaded', function() {
     // Ініціалізація Injury Story
     if (window.location.pathname.split('/').pop() === 'injury.html') {
         setupBodyMap();
+    }document.addEventListener('DOMContentLoaded', function() {
+    const STORAGE_KEY = 'proathletecare_load_data';
+    const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+    const loadForm = document.getElementById('load-form');
+    const loadDateInput = document.getElementById('load-date');
+    const loadDurationInput = document.getElementById('load-duration');
+    const loadDistanceInput = document.getElementById('load-distance');
+    const rpeRatingGroup = document.getElementById('rpe-rating-group');
+    const submitLoadBtn = document.getElementById('submit-load-btn');
+
+    const acwrRpeValue = document.getElementById('acwr-rpe-value');
+    const acwrRpeTrendIcon = document.getElementById('acwr-rpe-trend-icon');
+    const riskStatusCard = document.getElementById('risk-status-card');
+
+    // Встановлюємо сьогоднішню дату як дефолтну
+    const today = new Date().toISOString().split('T')[0];
+    loadDateInput.value = today;
+
+    // --- Chart Instances ---
+    let acwrChartInstance;
+    let loadTrendChartInstance;
+    let distanceChartInstance;
+
+    // --- Data Storage & Loading ---
+    function loadData() {
+        try {
+            const json = localStorage.getItem(STORAGE_KEY);
+            // Повертаємо відсортовані дані, щоб обробка дат була послідовною
+            return json ? JSON.parse(json).sort((a, b) => new Date(a.date) - new Date(b.date)) : [];
+        } catch (e) {
+            console.error("Помилка завантаження даних:", e);
+            return [];
+        }
     }
+
+    function saveData(data) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    // --- ACWR & Load Calculation ---
+    function calculateACWR(data, type = 'rpe') {
+        const results = [];
+        if (data.length === 0) return results;
+
+        const loadMap = new Map();
+        data.forEach(d => loadMap.set(d.date, d.load || 0)); // Використовуємо rpe-load за замовчуванням
+        
+        // Для кілометражу
+        const distanceMap = new Map();
+        data.forEach(d => distanceMap.set(d.date, d.distance || 0));
+
+        const startDate = new Date(data[0].date);
+        const endDate = new Date(data[data.length - 1].date);
+        
+        // Розширюємо діапазон на 27 днів до початку даних, щоб хронічне навантаження могло розрахуватися
+        const effectiveStartDate = new Date(startDate);
+        effectiveStartDate.setDate(startDate.getDate() - 27);
+
+        for (let current = new Date(effectiveStartDate); current <= endDate; current.setDate(current.getDate() + 1)) {
+            const currentDateStr = current.toISOString().split('T')[0];
+            
+            let currentLoadValue = (type === 'rpe') ? (loadMap.get(currentDateStr) || 0) : (distanceMap.get(currentDateStr) || 0);
+
+            // Calculate Acute Load (7 days)
+            let acuteLoadSum = 0;
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(current);
+                date.setDate(current.getDate() - i);
+                const dateStr = date.toISOString().split('T')[0];
+                acuteLoadSum += (type === 'rpe') ? (loadMap.get(dateStr) || 0) : (distanceMap.get(dateStr) || 0);
+            }
+            const acute = acuteLoadSum;
+
+            // Calculate Chronic Load (28 days average)
+            let chronicLoadSum = 0;
+            for (let i = 0; i < 28; i++) {
+                const date = new Date(current);
+                date.setDate(current.getDate() - i);
+                const dateStr = date.toISOString().split('T')[0];
+                chronicLoadSum += (type === 'rpe') ? (loadMap.get(dateStr) || 0) : (distanceMap.get(dateStr) || 0);
+            }
+            const chronicAvg = chronicLoadSum / 28;
+            
+            let acwr = null;
+            if (chronicAvg > 0) {
+                acwr = acute / chronicAvg;
+            }
+
+            // Додаємо дані лише з оригінального діапазону даних, щоб уникнути порожніх початкових точок на графіках
+            if (current >= startDate) {
+                results.push({
+                    date: currentDateStr,
+                    acwr: acwr,
+                    acute: acute,
+                    chronic: chronicAvg * 28, // Повертаємо суму за 28 днів для графіка
+                    dailyLoad: currentLoadValue // Щоденне навантаження
+                });
+            }
+        }
+        return results;
+    }
+
+    // --- Dashboard Update ---
+    function updateDashboard() {
+        const allData = loadData();
+        
+        // Якщо немає даних, ініціалізуємо графіки з порожніми даними
+        if (allData.length === 0) {
+            acwrRpeValue.textContent = "N/A";
+            acwrRpeTrendIcon.style.display = 'none';
+            riskStatusCard.className = 'status-card status-grey';
+            riskStatusCard.innerHTML = '<p style="font-size: 14px; color: #fff; margin: 0;">Недостатньо даних</p>';
+            submitLoadBtn.className = 'submit-button status-grey';
+            
+            renderACWRChart([], 'rpe');
+            renderLoadTrendChart([]);
+            renderDistanceChart([]);
+            return;
+        }
+
+        const acwrRpeResults = calculateACWR(allData, 'rpe');
+        const acwrDistanceResults = calculateACWR(allData, 'distance');
+
+        // Оновлення картки ACWR (RPE)
+        const latestRpeResult = acwrRpeResults[acwrRpeResults.length - 1];
+        let latestACWR = null;
+        let prevACWR = null;
+
+        if (latestRpeResult && latestRpeResult.acwr !== null) {
+            latestACWR = parseFloat(latestRpeResult.acwr.toFixed(2));
+            acwrRpeValue.textContent = latestACWR;
+
+            // Trend icon (простий тренд порівняно з попереднім днем)
+            if (acwrRpeResults.length > 1 && acwrRpeResults[acwrRpeResults.length - 2].acwr !== null) {
+                prevACWR = parseFloat(acwrRpeResults[acwrRpeResults.length - 2].acwr.toFixed(2));
+                acwrRpeTrendIcon.style.display = 'inline';
+                if (latestACWR > prevACWR) {
+                    acwrRpeTrendIcon.textContent = '▲';
+                    acwrRpeTrendIcon.style.color = '#F44336'; // Червоний
+                } else if (latestACWR < prevACWR) {
+                    acwrRpeTrendIcon.textContent = '▼';
+                    acwrRpeTrendIcon.style.color = '#4CAF50'; // Зелений
+                } else {
+                    acwrRpeTrendIcon.textContent = '—';
+                    acwrRpeTrendIcon.style.color = '#CCCCCC';
+                }
+            } else {
+                acwrRpeTrendIcon.style.display = 'none';
+            }
+
+            let statusText = '';
+            let statusClass = 'status-grey'; // Дефолт
+            let buttonClass = 'status-grey';
+
+            if (latestACWR >= 1.5) {
+                statusText = '<span style="font-size: 20px;">🔴</span> Високий Ризик Травми';
+                statusClass = 'status-danger';
+                buttonClass = 'status-red';
+            } else if (latestACWR >= 1.3) {
+                statusText = '<span style="font-size: 20px;">⚠️</span> Підвищений Ризик';
+                statusClass = 'status-warning';
+                buttonClass = 'status-orange';
+            } else if (latestACWR >= 0.8) {
+                statusText = '<span style="font-size: 20px;">✅</span> Оптимальна Зона';
+                statusClass = 'optimal-zone'; // Використовуємо клас optimal-zone
+                buttonClass = 'status-green';
+            } else if (latestACWR >= 0.5) {
+                statusText = '<span style="font-size: 20px;">⚠️</span> Недостатній Обсяг';
+                statusClass = 'status-warning';
+                buttonClass = 'status-orange';
+            } else {
+                statusText = '<span style="font-size: 20px;">❌</span> Низький Обсяг (Детренування)';
+                statusClass = 'status-danger';
+                buttonClass = 'status-red';
+            }
+            riskStatusCard.className = 'status-card ' + statusClass;
+            riskStatusCard.innerHTML = `<p style="font-size: 14px; color: ${statusClass === 'status-warning' ? '#333' : '#fff'}; margin: 0;">${statusText}</p>`;
+            submitLoadBtn.className = 'submit-button ' + buttonClass;
+        } else {
+            acwrRpeValue.textContent = "N/A";
+            acwrRpeTrendIcon.style.display = 'none';
+            riskStatusCard.className = 'status-card status-grey';
+            riskStatusCard.innerHTML = '<p style="font-size: 14px; color: #fff; margin: 0;">Недостатньо даних</p>';
+            submitLoadBtn.className = 'submit-button status-grey';
+        }
+
+        // Рендер графіків
+        renderACWRChart(acwrRpeResults, 'rpe');
+        renderLoadTrendChart(acwrRpeResults);
+        renderDistanceChart(acwrDistanceResults);
+    }
+
+    // --- Chart.js Rendering Functions ---
+
+    // Базові опції для темних графіків Chart.js
+    const baseChartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                labels: {
+                    color: '#BBBBBB'
+                }
+            },
+            tooltip: {
+                backgroundColor: 'rgba(0,0,0,0.8)',
+                titleColor: '#E0E0E0',
+                bodyColor: '#CCCCCC',
+                borderColor: '#444',
+                borderWidth: 1
+            }
+        },
+        scales: {
+            x: {
+                grid: {
+                    color: '#333'
+                },
+                ticks: {
+                    color: '#BBBBBB'
+                }
+            },
+            y: {
+                grid: {
+                    color: '#333'
+                },
+                ticks: {
+                    color: '#BBBBBB'
+                }
+            }
+        }
+    };
+
+    function renderACWRChart(results) {
+        const ctx = document.getElementById('acwrChart').getContext('2d');
+        if (acwrChartInstance) acwrChartInstance.destroy();
+
+        const labels = results.map(r => r.date);
+        const acwrData = results.map
     
 });
