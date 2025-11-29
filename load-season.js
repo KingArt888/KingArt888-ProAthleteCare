@@ -7,7 +7,6 @@ let currentWeeklyChart = null;
 let currentGaugeChart = null; 
 
 // Тестові дані, що імітують 28 днів S-RPE Load
-// Це дозволить ACWR одразу працювати при першому запуску
 const TEST_LOAD_HISTORY = [
     // День 1 (Сьогодні-1) до День 28 (Сьогодні-28). Load = Duration * RPE
     100, 300, 400, 0, 500, 450, 0, // Тиждень 1 (1750 AU)
@@ -103,7 +102,7 @@ function setupLoadForm() {
         const duration = parseInt(document.getElementById('load-duration').value);
         const distance = parseFloat(document.getElementById('load-distance').value);
         
-        // 🚨 ВИПРАВЛЕННЯ RPE: Перевірка та отримання значення
+        // Отримання значення RPE
         const rpeEl = document.querySelector('input[name="rpe"]:checked');
         
         if (!rpeEl) {
@@ -133,10 +132,9 @@ function setupLoadForm() {
         }
 
         saveLoadData();
-        // Залишаємо форму заповненою поточною датою для подальшого введення
+        // Скидаємо поля вводу
         document.getElementById('load-duration').value = 60;
         document.getElementById('load-distance').value = 0.0;
-        // Скидаємо вибір RPE (або залишаємо на 1)
         document.getElementById('rpe1').checked = true;
     });
 }
@@ -158,7 +156,7 @@ function calculateAndDisplayLoads() {
     // 3. ВІДОБРАЖЕННЯ
     displayACWR(rollingMetrics.acwrLatest, rollingMetrics.acuteLatest, rollingMetrics.chronicLatest);
     
-    // 💡 НОВА ЛОГІКА СПІДОМЕТРА
+    // ЛОГІКА СПІДОМЕТРА
     if (rollingMetrics.acwrLatest) {
         const acwrValue = parseFloat(rollingMetrics.acwrLatest);
         const gaugeData = getAcwrGaugeData(acwrValue);
@@ -194,15 +192,15 @@ function calculateRollingMetrics(data) {
     for (let i = 27; i < internalLoads.length; i++) {
         const currentDate = internalLoads[i].date;
         
-        // Acute (7 днів) - Включаючи поточний день (i - 6 до i)
+        // Acute (7 днів)
         const acuteSlice = internalLoads.slice(i - 6, i + 1);
         const acuteSum = acuteSlice.reduce((sum, item) => sum + item.load, 0);
-        const acuteLoad = acuteSum / 7; // Середньоденне Acute
+        const acuteLoad = acuteSum / 7; 
 
-        // Chronic (28 днів) - Включаючи поточний день (i - 27 до i)
+        // Chronic (28 днів)
         const chronicSlice = internalLoads.slice(i - 27, i + 1);
         const chronicSum = chronicSlice.reduce((sum, item) => sum + item.load, 0);
-        const chronicLoad = chronicSum / 28; // Середньоденне Chronic
+        const chronicLoad = chronicSum / 28; 
 
         const acwr = chronicLoad > 0 ? (acuteLoad / chronicLoad) : 0;
         
@@ -241,379 +239,4 @@ function calculateWeeklyMetrics(data) {
         if (!weeklyTotals[startOfWeek]) {
             weeklyTotals[startOfWeek] = { 
                 internalLoad: 0,
-                distance: 0
-            };
-        }
-        weeklyTotals[startOfWeek].internalLoad += d.internalLoad;
-        weeklyTotals[startOfWeek].distance += d.distance;
-    });
-    
-    const chartData = Object.keys(weeklyTotals).map(date => ({
-        weekStart: date,
-        internalLoad: weeklyTotals[date].internalLoad,
-        distance: weeklyTotals[date].distance
-    })).sort((a, b) => new Date(a.weekStart) - new Date(b.weekStart));
-    
-    return chartData;
-}
-
-
-// ----------------------------------------------------------
-// ФУНКЦІЇ СПІДОМЕТРА (GAUGE CHART) 
-// ----------------------------------------------------------
-
-// Функція, яка готує дані та кольори для спідометра
-function getAcwrGaugeData(acwr) {
-    const zones = [0.0, 0.8, 1.3, 1.5, 2.0];
-    const colors = ['#00BFFF', '#50C878', '#FFC72C', '#DA3E52']; // Низький, Оптимальний, Високий, Критичний
-    
-    let pointerValue = acwr;
-    let pointerColor = '#CCCCCC';
-
-    // Обмеження значення для відображення
-    if (pointerValue > 2.0) {
-        pointerValue = 2.0;
-        pointerColor = '#DA3E52';
-    } else if (pointerValue < 0) {
-        pointerValue = 0;
-    }
-
-    // Визначаємо колір стрілки (за ACWR)
-    if (acwr > 1.5) {
-        pointerColor = '#DA3E52'; 
-    } else if (acwr > 1.3) {
-        pointerColor = '#FFC72C'; 
-    } else if (acwr >= 0.8) {
-        pointerColor = '#50C878'; 
-    } else { 
-        pointerColor = '#00BFFF';
-    }
-
-    // Нам потрібні три набори даних для Chart.js:
-    // Сектори: [0.8, 1.3-0.8, 1.5-1.3, 2.0-1.5]
-    const dataSet = [zones[1], zones[2] - zones[1], zones[3] - zones[2], zones[4] - zones[3]];
-    
-    return {
-        data: dataSet,
-        colors: colors,
-        pointer: pointerValue,
-        pointerColor: pointerColor
-    };
-}
-
-/**
- * 💡 ОНОВЛЕНА ФУНКЦІЯ: Зроблено спідометр компактним та мінімалістичним 
- * (тонша стрілка, менший cutout)
- */
-function renderGaugeChart(gaugeData) {
-    const ctx = document.getElementById('acwrGaugeChart');
-    if (!ctx) return;
-    if (currentGaugeChart) currentGaugeChart.destroy();
-    
-    // Готуємо дані для відображення стрілки
-    const maxVal = 2.0;
-    const value = gaugeData.pointer;
-    const angle = (value / maxVal) * 180; // 180 градусів для півкола
-    
-    // 💡 Плагін для відображення стрілки (оновлено)
-    const gaugePointer = {
-        id: 'gaugePointer',
-        afterDatasetsDraw(chart, args, options) {
-            const { ctx, chartArea: { left, right, bottom } } = chart;
-            const xCenter = (left + right) / 2;
-            const yCenter = bottom; 
-            
-            ctx.save();
-            
-            // 1. Малюємо центр (коло)
-            ctx.beginPath();
-            ctx.arc(xCenter, yCenter, 4, 0, 2 * Math.PI); // Менший центр
-            ctx.fillStyle = gaugeData.pointerColor;
-            ctx.fill();
-            
-            // 2. Малюємо стрілку
-            ctx.translate(xCenter, yCenter);
-            ctx.rotate(Math.PI + (angle * Math.PI / 180));
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.lineTo(0, -50); // Довжина стрілки зменшена (було -60)
-            ctx.lineWidth = 2; // Тонша стрілка (було 3)
-            ctx.strokeStyle = gaugeData.pointerColor;
-            ctx.lineCap = 'round';
-            ctx.stroke();
-            
-            ctx.restore();
-        }
-    };
-    
-    currentGaugeChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            datasets: [{
-                data: gaugeData.data,
-                backgroundColor: gaugeData.colors,
-                borderWidth: 0,
-                circumference: 180, 
-                rotation: 270,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            cutout: '75%', // Товщина дуги зменшена для мінімалізму (було 60%)
-            plugins: {
-                legend: { display: false },
-                tooltip: { enabled: false },
-            },
-            layout: {
-                padding: {
-                    bottom: 10
-                }
-            }
-        },
-        plugins: [gaugePointer] 
-    });
-}
-
-// ----------------------------------------------------------
-// ФУНКЦІЇ ВІДОБРАЖЕННЯ
-// ----------------------------------------------------------
-
-function displayACWR(acwrValue, acuteLoad, chronicLoad) {
-    const valueEl = document.getElementById('acwr-value');
-    const statusEl = document.getElementById('acwr-status');
-    const acuteEl = document.getElementById('acute-workload');
-    const chronicEl = document.getElementById('chronic-workload');
-    
-    if (!statusEl || !valueEl || !acuteEl || !chronicEl) return;
-
-    // Скидання, якщо даних недостатньо
-    if (!acwrValue) {
-        valueEl.textContent = 'N/A';
-        statusEl.textContent = 'ПОТРІБНО > 28 ДНІВ ДАНИХ';
-        statusEl.style.backgroundColor = '#2c2c2c';
-        statusEl.style.color = '#FFC72C';
-        acuteEl.textContent = 'Гостре (7 дн.): N/A';
-        chronicEl.textContent = 'Хронічне (28 дн.): N/A';
-        return;
-    }
-
-    const acwr = parseFloat(acwrValue);
-    let riskStatus = '';
-    let bgColor = '';
-    let textColor = '#000000'; // Чорний текст для контрасту
-
-    if (acwr > 1.5) {
-        riskStatus = 'КРИТИЧНИЙ РИЗИК 🚨';
-        bgColor = '#DA3E52'; 
-        textColor = '#FFFFFF';
-    } else if (acwr > 1.3) {
-        riskStatus = 'ВИСОКИЙ РИЗИК 🔥';
-        bgColor = '#FFC72C'; 
-    } else if (acwr >= 0.8 && acwr <= 1.3) {
-        riskStatus = 'ОПТИМАЛЬНО ✅';
-        bgColor = '#50C878'; 
-    } else { // ACWR < 0.8
-        riskStatus = 'НИЗЬКИЙ СТИМУЛ 📉';
-        bgColor = '#00BFFF';
-        textColor = '#000000'; 
-    }
-
-    valueEl.textContent = acwrValue;
-    // Колір значення буде встановлено через renderGaugeChart
-    statusEl.textContent = riskStatus;
-    statusEl.style.backgroundColor = bgColor;
-    statusEl.style.color = textColor; 
-    acuteEl.textContent = `Гостре (7 дн.): ${acuteLoad} AU`;
-    chronicEl.textContent = `Хронічне (28 дн.): ${chronicLoad} AU`;
-}
-
-// ----------------------------------------------------------
-// ФУНКЦІЇ ГРАФІКІВ (Chart.js)
-// ----------------------------------------------------------
-
-function renderRollingLoadChart(rollingData) {
-    const ctx = document.getElementById('rollingLoadChart');
-    if (!ctx) return;
-    if (currentRollingChart) currentRollingChart.destroy();
-
-    if (rollingData.length === 0) {
-        ctx.style.display = 'none';
-        ctx.parentNode.querySelector('h3').insertAdjacentHTML('afterend', '<p class="placeholder-text">Потрібно 28 днів даних для відображення ролінгу.</p>');
-        return;
-    }
-    
-    ctx.style.display = 'block';
-    
-    // ... (Your rolling load chart implementation) ...
-    const labels = rollingData.map(d => d.date);
-    const acuteData = rollingData.map(d => d.acute);
-    const chronicData = rollingData.map(d => d.chronic);
-    const acwrData = rollingData.map(d => d.acwr);
-
-    currentRollingChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: 'Гостре навантаження (7-Day Sum)',
-                    data: acuteData,
-                    borderColor: '#DA3E52',
-                    backgroundColor: 'rgba(218, 62, 82, 0.2)',
-                    fill: false,
-                    tension: 0.2,
-                    yAxisID: 'y'
-                },
-                {
-                    label: 'Хронічне навантаження (28-Day Avg * 7)',
-                    data: chronicData,
-                    borderColor: '#00BFFF',
-                    backgroundColor: 'rgba(0, 191, 255, 0.2)',
-                    fill: false,
-                    tension: 0.2,
-                    yAxisID: 'y'
-                },
-                {
-                    label: 'ACWR',
-                    data: acwrData,
-                    borderColor: '#FFC72C',
-                    borderDash: [5, 5],
-                    fill: false,
-                    tension: 0.1,
-                    yAxisID: 'acwr'
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: { display: false },
-                legend: { labels: { color: '#CCCCCC' } },
-                // 💡 Chart.js Annotation Plugin повинен бути підключений окремо!
-                annotation: {
-                    annotations: {
-                        line1: {
-                            type: 'line',
-                            yMin: 1.3,
-                            yMax: 1.3,
-                            borderColor: '#FFC72C',
-                            borderWidth: 1,
-                            borderDash: [6, 6],
-                            yAxisID: 'acwr'
-                        },
-                        line2: {
-                            type: 'line',
-                            yMin: 0.8,
-                            yMax: 0.8,
-                            borderColor: '#50C878',
-                            borderWidth: 1,
-                            borderDash: [6, 6],
-                            yAxisID: 'acwr'
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: { ticks: { color: '#CCCCCC' }, grid: { color: '#333333' } },
-                y: {
-                    type: 'linear',
-                    display: true,
-                    position: 'left',
-                    title: { display: true, text: 'Тижневе Навантаження (AU)', color: '#CCCCCC' },
-                    ticks: { color: '#CCCCCC' },
-                    grid: { color: '#333333' }
-                },
-                acwr: {
-                    type: 'linear',
-                    display: true,
-                    position: 'right',
-                    title: { display: true, text: 'ACWR', color: '#FFC72C' },
-                    ticks: { color: '#FFC72C' },
-                    grid: { drawOnChartArea: false }, 
-                    min: 0,
-                    max: 2.0
-                }
-            }
-        }
-    });
-}
-
-function renderWeeklyLoadChart(weeklyData) {
-    const ctx = document.getElementById('weeklyLoadChart');
-    if (!ctx) return;
-    if (currentWeeklyChart) currentWeeklyChart.destroy();
-
-    if (weeklyData.length === 0) {
-        ctx.style.display = 'none';
-        ctx.parentNode.querySelector('h3').insertAdjacentHTML('afterend', '<p class="placeholder-text">Введіть дані, щоб побачити тижневі підсумки.</p>');
-        return;
-    }
-    
-    ctx.style.display = 'block';
-
-    const labels = weeklyData.map(d => `Тиждень від ${d.weekStart}`);
-    const loadData = weeklyData.map(d => d.internalLoad);
-    const distanceData = weeklyData.map(d => d.distance);
-    
-    currentWeeklyChart = new Chart(ctx, {
-        type: 'line', 
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: 'Тижневе Internal Load (AU)',
-                    data: loadData,
-                    borderColor: '#00BFFF',
-                    backgroundColor: 'rgba(0, 191, 255, 0.3)',
-                    fill: 'origin', 
-                    tension: 0.3, 
-                    yAxisID: 'load'
-                },
-                {
-                    label: 'Тижнева Дистанція (км)',
-                    data: distanceData,
-                    borderColor: '#FFC72C',
-                    fill: false,
-                    tension: 0.3,
-                    yAxisID: 'distance'
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: { display: false },
-                legend: { labels: { color: '#CCCCCC' } }
-            },
-            scales: {
-                x: { ticks: { color: '#CCCCCC' }, grid: { color: '#333333' } },
-                load: {
-                    type: 'linear',
-                    position: 'left',
-                    title: { display: true, text: 'Навантаження (AU)', color: '#CCCCCC' },
-                    ticks: { color: '#CCCCCC' },
-                    grid: { color: '#333333' }
-                },
-                distance: {
-                    type: 'linear',
-                    position: 'right',
-                    title: { display: true, text: 'Дистанція (км)', color: '#FFC72C' },
-                    ticks: { color: '#FFC72C' },
-                    grid: { drawOnChartArea: false }
-                }
-            }
-        }
-    });
-}
-
-
-// Запуск ініціалізації при завантаженні
-document.addEventListener('DOMContentLoaded', () => {
-    loadInitialData();
-    setupLoadForm();
-    // Викликаємо розрахунок після завантаження даних
-    calculateAndDisplayLoads(); 
-});
+                distance
