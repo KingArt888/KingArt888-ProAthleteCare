@@ -133,7 +133,7 @@ textarea {
     width: 100%;
     
     /* ЗМЕНШУЄМО РОЗМІР КАРТИНКИ: встановіть бажане значення */
-    max-width: 50px; 
+    max-width: 500px; 
     
     margin: 15px auto;
 }
