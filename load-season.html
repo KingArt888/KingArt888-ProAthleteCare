@@ -30,74 +30,25 @@
             <a href="velocity-control.html">Velocity Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
         </nav>
         
-       <main class="main-content">
-    <h2 style="color: #4CAF50;">📈 Load Season: Контроль тренувального навантаження</h2>
-
-    <div class="dashboard-grid">
-        <div class="form-card grid-item">
-            <h3>Щоденне тренування (Session-RPE)</h3>
-            <form id="load-form">
-                <label for="load-date">Дата тренування:</label>
-                <input type="date" id="load-date" name="date" required style="width: 100%; padding: 8px; margin-bottom: 15px; background-color: #1a1a1a; border: 1px solid #333; color: #CCCCCC;">
+        <main class="main-content">
+            <h2 style="color: #4CAF50;">📈 Load Season: Контроль тренувального навантаження</h2>
+            
+            <div class="dashboard-container">
                 
-                <label for="load-duration">Тривалість (хвилин):</label>
-                <input type="number" id="load-duration" name="duration" min="1" value="60" required style="width: 100%; padding: 8px; margin-bottom: 15px; background-color: #1a1a1a; border: 1px solid #333; color: #CCCCCC;">
+                <div class="form-card" style="width: 40%; min-width: 350px;">
+                    <h3>Щоденне тренування (Session-RPE)</h3>
+                    <form id="load-form">
+                        
+                        <label for="load-date">Дата тренування:</label>
+                        <input type="date" id="load-date" name="date" required style="width: 100%; padding: 8px; margin-bottom: 15px; background-color: #1a1a1a; border: 1px solid #333; color: #CCCCCC;">
+                        
+                        <label for="load-duration">Тривалість (хвилин):</label>
+                        <input type="number" id="load-duration" name="duration" min="1" value="60" required style="width: 100%; padding: 8px; margin-bottom: 15px; background-color: #1a1a1a; border: 1px solid #333; color: #CCCCCC;">
 
-                <label for="load-distance">Кілометраж (м):</label>
-                <input type="number" id="load-distance" name="distance" min="0" value="0" step="100" style="width: 100%; padding: 8px; margin-bottom: 15px; background-color: #1a1a1a; border: 1px solid #333; color: #CCCCCC;">
-
-                <label>Суб'єктивне навантаження (RPE, 1-10):</label>
-                <div class="rating-group rpe-group" id="rpe-rating-group">
-                    <input type="radio" id="rpe1" name="rpe" value="1"><label for="rpe1" title="1 (Дуже легко)"></label>
-                    <input type="radio" id="rpe2" name="rpe" value="2"><label for="rpe2" title="2"></label>
-                    <input type="radio" id="rpe3" name="rpe" value="3"><label for="rpe3" title="3 (Легко)"></label>
-                    <input type="radio" id="rpe4" name="rpe" value="4"><label for="rpe4" title="4"></label>
-                    <input type="radio" id="rpe5" name="rpe" value="5"><label for="rpe5" title="5 (Помірно)"></label>
-                    <input type="radio" id="rpe6" name="rpe" value="6"><label for="rpe6" title="6"></label>
-                    <input type="radio" id="rpe7" name="rpe" value="7"><label for="rpe7" title="7 (Важко)"></label>
-                    <input type="radio" id="rpe8" name="rpe" value="8"><label for="rpe8" title="8 (Дуже важко)"></label>
-                    <input type="radio" id="rpe9" name="rpe" value="9"><label for="rpe9" title="9"></label>
-                    <input type="radio" id="rpe10" name="rpe" value="10"><label for="rpe10" title="10 (Максимально важко)"></label>
-                </div>
-                
-                <button type="submit" id="submit-load-btn" class="submit-button green-button" style="width: 100%; padding: 10px; margin-top: 20px; border-radius: 5px; border: none; font-size: 16px; cursor: pointer;">
-                    Зафіксувати Навантаження
-                </button>
-            </form>
-        </div>
-
-        <div class="status-charts-grid grid-item">
-            <div class="status-card-group">
-                <div class="status-card current-acwr-card">
-                    <p style="font-size: 14px; color: #aaa;">Поточний ACWR (RPE)</p>
-                    <h3 id="acwr-rpe-value" style="font-size: 28px; margin: 5px 0;">N/A</h3>
-                    <span id="acwr-rpe-trend-icon" style="color: #4CAF50;">▲</span>
-                </div>
-                <div id="risk-status-card" class="status-card status-grey optimal-zone">
-                    <p style="font-size: 14px; color: #fff; margin: 0;"><span style="font-size: 20px;">✅</span> Оптимальна Зона</p>
-                </div>
-            </div>
-
-            <div class="chart-card distance-chart-container">
-                <h3>Динаміка Кілометражу (Rolling Distance)</h3>
-                <canvas id="distanceChart"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <div class="chart-section-title">
-        <h3 style="color: #4CAF50; margin-top: 30px;">Тренувальне Навантаження (ProAtletCare Analytics)</h3>
-    </div>
-
-    <div class="bottom-charts-grid">
-        <div class="chart-card">
-            <h3>Динаміка Ризику Травми (ACWR)</h3>
-            <canvas id="acwrChart"></canvas>
-        </div>
-        <div class="chart-card">
-            <h3>Тренувальне Навантаження (Rolling Trend)</h3>
-            <canvas id="loadTrendChart"></canvas>
-        </div>
-    </div>
-
-</main>
+                        <label>Суб'єктивне навантаження (RPE, 1-10):</label>
+                        <div class="rating-group pain-group" id="rpe-rating-group">
+                            <input type="radio" id="rpe10" name="rpe" value="10"><label for="rpe10" title="10 (Максимально важко)"></label>
+                            <input type="radio" id="rpe9" name="rpe" value="9"><label for="rpe9" title="9"></label>
+                            <input type="radio" id="rpe8" name="rpe" value="8"><label for="rpe8" title="8 (Дуже важко)"></label>
+                            <input type="radio" id="rpe7" name="rpe" value="7"><label for="rpe7" title="7"></label>
+                            <input type="radio" id="rpe6" name="rpe" value="6
