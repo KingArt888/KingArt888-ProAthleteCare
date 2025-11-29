@@ -87,14 +87,14 @@
     transition: color 0.2s;
 }/* Зірки (Сон) */.star-group label:before {
     content: '★'; 
-    margin-right: 10px;
+    margin-right: 15px;
 }.star-group input:checked ~ label:before,
 .star-group label:hover:before,
 .star-group label:hover ~ label:before {
     color: #FFC72C; 
 }/* Хрестики (Біль/Втома) */.pain-group label:before {
     content: '✖'; 
-    margin-right: 10px;
+    margin-right: 13px;
 }.pain-group input:checked ~ label:before,
 .pain-group label:hover:before,
 .pain-group label:hover ~ label:before {
