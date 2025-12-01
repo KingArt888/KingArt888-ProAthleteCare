@@ -69,13 +69,14 @@ input[type="date"]:focus, input[type="number"]:focus {
 }
 
 /* =========================================================================
-   3. СТИЛІ RPE GROUP (1-10)
+   3. СТИЛІ RPE GROUP (1-10 - ВОГНИКИ З ЦИФРАМИ)
    ========================================================================= */
 
-.rating-group {
+.rpe-group {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: row-reverse; 
+    justify-content: flex-end; 
+    align-items: flex-start; /* Змінено: для вирівнювання цифр */
     margin-bottom: 20px;
     background-color: #1a1a1a;
     padding: 5px;
@@ -83,30 +84,106 @@ input[type="date"]:focus, input[type="number"]:focus {
     flex-wrap: wrap; 
 }
 
-.rating-group input[type="radio"] {
+.rpe-group input[type="radio"] {
     display: none;
 }
 
-.rating-group label {
+.rpe-group label {
     cursor: pointer;
-    font-size: 0.8em;
-    width: 8%;
-    min-width: 25px;
+    font-size: 1.5em; 
+    width: 8%; 
+    padding: 5px 0 0 0; /* Зменшено нижній padding для підйому цифр */
+    margin: 0; 
     text-align: center;
-    padding: 5px 0;
-    border-radius: 5px;
-    background-color: #333;
-    color: #CCCCCC;
-    transition: background-color 0.2s, transform 0.2s;
-    margin: 2px;
+    transition: color 0.3s, transform 0.2s;
+    color: #456545; /* Колір неактивної іконки - темно-зелений */
+    position: relative; /* Додано для позиціонування цифри */
+    display: block; /* Важливо для flexbox та позиціонування */
 }
 
-.rpe-group input[type="radio"]:checked + label {
-    background-color: #FFD700; 
-    color: #1E1E1E;
+/* --- СТИЛЬ ЦИФР ЗВЕРХУ --- */
+.rpe-group label::after {
+    content: attr(data-rpe); /* Беремо вміст з HTML-атрибуту */
+    position: absolute;
+    top: -15px; /* Піднімаємо цифру над блискавкою */
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.6em; /* Дуже маленький розмір */
     font-weight: bold;
-    transform: scale(1.1);
-    box-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+    color: #888888; /* Сірий колір для неактивних цифр */
+    transition: color 0.3s;
+}
+
+/* Стиль самої іконки */
+.rpe-group label::before {
+    content: '⚡'; 
+    padding: 0 1px;
+    display: block;
+}
+
+/* --- КОЛЬОРОВА ЛОГІКА RPE (АКТИВНИЙ СТАН) --- */
+
+/* 1. БАЗОВИЙ КОЛІР: 1-5 (ЯСКРАВО-ЗЕЛЕНИЙ) */
+.rpe-group input[value="1"]:checked ~ label,
+.rpe-group input[value="2"]:checked ~ label,
+.rpe-group input[value="3"]:checked ~ label,
+.rpe-group input[value="4"]:checked ~ label,
+.rpe-group input[value="5"]:checked ~ label {
+    color: #5cb85c; /* Green - блискавка */
+}
+
+/* Підсвічуємо цифри відповідним кольором */
+.rpe-group input[value="1"]:checked ~ label::after,
+.rpe-group input[value="2"]:checked ~ label::after,
+.rpe-group input[value="3"]:checked ~ label::after,
+.rpe-group input[value="4"]:checked ~ label::after,
+.rpe-group input[value="5"]:checked ~ label::after {
+    color: #5cb85c; 
+}
+
+
+/* 2. ПІДСВІЧУВАННЯ 6-8 (ОРАНЖЕВИЙ) */
+.rpe-group input[value="6"]:checked ~ label,
+.rpe-group input[value="7"]:checked ~ label,
+.rpe-group input[value="8"]:checked ~ label {
+    color: #f0ad4e; /* Orange - блискавка */
+}
+.rpe-group input[value="6"]:checked ~ label::after,
+.rpe-group input[value="7"]:checked ~ label::after,
+.rpe-group input[value="8"]:checked ~ label::after {
+    color: #f0ad4e; 
+}
+
+/* 3. ПІДСВІЧУВАННЯ 9-10 (ЧЕРВОНИЙ) */
+.rpe-group input[value="9"]:checked ~ label,
+.rpe-group input[value="10"]:checked ~ label {
+    color: #d9534f; /* Red - блискавка */
+}
+.rpe-group input[value="9"]:checked ~ label::after,
+.rpe-group input[value="10"]:checked ~ label::after {
+    color: #d9534f; 
+}
+
+/* 4. ЕФЕКТНИЙ ВІЗУАЛ (Застосовуємо до вибраної мітки) */
+.rpe-group input:checked + label {
+    transform: scale(1.15); 
+    text-shadow: 0 0 5px currentColor; 
+}
+
+/* При наведенні (Hover) робимо світло-зеленою */
+.rpe-group label:hover {
+    color: #5cb85c; 
+}
+.rpe-group label:hover::after {
+    color: #5cb85c;
+}
+
+/* Запобігаємо конфлікту ховера з вибраним елементом */
+.rpe-group input:checked ~ label:hover {
+    color: inherit; 
+}
+.rpe-group input:checked ~ label:hover::after {
+    color: inherit; 
 }
 
 /* =========================================================================
