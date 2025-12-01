@@ -4,101 +4,103 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Load Season | ProAthleteCare</title>
-    <!-- Підключення стилів -->
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="load-season.css">
-    <!-- Chart.js для графіків -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <!-- Font Awesome для іконок -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-</head>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    </head>
 <body>
-    <header>
-        <!-- Використовуємо реальний логотип Шахтаря, оскільки Ви там працювали -->
-        <img src="https://placehold.co/70x70/FFC72C/0D0D0D?text=SC" onerror="this.src='https://placehold.co/70x70/FFC72C/0D0D0D?text=AK'" alt="Logo" class="logo">
-        <h1 class="project-title">ProAthleteCare: Аналіз Тренувального Навантаження</h1>
-        <p class="tagline">Для Кулик Артема. Ваш інструмент контролю ACWR.</p>
-    </header>
 
+    <header>
+        <a href="index.html" class="logo-link">
+            <img src="AK_logo.png" alt="ProAthleteCare Logo" class="logo">
+        </a>
+        <h1 class="project-title">ProAthleteCare</h1>
+        <p class="tagline">Онлайн-тренінг та професійний супровід атлетів</p>
+    </header>
+    
     <div class="content-wrapper">
         <nav class="sidebar">
-            <a href="#" class="active"><i class="fas fa-chart-line"></i> Тренувальне Навантаження</a>
-            <a href="#"><i class="fas fa-list-check"></i> Тижневий План</a>
-            <a href="#"><i class="fas fa-user-gear"></i> Профіль Спортсмена</a>
-            <a href="#"><i class="fas fa-gear"></i> Налаштування</a>
+            <a href="wellness.html">Wellness Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="injury.html">Injury Story <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+            
+            <a href="load-season.html" class="active">Load Season <img src="AK_logo.png" class="menu-icon" alt="АК"></a> 
+            
+            <a href="daily-individual.html">Daily Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="weekly-individual.html">Weekly Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="weight-control.html">Weight Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="velocity-control.html">Velocity Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
         </nav>
-
+        
         <main class="main-content">
-            <div class="hero">
-                <img src="https://placehold.co/1200x400/FFC72C/0D0D0D?text=PERFORMANCE+OPTIMIZATION" alt="Athlete training hard" class="hero-image">
-                <div class="hero-overlay">
-                    <h2>Контроль Навантаження</h2>
-                    <p>Відстежуйте співвідношення гострого до хронічного навантаження (ACWR) для мінімізації ризику травм та оптимізації форми.</p>
-                </div>
-            </div>
-
-            <section class="dashboard-grid">
-                <!-- 1. ACWR Gauge (Спідометр) -->
-                <div class="card acwr-card">
-                    <h3>ACWR Співвідношення</h3>
-                    <div class="gauge-container">
-                        <canvas id="acwrGauge"></canvas>
-                        <div id="acwrValue" class="acwr-value">0.00</div>
-                        <div id="acwrStatus" class="acwr-status">Недостатньо даних</div>
-                    </div>
-                </div>
-
-                <!-- 2. Form для введення даних -->
-                <div class="card form-card">
-                    <h3>Введення Тренування (RPE-метод)</h3>
+            <h2>📈 Load Season: Контроль тренувального навантаження</h2>
+            
+            <div class="dashboard-container">
+                
+                <div class="form-card form-container">
+                    <h3>Щоденне тренування (Session-RPE)</h3>
                     <form id="load-form">
-                        <div class="form-group">
-                            <label for="date">Дата тренування:</label>
-                            <input type="date" id="date" name="date" required>
-                        </div>
+                        
+                        <label for="load-date">Дата тренування:</label>
+                        <input type="date" id="load-date" name="date" required>
+                        
+                        <label for="load-duration">Тривалість (хвилин):</label>
+                        <input type="number" id="load-duration" name="duration" min="1" value="60" required>
+                        
+                        <label for="load-distance">Кілометраж (км):</label>
+                        <input type="number" id="load-distance" name="distance" min="0" step="0.1" value="0.0" required>
 
-                        <div class="form-group">
-                            <label for="duration">Тривалість (хв):</label>
-                            <input type="number" id="duration" name="duration" min="1" required>
+                        <label>Суб'єктивне навантаження (RPE, 1-10):</label>
+                        <div class="rating-group rpe-group" id="rpe-rating-group">
+                            <input type="radio" id="rpe1" name="rpe" value="1" required><label for="rpe1" title="1 (Дуже легко)"></label>
+                            <input type="radio" id="rpe5" name="rpe" value="5"><label for="rpe5" title="5 (Помірно)"></label>
+                            <input type="radio" id="rpe10" name="rpe" value="10"><label for="rpe10" title="10 (Максимально важко)"></label>
+                            <span class="rpe-value-display"></span>
                         </div>
+                        
+                        <button type="submit" class="submit-button">Зберегти навантаження</button>
+                    </form>
+                    <div id="form-status" class="status-message"></div>
+                </div>
 
-                        <div class="form-group">
-                            <label for="distance">Дистанція (км, необов'язково):</label>
-                            <input type="number" id="distance" name="distance" step="0.1" value="0">
-                        </div>
-
-                        <div class="form-group rpe-group">
-                            <label>RPE (Суб'єктивна складність):</label>
-                            <div class="rpe-options">
-                                <input type="radio" id="rpe6" name="rpe" value="6" required><label for="rpe6">6 (Легко)</label>
-                                <input type="radio" id="rpe8" name="rpe" value="8"><label for="rpe8">8 (Важко)</label>
-                                <input type="radio" id="rpe10" name="rpe" value="10"><label for="rpe10">10 (Макс. зусилля)</label>
+                <div class="stats-card stats-container">
+                    <h3>Контроль ризику травм (ACWR)</h3>
+                    
+                    <div class="speedometer-widget">
+                        <div class="gauge-display" id="acwr-gauge-display">
+                            <div class="gauge-arc">
+                                <div class="arc green-arc"></div>
+                                <div class="arc yellow-arc"></div>
+                                <div class="arc red-arc"></div>
+                                <div class="gauge-needle-pivot">
+                                    <div class="gauge-needle" id="gauge-needle"></div>
+                                </div>
+                            </div>
+                            <div class="gauge-value-text">
+                                <span id="acwr-value">1.00</span>
+                                <p class="acwr-label">ACWR</p>
                             </div>
                         </div>
+                        <div class="gauge-status-box">
+                            <p>Статус: <span id="acwr-status" class="status-safe">Безпечна зона</span></p>
+                        </div>
+                    </div>
 
-                        <button type="submit" class="submit-btn">Зберегти Навантаження</button>
-                        <p id="form-status" class="status-message"></p>
-                    </form>
+                    <div class="chart-card">
+                        <h4>Дистанція (км) по тижнях</h4>
+                        <canvas id="distanceChart"></canvas>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <h4>Навантаження (Acute vs Chronic)</h4>
+                        <canvas id="loadChart"></canvas>
+                    </div>
+
                 </div>
 
-                <!-- 3. Графік тренувального навантаження -->
-                <div class="card full-width">
-                    <h3>Гостре (7 днів) vs Хронічне (28 днів) Навантаження</h3>
-                    <canvas id="loadChart"></canvas>
-                </div>
-
-                <!-- 4. Графік дистанції -->
-                <div class="card full-width">
-                    <h3>Накопичена Дистанція (км)</h3>
-                    <canvas id="distanceChart"></canvas>
-                </div>
-            </section>
+            </div>
         </main>
     </div>
-
-    <!-- 
-        Важливо: Використовуємо ES Modules, щоб працював імпорт Firebase.
-    -->
-    <script type="module" src="load-season.js"></script>
+    
+    <script src="load-season.js"></script>
 </body>
 </html>
