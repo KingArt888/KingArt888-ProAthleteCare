@@ -7,13 +7,13 @@
 }
 
 /* Стиль карток */
-.form-card, .stats-card, .chart-card {
-    background-color: #1E1E1E; /* Узгоджений фон */
-    padding: 25px;
+/* Картки для форми та графіка (базовий вигляд) */
+.form-card, .chart-card {
+    background-color: #0d0d0d;
+    border: 1px solid #1a1a1a;
     border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
-    margin-bottom: 20px;
-    border: 1px solid #333; /* Додамо м'який бордер */
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 }
 
 .form-container {
