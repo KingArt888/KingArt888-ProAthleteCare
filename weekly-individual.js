@@ -1,5 +1,5 @@
 // =========================================================
-// weekly-individual.js - ФІНАЛЬНА ВЕРСІЯ: ВИПРАВЛЕНО ВИМКНЕННЯ "ВІДПОЧИНОК"
+// weekly-individual.js - ФІНАЛЬНА ВЕРСІЯ: ПОВНИЙ КОНТРОЛЬ
 // =========================================================
 
 const COLOR_MAP = {
@@ -20,19 +20,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const activitySelects = document.querySelectorAll('.activity-type-select');
     const dynamicMatchFields = document.getElementById('dynamic-match-fields');
     const dayCells = document.querySelectorAll('#md-colors-row .cycle-day');
-    const microcycleTable = document.querySelector('.microcycle-table'); 
     const weeklyPlanForm = document.getElementById('weekly-plan-form'); 
     // ===========================================
 
     // =========================================================
     // НАЙБІЛЬШ НАДІЙНА ФУНКЦІЯ: ВИМКНЕННЯ ПОЛІВ
-    // Вона перевіряє всі поля форми на відповідність індексу дня або назві MD+2
+    // Вона перевіряє всі поля форми на відповідність індексу дня
     // =========================================================
 
     function toggleDayInputs(dayIndex, activityType, isPlanActive) {
         
         const isDisabledOverall = !isPlanActive;
-        // Вибираємо ВСІ поля вводу у всій формі
         const allFormElements = weeklyPlanForm.querySelectorAll('input, select, textarea');
         const currentDayIndexStr = dayIndex.toString();
 
@@ -47,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let shouldBeDisabled = false;
             
             // 1. Визначаємо, чи поле стосується поточного дня
-            // Перевіряємо за індексом, або за назвою MD+2 для неділі (індекс 6)
+            // Приклад: name="load_0" або name="tasks_md_plus_2" (для індексу 6)
             const isFieldRelatedToCurrentDay = elementName.includes(`_${currentDayIndexStr}`) || 
                                                (dayIndex === 6 && elementName.includes('md_plus_2')); 
             
@@ -86,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================
-    // ОБРОБНИКИ ПОДІЙ ТА ЛОГІКА (БЕЗ ЗМІН)
+    // ОБРОБНИКИ ПОДІЙ ТА ЛОГІКА
     // =========================================================
 
     function updateMatchDetails(dayIndex, activityType) {
@@ -182,8 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // === ІНІЦІАЛІЗАЦІЯ ОБРОБНИКІВ ===
     activitySelects.forEach(select => {
         select.addEventListener('change', (event) => {
-            // dataset.dayIndex завжди повертає рядок
-            const dayIndex = event.target.closest('td').dataset.dayIndex; 
+            const dayIndex = parseInt(event.target.closest('td').dataset.dayIndex); 
             const activityType = event.target.value;
             
             updateCycleColors(); 
