@@ -1,5 +1,5 @@
 // =========================================================
-// weekly-individual.js - ПОВЕРНЕННЯ ДО ЧИСТОЇ ВЕРСІЇ (V4.0)
+// weekly-individual.js - ФІНАЛЬНА РОБОЧА ВЕРСІЯ (V4.1: СИНТАКСИЧНИЙ ФІКС)
 // =========================================================
 
 const COLOR_MAP = {
@@ -20,12 +20,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const activitySelects = document.querySelectorAll('.activity-type-select');
     const dynamicMatchFields = document.getElementById('dynamic-match-fields');
     const dayCells = document.querySelectorAll('#md-colors-row .cycle-day');
-    const weeklyPlanForm = document.getElementById('weekly-plan-form'); 
+    // ВИДАЛЕНО: const weeklyPlanForm = document.getElementById('weekly-plan-form'); для уникнення помилок
     // ===========================================
 
     // =========================================================
     // ФУНКЦІЯ 1: ВИМКНЕННЯ ПОЛІВ (ОСТАТОЧНА ВЕРСІЯ V4.0)
-    // Використовує document.body.querySelectorAll для надійності
     // =========================================================
 
     function toggleDayInputs(dayIndex, activityType, isPlanActive) {
@@ -64,7 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 } 
                 
                 // Правило II: Вимкнути деталі матчу, якщо це не день матчу
-                // Використовуємо element.closest без прив'язки до weeklyPlanForm
                 else if (activityType !== 'MATCH' && element.closest(`.match-detail-block[data-day-index="${dayIndex}"]`)) {
                      shouldBeDisabled = true;
                 }
@@ -159,4 +157,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 if (minOffset <= 4 && minOffset > 0) { 
-                    statusKey = isPostMatch ? `MD+${minOffset}` :
+                    // <--- ВИПРАВЛЕНО СИНТАКСИЧНУ ПОМИЛКУ ТУТ!
+                    statusKey = isPostMatch ? `MD+${minOffset}` : `MD-${minOffset}`; 
+                }
+            } else {
+                 statusKey = 'REST'; 
+            }
+
+            const style = COLOR_MAP[statusKey] || COLOR_MAP['REST'];
+            mdStatusElement.textContent = style.status;
+            
+            Object.values(COLOR_MAP).forEach(map => mdStatusElement.classList.remove(map.colorClass)); 
+            mdStatusElement.classList.add(style.colorClass); 
+
+            cell.title = `Фаза: ${style.status}`; 
+
+            const currentActivity = activitySelects[index].value;
+            toggleDayInputs(index, currentActivity, isPlanActive); 
+        });
+    }
+
+    // === ІНІЦІАЛІЗАЦІЯ ОБРОБНИКІВ ===
+    activitySelects.forEach(select => {
+        select.addEventListener('change', (event) => {
+            const dayIndex = parseInt(event.target.closest('td').dataset.dayIndex); 
+            const activityType = event.target.value;
+            
+            updateCycleColors(); 
+            updateMatchDetails(dayIndex, activityType); 
+        });
+    });
+
+    // === ПОЧАТКОВИЙ ЗАПУСК ===
+    updateCycleColors(); 
+});
