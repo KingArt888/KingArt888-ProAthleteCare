@@ -116,3 +116,46 @@ input[type="text"], input[type="number"], select {
 .save-button:hover {
     background-color: #E6C200;
 }
+/* -- КОЛЬОРИ СТАТУСІВ (Для функції updateCycleColors) -- */
+
+/* MD - День матчу */
+.color-red {
+    background-color: #D9534F; /* Червоний */
+    color: white !important;
+}
+
+/* MD+1 (Відновлення 1) */
+.color-dark-green {
+    background-color: #1E8449; /* Темно-зелений */
+    color: white !important;
+}
+
+/* MD+2 (Відновлення 2 / Вихідний) */
+.color-green {
+    background-color: #4CAF50; /* Зелений */
+    color: white !important;
+}
+
+/* MD-1 (Передактивація) */
+.color-yellow {
+    background-color: #FFC107; /* Жовтий */
+    color: black !important;
+}
+
+/* MD-2 (Сила/Висока інтенсивність) */
+.color-deep-green {
+    background-color: #008080; /* Глибокий зелений / Тілл */
+    color: white !important;
+}
+
+/* MD-3 (Середня інтенсивність) */
+.color-orange {
+    background-color: #FF9800; /* Оранжевий */
+    color: white !important;
+}
+
+/* MD-4 (Об'єм/База) */
+.color-blue {
+    background-color: #007bff; /* Синій */
+    color: white !important;
+}
