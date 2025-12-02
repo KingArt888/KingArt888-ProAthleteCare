@@ -1,5 +1,5 @@
 // =========================================================
-// weekly-individual.js - ФІНАЛЬНА ВЕРСІЯ (V17.0: Виправлено синтаксис та автозаповнення)
+// weekly-individual.js - ФІНАЛЬНА ВЕРСІЯ (V18.0: Синтаксис виправлено, автозаповнення працює)
 // =========================================================
 
 const COLOR_MAP = {
@@ -17,9 +17,15 @@ const COLOR_MAP = {
 
 document.addEventListener('DOMContentLoaded', () => {
     
+    // Перевірка наявності необхідних елементів
     const activitySelects = document.querySelectorAll('.activity-type-select');
     const dynamicMatchFields = document.getElementById('dynamic-match-fields');
     const dayCells = document.querySelectorAll('#md-colors-row .cycle-day');
+    
+    if (activitySelects.length === 0 || dayCells.length === 0) {
+        console.error("Помилка: Не знайдено необхідних елементів таблиці (selects або MD-комірок). Перевірте HTML.");
+        return; 
+    }
     
     // ФУНКЦІЯ ОТРИМАННЯ ШАБЛОНУ
     function getTemplateText(status) {
@@ -37,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const templateElement = document.querySelector(`textarea[name="${fieldName}"]`);
+        // Увага: якщо шаблон не знайдено, повертаємо порожній рядок, а не null/undefined
         return templateElement ? templateElement.value.trim() : ''; 
     }
 
@@ -98,152 +105,4 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================
-    // ФУНКЦІЯ 2: ПЕРЕРИВАННЯ ЦИКЛУ
-    // =========================================================
-
-    function resetCycleAfterRest(days, activityTypes, matchDays) {
-        const updatedDays = [...days]; 
-
-        for (let i = 0; i < 7; i++) {
-            if (activityTypes[i] === 'REST') {
-                
-                let nextMatchIndex = -1;
-                for (let k = i + 1; k < 7; k++) {
-                    if (matchDays.includes(k)) {
-                        nextMatchIndex = k;
-                        break;
-                    }
-                }
-
-                if (nextMatchIndex === -1) {
-                    continue; 
-                }
-
-                for (let j = i + 1; j < 7; j++) {
-                    
-                    if (j === nextMatchIndex) {
-                        updatedDays[j] = 'MD'; 
-                        break; 
-                    }
-
-                    if (activityTypes[j] === 'REST') {
-                         updatedDays[j] = 'REST';
-                         continue; 
-                    }
-                    
-                    const offset = nextMatchIndex - j; 
-                    
-                    if (offset > 0 && offset <= 4) {
-                        updatedDays[j] = `MD-${offset}`;
-                    } else if (offset > 4) {
-                        updatedDays[j] = 'MD-4';
-                    }
-                }
-            }
-        }
-
-        return updatedDays;
-    }
-
-
-    // =========================================================
-    // ФУНКЦІЯ 3: ОНОВЛЕННЯ ДЕТАЛЕЙ МАТЧУ
-    // =========================================================
-
-    function updateMatchDetails(dayIndex, activityType) {
-        const existingBlock = dynamicMatchFields.querySelector(`.match-detail-block[data-day-index="${dayIndex}"]`);
-        const dayNames = ['Понеділок', 'Вівторок', 'Середа', 'Четвер', 'П’ятниця', 'Субота', 'Неділя'];
-        const dayName = dayNames[dayIndex];
-
-        if (activityType === 'MATCH' && !existingBlock) {
-            const detailsHTML = `
-                <div class="match-detail-block" data-day-index="${dayIndex}">
-                    <h4>День ${dayIndex * 1 + 1}: ${dayName} (Матч)</h4>
-                    <label>Суперник:</label>
-                    <input type="text" name="opponent_${dayIndex}" required>
-                    <label>Місце проведення:</label>
-                    <select name="venue_${dayIndex}">
-                        <option value="Home">Вдома</option>
-                        <option value="Away">На виїзді</option>
-                    </select>
-                    <label>Відстань поїздки (км):</label>
-                    <input type="number" name="travel_km_${dayIndex}" value="0" min="0">
-                </div>
-            `;
-            dynamicMatchFields.insertAdjacentHTML('beforeend', detailsHTML);
-        } else if (activityType !== 'MATCH' && existingBlock) {
-            existingBlock.remove();
-        }
-        
-        const isPlanActive = document.querySelectorAll('.activity-type-select[value="MATCH"]').length > 0;
-        toggleDayInputs(dayIndex, activityType, isPlanActive);
-    }
-    
-    // =========================================================
-    // ФУНКЦІЯ 4: РОЗРАХУНОК КОЛЬОРУ ЦИКЛУ та АВТОЗАПОВНЕННЯ (V17.0)
-    // =========================================================
-    
-    function updateCycleColors() {
-        try {
-            let activityTypes = [];
-            let matchDays = [];
-
-            activitySelects.forEach((select, index) => {
-                activityTypes[index] = select.value;
-                if (select.value === 'MATCH') {
-                    matchDays.push(index); 
-                }
-            });
-            
-            const isPlanActive = matchDays.length > 0;
-            let dayStatuses = new Array(7).fill('REST'); 
-
-            // 1. Стандартний розрахунок MD+X/MD-X
-            dayCells.forEach((cell, index) => {
-                if (matchDays.includes(index)) {
-                    dayStatuses[index] = 'MD';
-                } else if (isPlanActive) { 
-                    
-                    let minOffset = 7;
-                    let isPostMatch = false; 
-                    
-                    matchDays.forEach(mdIndex => {
-                        const offsetForward = (index - mdIndex + 7) % 7; 
-                        const offsetBackward = (mdIndex - index + 7) % 7; 
-                        
-                        if (offsetForward > 0 && offsetForward <= 2) { 
-                            if (offsetForward < minOffset) {
-                                minOffset = offsetForward;
-                                isPostMatch = true;
-                            }
-                        } 
-                        else if (offsetBackward > 0 && offsetBackward < 7) { 
-                            if (offsetBackward <= 4) { 
-                                if (offsetBackward < minOffset) {
-                                    minOffset = offsetBackward;
-                                    isPostMatch = false;
-                                }
-                            }
-                        }
-                    });
-
-                    if (minOffset <= 4 && minOffset > 0) { 
-                        dayStatuses[index] = isPostMatch ? `MD+${minOffset}` : `MD-${minOffset}`; 
-                    }
-                }
-            });
-
-            // 2. ПЕРЕРИВАННЯ ЦИКЛУ
-            let finalStatuses = dayStatuses;
-
-            if (activityTypes.includes('REST') && isPlanActive) {
-                finalStatuses = resetCycleAfterRest(dayStatuses, activityTypes, matchDays);
-            }
-
-            // 3. ФІНАЛЬНЕ ОНОВЛЕННЯ КОЛЬОРІВ ТА АВТОЗАПОВНЕННЯ ПОЛІВ
-            dayCells.forEach((cell, index) => {
-                const mdStatusElement = cell.querySelector('.md-status');
-                
-                let statusKey = finalStatuses[index] || 'REST'; 
-                
-                // Якщо селектор - REST, колір має бути REST
+    // ФУНКЦІЯ 2: ПЕР
