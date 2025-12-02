@@ -1,5 +1,5 @@
 // =========================================================
-// weekly-individual.js - ФІНАЛЬНА ВЕРСІЯ (V18.1: Синтаксис 100% коректний, автозаповнення працює)
+// weekly-individual.js - ФІНАЛЬНА ВЕРСІЯ (V19.0: Виправлено логіку автозаповнення)
 // =========================================================
 
 const COLOR_MAP = {
@@ -17,13 +17,12 @@ const COLOR_MAP = {
 
 document.addEventListener('DOMContentLoaded', () => {
     
-    // Перевірка наявності необхідних елементів
     const activitySelects = document.querySelectorAll('.activity-type-select');
     const dynamicMatchFields = document.getElementById('dynamic-match-fields');
     const dayCells = document.querySelectorAll('#md-colors-row .cycle-day');
     
     if (activitySelects.length === 0 || dayCells.length === 0) {
-        console.error("Помилка: Не знайдено необхідних елементів таблиці (selects або MD-комірок). Перевірте HTML.");
+        console.error("Помилка: Не знайдено необхідних елементів таблиці.");
         return; 
     }
     
@@ -38,17 +37,16 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (status.startsWith('MD-')) {
             fieldName = `tasks_md_minus_${status.charAt(3)}`;
         } else {
-             // Якщо статус не MD-фаза, повертаємо порожній рядок
              return ''; 
         }
 
         const templateElement = document.querySelector(`textarea[name="${fieldName}"]`);
-        // Увага: якщо шаблон не знайдено, повертаємо порожній рядок
         return templateElement ? templateElement.value.trim() : ''; 
     }
 
     // =========================================================
     // ФУНКЦІЯ 1: ВИМКНЕННЯ ПОЛІВ
+    // (Без змін)
     // =========================================================
 
     function toggleDayInputs(dayIndex, activityType, isPlanActive) {
@@ -106,6 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // =========================================================
     // ФУНКЦІЯ 2: ПЕРЕРИВАННЯ ЦИКЛУ
+    // (Без змін)
     // =========================================================
 
     function resetCycleAfterRest(days, activityTypes, matchDays) {
@@ -155,6 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // =========================================================
     // ФУНКЦІЯ 3: ОНОВЛЕННЯ ДЕТАЛЕЙ МАТЧУ
+    // (Без змін)
     // =========================================================
 
     function updateMatchDetails(dayIndex, activityType) {
@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // =========================================================
-    // ФУНКЦІЯ 4: РОЗРАХУНОК ЦИКЛУ та АВТОЗАПОВНЕННЯ
+    // ФУНКЦІЯ 4: РОЗРАХУНОК ЦИКЛУ та АВТОЗАПОВНЕННЯ (ОСНОВНЕ ВИПРАВЛЕННЯ)
     // =========================================================
     
     function updateCycleColors() {
@@ -254,7 +254,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 let statusKey = finalStatuses[index] || 'REST'; 
                 
                 // Якщо селектор - REST, колір має бути REST
-                if (activitySelects[index].value === 'REST') {
+                const currentActivity = activitySelects[index].value;
+                if (currentActivity === 'REST') {
                     statusKey = 'REST'; 
                 }
                 
@@ -266,19 +267,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 cell.title = `Фаза: ${style.status}`; 
 
-                const currentActivity = activitySelects[index].value;
                 toggleDayInputs(index, currentActivity, isPlanActive); 
                 
-                // АВТОЗАПОВНЕННЯ daily_task
+                // === ОСНОВНА ЛОГІКА АВТОЗАПОВНЕННЯ (ВИПРАВЛЕНО) ===
                 const dailyTaskField = document.querySelector(`textarea[name="daily_task_${index}"]`);
                 
                 if (dailyTaskField) {
                      const templateText = getTemplateText(statusKey);
-                     dailyTaskField.value = templateText;
                      
-                     // Додаткова логіка: якщо день - тренування (TRAIN) і статус не є MD-фазою
-                     if (currentActivity === 'TRAIN' && (statusKey === 'REST' || statusKey === 'TRAIN')) {
+                     // 1. Спочатку перевіряємо, чи є шаблон для MD-статусу
+                     if (templateText) {
+                         dailyTaskField.value = templateText;
+                     } 
+                     // 2. Якщо шаблону немає (порожній рядок), і це день "Тренування", 
+                     // використовуємо загальний текст.
+                     else if (currentActivity === 'TRAIN') {
                          dailyTaskField.value = 'Загальнокомандне тренування: Специфічні вправи вводити вручну.';
+                     }
+                     // 3. Для всіх інших випадків (REST без шаблону, або день без MD-статусу та без TRAIN)
+                     else {
+                         dailyTaskField.value = ''; // Залишаємо порожнім
                      }
                 }
                 
