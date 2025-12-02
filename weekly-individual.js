@@ -7,7 +7,7 @@ const COLOR_MAP = {
     'MD': { status: 'MD', colorClass: 'color-red' },
     'MD+1': { status: 'MD+1', colorClass: 'color-dark-green' }, 
     'MD+2': { status: 'MD+2', colorClass: 'color-green' }, 
-    'MD+3': { status: 'MD+3', colorClass: 'color-neutral' }, // Виходить за межі циклу 7 днів
+    'MD+3': { status: 'MD+3', colorClass: 'color-neutral' }, 
     
     'MD-1': { status: 'MD-1', colorClass: 'color-yellow' }, 
     'MD-2': { status: 'MD-2', colorClass: 'color-deep-green' }, 
@@ -27,8 +27,8 @@ document.addEventListener('DOMContentLoaded', () => {
         select.addEventListener('change', (event) => {
             const dayIndex = event.target.closest('td').dataset.dayIndex;
             
-            updateCycleColors(); // Оновлення циклу
-            updateMatchDetails(dayIndex, event.target.value); // Динамічне поле для деталей матчу
+            updateCycleColors(); 
+            updateMatchDetails(dayIndex, event.target.value); 
         });
     });
 
@@ -37,8 +37,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateMatchDetails(dayIndex, activityType) {
         const existingBlock = dynamicMatchFields.querySelector(`.match-detail-block[data-day-index="${dayIndex}"]`);
         
-        // Визначення назви дня для заголовка
-        const dayName = dayCells[dayIndex].querySelector('.md-status').textContent.split(' ')[0]; 
+        const dayNames = ['Понеділок', 'Вівторок', 'Середа', 'Четвер', 'П’ятниця', 'Субота', 'Неділя'];
+        const dayName = dayNames[dayIndex];
 
         if (activityType === 'MATCH' && !existingBlock) {
             const detailsHTML = `
@@ -55,11 +55,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <input type="number" name="travel_km_${dayIndex}" value="0" min="0">
                 </div>
             `;
-            // Додаємо новий блок деталей
             dynamicMatchFields.insertAdjacentHTML('beforeend', detailsHTML);
             
         } else if (activityType !== 'MATCH' && existingBlock) {
-            // Видаляємо, якщо день більше не є матчем
             existingBlock.remove();
         }
     }
@@ -81,24 +79,21 @@ document.addEventListener('DOMContentLoaded', () => {
             let statusKey = 'REST'; 
 
             if (matchDays.includes(index)) {
-                // Це день матчу
                 statusKey = 'MD';
             } else if (matchDays.length > 0) {
-                // Знаходимо найближчий Match Day
                 let minDistance = 7; 
                 let isPostMatch = false; 
 
                 matchDays.forEach(mdIndex => {
-                    // Відстань в циклі: (Поточний день - День матчу + 7) % 7
                     let distance = (index - mdIndex + 7) % 7; 
 
                     if (distance > 0) { 
-                        if (distance <= 3) { // MD+1, MD+2, MD+3
+                        if (distance <= 3) { 
                             if (distance < minDistance) {
                                 minDistance = distance;
                                 isPostMatch = true;
                             }
-                        } else if (distance >= 4) { // MD-3, MD-2, MD-1
+                        } else if (distance >= 4) { 
                             let daysToMatch = 7 - distance; 
                             if (daysToMatch < minDistance) {
                                 minDistance = daysToMatch;
@@ -108,41 +103,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
 
-                // Призначаємо статус MD+X/MD-X
-                if (minDistance <= 4) { // Обмежуємо цикл MD-4 до MD+3
+                if (minDistance <= 4) { 
                     statusKey = isPostMatch ? `MD+${minDistance}` : `MD-${minDistance}`;
                 }
             }
-// ЗМІНА ПОТРІБНА ТУТ (у weekly_plan_logic.js):
 
-// 3.2. Застосування стилів
-const style = COLOR_MAP[statusKey];
-mdStatusElement.textContent = style.status;
+            // 3.2. ЗАСТОСУВАННЯ СТИЛІВ (КРИТИЧНА ДІЛЯНКА)
+            const style = COLOR_MAP[statusKey];
+            mdStatusElement.textContent = style.status;
+            
+            // Видаляємо всі класи кольорів, що існують, з SPAN
+            Object.values(COLOR_MAP).forEach(map => mdStatusElement.classList.remove(map.colorClass)); 
+            
+            // Додаємо новий клас до SPAN
+            mdStatusElement.classList.add(style.colorClass); 
 
-// Спочатку видаляємо всі попередні класи кольорів та додаємо новий
-Object.values(COLOR_MAP).forEach(map => cell.classList.remove(map.colorClass)); // cell - це TD
-cell.classList.add(style.colorClass); // <-- КЛАС ДОДАЄТЬСЯ ДО TD
+            cell.title = `Фаза: ${style.status}`; 
+        });
+    }
 
-// ----------------------------------------------------
-// *** ВИПРАВЛЕННЯ #2: МЕНЯЄМО ЕЛЕМЕНТ, ЯКИЙ ФАРБУЄМО ***
-// ----------------------------------------------------
-
-// Фарбувати логічніше саме внутрішній елемент (span.md-status), 
-// щоб він був чітко видимим.
-// Змінюємо JS, щоб клас додавався до mdStatusElement (SPAN):
-
-// ... всередині updateCycleColors()...
-
-// 3.2. Застосування стилів
-const style = COLOR_MAP[statusKey];
-mdStatusElement.textContent = style.status;
-
-// *** ВИДАЛЯЄМО КЛАСИ З MD STATUS ELEMENT (SPAN) ***
-// Це гарантує, що ми видаляємо старий колір (наприклад, червоний) перед додаванням нового (наприклад, зеленого).
-Object.values(COLOR_MAP).forEach(map => mdStatusElement.classList.remove(map.colorClass)); 
-
-// *** ДОДАЄМО КЛАС ДО MD STATUS ELEMENT (SPAN) ***
-// Фарбування має відбуватися на SPAN, оскільки він містить текст MD-X.
-mdStatusElement.classList.add(style.colorClass); 
-
-cell.title = `Фаза: ${style.status}`;
+    // Початковий запуск логіки при завантаженні
+    updateCycleColors(); 
+});
