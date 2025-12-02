@@ -32,21 +32,69 @@
         <main class="main-content">
             <h2 style="color: #4A90E2;">🗓️ Weekly Individual: Тижневий план та підсумки</h2>
             
-            <div class="dashboard-container">
-                
-                <div class="chart-card" style="width: 100%;">
-                    <h3>🎯 Тижневі цілі (25.11 – 01.12)</h3>
-                    
-                    <ul style="list-style: none; padding: 0;">
-                        <li style="margin-bottom: 10px; padding: 10px; background-color: #1a1a1a; border-left: 3px solid #4A90E2; border-radius: 4px;">
-                            <strong>Сила:</strong> Виконати 3 силові тренування з акцентом на верх тіла.
-                        </li>
-                        <li style="margin-bottom: 10px; padding: 10px; background-color: #1a1a1a; border-left: 3px solid #4A90E2; border-radius: 4px;">
-                            <strong>Швидкість:</strong> 2 високоінтенсивні бігові сесії (спринти) по 30 хвилин.
-                        </li>
-                        <li style="margin-bottom: 10px; padding: 10px; background-color: #1a1a1a; border-left: 3px solid #4A90E2; border-radius: 4px;">
-                            <strong>Відновлення:</strong> Щоденний масажний ролик, 20 хвилин сну.
-                        </li>
-                    </ul>
+            <div class="content-area">
+        <div class="proatlet-container">
+            <h2>Планування Мікроциклу</h2>
+            <p class="subtitle">Оберіть дні матчів (MD), щоб система автоматично розрахувала фази тренувань.</p>
 
-                    <h3 style="margin-top: 30px;">📋 Звіт про виконання та зворотний
+            <form id="weekly-plan-form">
+                
+                <div class="microcycle-grid-wrapper">
+                    <table class="microcycle-table">
+                        <thead>
+                            <tr>
+                                <th>ПН</th><th>ВТ</th><th>СР</th><th>ЧТ</th><th>ПТ</th><th>СБ</th><th>НД</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr id="md-colors-row">
+                                <td class="cycle-day" data-date="Mon" data-day-index="0"><span class="md-status">MD-4</span></td>
+                                <td class="cycle-day" data-date="Tue" data-day-index="1"><span class="md-status">MD-3</span></td>
+                                <td class="cycle-day" data-date="Wed" data-day-index="2"><span class="md-status">MD-2</span></td>
+                                <td class="cycle-day" data-date="Thu" data-day-index="3"><span class="md-status">MD-1</span></td>
+                                <td class="cycle-day" data-date="Fri" data-day-index="4"><span class="md-status">MD</span></td>
+                                <td class="cycle-day" data-date="Sat" data-day-index="5"><span class="md-status">MD+1</span></td>
+                                <td class="cycle-day" data-date="Sun" data-day-index="6"><span class="md-status">MD+2</span></td>
+                            </tr>
+                            
+                            <tr id="activity-row">
+                                <td data-day-index="0"><select name="activity_Mon" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч (MD)</option><option value="REST">Відпочинок</option></select></td>
+                                <td data-day-index="1"><select name="activity_Tue" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч (MD)</option><option value="REST">Відпочинок</option></select></td>
+                                <td data-day-index="2"><select name="activity_Wed" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч (MD)</option><option value="REST">Відпочинок</option></select></td>
+                                <td data-day-index="3"><select name="activity_Thu" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч (MD)</option><option value="REST">Відпочинок</option></select></td>
+                                <td data-day-index="4"><select name="activity_Fri" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч (MD)</option><option value="REST">Відпочинок</option></select></td>
+                                <td data-day-index="5"><select name="activity_Sat" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч (MD)</option><option value="REST">Відпочинок</option></select></td>
+                                <td data-day-index="6"><select name="activity_Sun" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч (MD)</option><option value="REST">Відпочинок</option></select></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="match-details-container" class="details-section">
+                    <h3>Деталі Матчу</h3>
+                    <div id="dynamic-match-fields">
+                        </div>
+                </div>
+
+                <div id="recovery-details-container" class="details-section">
+                    <h3>Детальні Завдання для Відновлення (Шаблони)</h3>
+                    
+                    <div class="cycle-task-block">
+                        <h4>MD+2 (Відновлення/Вихідний)</h4>
+                        <label>Відновлювальні вправи:</label>
+                        <input type="text" name="tasks_md_plus_2" value="Ролінг (10 хв), Стречінг (15 хв), Мобілізація суглобів">
+                        <label>Кардіо/Пробіжка (5 хв / 1 км):</label>
+                        <input type="text" name="cardio_md_plus_2" value="Пробіжка 5 хвилин / 1 км або 20 хв на верх тіла">
+                    </div>
+
+                    </div>
+
+                <button type="submit" class="save-button">Зберегти Тижневий План</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="weekly-individual.js"></script>
+</body>
+</html>
