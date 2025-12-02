@@ -1,5 +1,5 @@
 // =========================================================
-// weekly_plan_logic.js - ФІНАЛЬНА ВЕРСІЯ: ВИМКНЕННЯ ПОЛІВ ПРИ "ВІДПОЧИНКУ"
+// weekly_plan_logic.js - ФІНАЛЬНА ВЕРСІЯ: НЕАКТИВНИЙ СТАН ЗА ЗАМОВЧУВАННЯМ
 // =========================================================
 
 const COLOR_MAP = {
@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const activitySelects = document.querySelectorAll('.activity-type-select');
     const dynamicMatchFields = document.getElementById('dynamic-match-fields');
     const dayCells = document.querySelectorAll('#md-colors-row .cycle-day');
-    const microcycleTable = document.querySelector('.microcycle-table'); // Додано для пошуку інших полів
+    const microcycleTable = document.querySelector('.microcycle-table'); 
 
     activitySelects.forEach(select => {
         select.addEventListener('change', (event) => {
@@ -30,36 +30,33 @@ document.addEventListener('DOMContentLoaded', () => {
             
             updateCycleColors(); 
             updateMatchDetails(dayIndex, activityType); 
-            
-            // === НОВА ФУНКЦІЯ: ВИМКНЕННЯ/УВІМКНЕННЯ ПОЛІВ ===
-            toggleDayInputs(dayIndex, activityType);
         });
     });
 
     // =========================================================
-    // НОВА ФУНКЦІЯ: ВИМКНЕННЯ ПОЛІВ
+    // МОДИФІКОВАНА ФУНКЦІЯ: ВИМКНЕННЯ ПОЛІВ
+    // Тепер приймає isPlanActive і вимикає всі поля, якщо план не активний
     // =========================================================
 
-    function toggleDayInputs(dayIndex, activityType) {
-        // Знаходимо всі комірки (<td>) у таблиці, які відповідають цьому дню
+    function toggleDayInputs(dayIndex, activityType, isPlanActive) {
         const dayColumns = microcycleTable.querySelectorAll(`td[data-day-index="${dayIndex}"]`);
         
-        // Визначаємо, чи потрібно вимкнути поля (якщо обрано REST)
-        const isDisabled = activityType === 'REST';
+        // Поля вимкнені, якщо:
+        // 1. План не активний (немає обраного MD), АБО
+        // 2. Для цього дня обрано "Відпочинок"
+        const isDisabled = !isPlanActive || activityType === 'REST'; 
 
         dayColumns.forEach(td => {
-            // Шукаємо всі input, select, textarea у цій колонці
             const controllableElements = td.querySelectorAll('input, select, textarea');
             
             controllableElements.forEach(element => {
-                // НЕ ВИМИКАЄМО САМ СЕЛЕКТОР АКТИВНОСТІ, інакше його не можна буде змінити
+                // НЕ ВИМИКАЄМО САМ СЕЛЕКТОР АКТИВНОСТІ
                 if (element.classList.contains('activity-type-select')) {
                     return; 
                 }
                 
                 element.disabled = isDisabled;
                 
-                // Додаємо клас для візуального відображення, що поле неактивне (потрібно додати стилі в CSS)
                 if (isDisabled) {
                     element.classList.add('day-disabled');
                 } else {
@@ -100,8 +97,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // =========================================================
-    // ЛОГІКА РОЗРАХУНКУ MD+X/MD-X (виправлена)
+    // МОДИФІКОВАНА ЛОГІКА: ВИДАЛЕНО MD ЗА ЗАМОВЧУВАННЯМ
     // =========================================================
+
     function updateCycleColors() {
         let matchDays = [];
         activitySelects.forEach((select, index) => {
@@ -110,13 +108,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         
-        // --- ВИПРАВЛЕННЯ СТАРТОВОГО СТАНУ ---
-        if (matchDays.length === 0) {
-            matchDays = [5]; // Субота (індекс 5)
-        }
-        // ------------------------------------
+        // --- КРИТИЧНА ЗМІНА: ПЛАН АКТИВНИЙ ТІЛЬКИ ПРИ ВИБОРІ MD ---
+        const isPlanActive = matchDays.length > 0;
+        // ---------------------------------------------------------
 
         console.log('Дні матчів (Індекси):', matchDays); 
+        console.log('План Активний:', isPlanActive);
 
         dayCells.forEach((cell, index) => {
             const mdStatusElement = cell.querySelector('.md-status');
@@ -124,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (matchDays.includes(index)) {
                 statusKey = 'MD';
-            } else if (matchDays.length > 0) {
+            } else if (isPlanActive) { 
                 
                 let minOffset = 7;
                 let isPostMatch = false; 
@@ -133,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const offsetForward = (index - mdIndex + 7) % 7;
                     const offsetBackward = (mdIndex - index + 7) % 7; 
                     
-                    // === КРИТИЧНЕ ВИПРАВЛЕННЯ: ОБМЕЖУЄМО MD+ ТІЛЬКИ ДО +2 ===
+                    // Обмеження MD+ до +2
                     if (offsetForward > 0 && offsetForward <= 2) { 
                         if (offsetForward < minOffset) {
                             minOffset = offsetForward;
@@ -141,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     } 
                     
-                    // MD-X може йти до MD-4
+                    // MD-X до MD-4
                     else if (offsetBackward > 0 && offsetBackward < 7) { 
                         if (offsetBackward <= 4) { 
                             if (offsetBackward < minOffset) {
@@ -155,6 +152,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (minOffset <= 4 && minOffset > 0) { 
                     statusKey = isPostMatch ? `MD+${minOffset}` : `MD-${minOffset}`;
                 }
+            } else {
+                 // Якщо план не активний, ставимо 'REST' (нейтральний колір)
+                 statusKey = 'REST'; 
             }
 
             // ЗАСТОСУВАННЯ СТИЛІВ
@@ -165,13 +165,11 @@ document.addEventListener('DOMContentLoaded', () => {
             mdStatusElement.classList.add(style.colorClass); 
 
             cell.title = `Фаза: ${style.status}`; 
-            // Викликаємо функцію вимкнення при початковому завантаженні для днів, які встановлено на REST
+            console.log(`День ${index}: Статус: ${style.status}, Клас: ${style.colorClass}`); 
+
+            // === КРИТИЧНИЙ ВИКЛИК: Вимикаємо/Вмикаємо поля ===
             const currentActivity = activitySelects[index].value;
-            if (currentActivity === 'REST') {
-                toggleDayInputs(index, 'REST');
-            } else {
-                toggleDayInputs(index, currentActivity);
-            }
+            toggleDayInputs(index, currentActivity, isPlanActive); 
         });
     }
 
