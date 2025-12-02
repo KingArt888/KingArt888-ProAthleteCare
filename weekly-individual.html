@@ -1,112 +1,188 @@
-<!DOCTYPE html>
-<html lang="uk">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weekly Individual | ProAthleteCare</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="weekly-individual.css">
-</head>
-<body>
+// =========================================================
+// weekly-individual.js - ФІНАЛЬНА ВЕРСІЯ: З ГАРАНТІЄЮ РОБОТИ
+// =========================================================
 
-    <header>
-        <a href="index.html" class="logo-link">
-            <img src="AK_logo.png" alt="ProAthleteCare Logo" class="logo">
-        </a>
-        <h1 class="project-title">ProAthleteCare</h1>
-        <p class="tagline">Онлайн-тренінг та професійний супровід атлетів</p>
-    </header>
+const COLOR_MAP = {
+    'MD': { status: 'MD', colorClass: 'color-red' },
+    'MD+1': { status: 'MD+1', colorClass: 'color-dark-green' }, 
+    'MD+2': { status: 'MD+2', colorClass: 'color-green' }, 
+    'MD+3': { status: 'MD+3', colorClass: 'color-neutral' }, 
+    'MD-1': { status: 'MD-1', colorClass: 'color-yellow' }, 
+    'MD-2': { status: 'MD-2', colorClass: 'color-deep-green' }, 
+    'MD-3': { status: 'MD-3', colorClass: 'color-orange' }, 
+    'MD-4': { status: 'MD-4', colorClass: 'color-blue' }, 
+    'REST': { status: 'REST', colorClass: 'color-neutral' }, 
+};
+
+// ВЕСЬ ВИКОНУВАНИЙ КОД ПОВИНЕН БУТИ ВСЕРЕДИНІ ЦЬОГО БЛОКУ!
+document.addEventListener('DOMContentLoaded', () => {
     
-    <div class="content-wrapper">
-        <nav class="sidebar">
-            <a href="wellness.html">Wellness Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="injury.html">Injury Story <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="load-season.html">Load Season <img src="AK_logo.png" class="menu-icon" alt="АК"></a> 
-            <a href="daily-individual.html">Daily Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            
-            <a href="weekly-individual.html" class="active">Weekly Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            
-            <a href="weight-control.html">Weight Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="velocity-control.html">Velocity Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-        </nav>
+    // === ВИЗНАЧЕННЯ ВСІХ КРИТИЧНИХ ЗМІННИХ (РЯДКИ 24-27) ===
+    const activitySelects = document.querySelectorAll('.activity-type-select'); // Визначаємо тут
+    const dynamicMatchFields = document.getElementById('dynamic-match-fields');
+    const dayCells = document.querySelectorAll('#md-colors-row .cycle-day');
+    const weeklyPlanForm = document.getElementById('weekly-plan-form'); 
+    // ===========================================
+
+    // =========================================================
+    // НАЙБІЛЬШ НАДІЙНА ФУНКЦІЯ: ВИМКНЕННЯ ПОЛІВ
+    // =========================================================
+
+    function toggleDayInputs(dayIndex, activityType, isPlanActive) {
         
-       <main class="main-content">
-            <h2> Weekly Individual: Тижневий план та підсумки</h2>
+        const isDisabledOverall = !isPlanActive;
+        const allFormElements = weeklyPlanForm.querySelectorAll('input, select, textarea');
+        const currentDayIndexStr = dayIndex.toString();
+
+        allFormElements.forEach(element => {
+            const elementName = element.name || '';
             
-            <div class="content-area">
-                <div class="proatlet-container">
-                    <h2>Планування Мікроциклу</h2>
-                    <p class="subtitle">Оберіть дні матчів (MD), щоб система автоматично розрахувала фази тренувань.</p>
+            // Ігноруємо сам селектор активності
+            if (element.classList.contains('activity-type-select')) {
+                return; 
+            }
 
-                    <form id="weekly-plan-form">
-                        
-                        <div class="microcycle-grid-wrapper">
-                            <table class="microcycle-table">
-                                <thead>
-                                    <tr>
-                                        <th>ПН</th><th>ВТ</th><th>СР</th><th>ЧТ</th><th>ПТ</th><th>СБ</th><th>НД</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr id="md-colors-row">
-                                        <td class="cycle-day" data-date="Mon" data-day-index="0"><span class="md-status">REST</span></td>
-                                        <td class="cycle-day" data-date="Tue" data-day-index="1"><span class="md-status">REST</span></td>
-                                        <td class="cycle-day" data-date="Wed" data-day-index="2"><span class="md-status">REST</span></td>
-                                        <td class="cycle-day" data-date="Thu" data-day-index="3"><span class="md-status">REST</span></td>
-                                        <td class="cycle-day" data-date="Fri" data-day-index="4"><span class="md-status">REST</span></td>
-                                        <td class="cycle-day" data-date="Sat" data-day-index="5"><span class="md-status">REST</span></td>
-                                        <td class="cycle-day" data-date="Sun" data-day-index="6"><span class="md-status">REST</span></td>
-                                    </tr>
-                                    
-                                    <tr id="activity-row">
-                                        <td data-day-index="0"><select name="activity_Mon" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч (MD)</option><option value="REST">Відпочинок</option></select></td>
-                                        <td data-day-index="1"><select name="activity_Tue" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч (MD)</option><option value="REST">Відпочинок</option></select></td>
-                                        <td data-day-index="2"><select name="activity_Wed" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч (MD)</option><option value="REST">Відпочинок</option></select></td>
-                                        <td data-day-index="3"><select name="activity_Thu" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч (MD)</option><option value="REST">Відпочинок</option></select></td>
-                                        <td data-day-index="4"><select name="activity_Fri" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч (MD)</option><option value="REST">Відпочинок</option></select></td>
-                                        <td data-day-index="5"><select name="activity_Sat" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч (MD)</option><option value="REST">Відпочинок</option></select></td>
-                                        <td data-day-index="6"><select name="activity_Sun" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч (MD)</option><option value="REST">Відпочинок</option></select></td>
-                                    </tr>
-                                    
-                                    <tr class="training-load-row">
-                                        <td><input type="number" name="load_0" placeholder="Load (AU)"></td>
-                                        <td><input type="number" name="load_1" placeholder="Load (AU)"></td>
-                                        <td><input type="number" name="load_2" placeholder="Load (AU)"></td>
-                                        <td><input type="number" name="load_3" placeholder="Load (AU)"></td>
-                                        <td><input type="number" name="load_4" placeholder="Load (AU)"></td>
-                                        <td><input type="number" name="load_5" placeholder="Load (AU)"></td>
-                                        <td><input type="number" name="load_6" placeholder="Load (AU)"></td>
-                                    </tr>
-                                    </tbody>
-                            </table>
-                        </div>
+            let shouldBeDisabled = false;
+            
+            // 1. Визначаємо, чи поле стосується поточного дня
+            const isFieldRelatedToCurrentDay = elementName.includes(`_${currentDayIndexStr}`) || 
+                                               (dayIndex === 6 && elementName.includes('md_plus_2')); 
+            
+            
+            // 2. Встановлюємо стан disabled
+            
+            if (isDisabledOverall) {
+                shouldBeDisabled = true;
+            } 
+            else if (isFieldRelatedToCurrentDay) {
+                
+                // Правило I: Вимкнути для "Відпочинку" (REST)
+                if (activityType === 'REST') {
+                    shouldBeDisabled = true; 
+                } 
+                
+                // Правило II: Вимкнути деталі матчу, якщо це не день матчу
+                else if (activityType !== 'MATCH' && element.closest(`.match-detail-block[data-day-index="${dayIndex}"]`)) {
+                     shouldBeDisabled = true;
+                }
+            }
+            
+            element.disabled = shouldBeDisabled;
+            
+            if (shouldBeDisabled) {
+                element.classList.add('day-disabled');
+            } else {
+                element.classList.remove('day-disabled');
+            }
+        });
+    }
 
-                        <div id="match-details-container" class="details-section">
-                            <h3>Деталі Матчу</h3>
-                            <div id="dynamic-match-fields">
-                            </div>
-                        </div>
+    // =========================================================
+    // ОБРОБНИКИ ПОДІЙ ТА ЛОГІКА
+    // =========================================================
 
-                        <div id="recovery-details-container" class="details-section">
-                            <h3>Детальні Завдання для Відновлення (Шаблони)</h3>
-                            
-                            <div class="cycle-task-block">
-                                <h4>MD+2 (Відновлення/Вихідний)</h4>
-                                <label>Відновлювальні вправи:</label>
-                                <input type="text" name="tasks_md_plus_2" value="Ролінг (10 хв), Стречінг (15 хв), Мобілізація суглобів">
-                                <label>Кардіо/Пробіжка (5 хв / 1 км):</label>
-                                <input type="text" name="cardio_md_plus_2" value="Пробіжка 5 хвилин / 1 км або 20 хв на верх тіла">
-                            </div>
-                        </div>
+    function updateMatchDetails(dayIndex, activityType) {
+        const existingBlock = dynamicMatchFields.querySelector(`.match-detail-block[data-day-index="${dayIndex}"]`);
+        const dayNames = ['Понеділок', 'Вівторок', 'Середа', 'Четвер', 'П’ятниця', 'Субота', 'Неділя'];
+        const dayName = dayNames[dayIndex];
 
-                        <button type="submit" class="save-button">Зберегти Тижневий План</button>
-                    </form>
+        if (activityType === 'MATCH' && !existingBlock) {
+            const detailsHTML = `
+                <div class="match-detail-block" data-day-index="${dayIndex}">
+                    <h4>День ${dayIndex * 1 + 1}: ${dayName} (Матч)</h4>
+                    <label>Суперник:</label>
+                    <input type="text" name="opponent_${dayIndex}" required>
+                    <label>Місце проведення:</label>
+                    <select name="venue_${dayIndex}">
+                        <option value="Home">Вдома</option>
+                        <option value="Away">На виїзді</option>
+                    </select>
+                    <label>Відстань поїздки (км):</label>
+                    <input type="number" name="travel_km_${dayIndex}" value="0" min="0">
                 </div>
-            </div>
-        </main>
-    </div>
+            `;
+            dynamicMatchFields.insertAdjacentHTML('beforeend', detailsHTML);
+        } else if (activityType !== 'MATCH' && existingBlock) {
+            existingBlock.remove();
+        }
+        
+        const isPlanActive = document.querySelectorAll('.activity-type-select[value="MATCH"]').length > 0;
+        toggleDayInputs(dayIndex, activityType, isPlanActive);
+    }
+    
+    function updateCycleColors() {
+        let matchDays = [];
+        // ВІДПРАЦЬОВУЄ ТІЛЬКИ ПІСЛЯ ВИЗНАЧЕННЯ activitySelects
+        activitySelects.forEach((select, index) => {
+            if (select.value === 'MATCH') {
+                matchDays.push(index); 
+            }
+        });
+        
+        const isPlanActive = matchDays.length > 0;
+        
+        dayCells.forEach((cell, index) => {
+            const mdStatusElement = cell.querySelector('.md-status');
+            let statusKey = 'REST'; 
 
-    <script src="weekly-individual.js"></script> 
-</body>
-</html>
+            if (matchDays.includes(index)) {
+                statusKey = 'MD';
+            } else if (isPlanActive) { 
+                
+                let minOffset = 7;
+                let isPostMatch = false; 
+                
+                matchDays.forEach(mdIndex => {
+                    const offsetForward = (index - mdIndex + 7) % 7;
+                    const offsetBackward = (mdIndex - index + 7) % 7; 
+                    
+                    if (offsetForward > 0 && offsetForward <= 2) { 
+                        if (offsetForward < minOffset) {
+                            minOffset = offsetForward;
+                            isPostMatch = true;
+                        }
+                    } 
+                    else if (offsetBackward > 0 && offsetBackward < 7) { 
+                        if (offsetBackward <= 4) { 
+                            if (offsetBackward < minOffset) {
+                                minOffset = offsetBackward;
+                                isPostMatch = false;
+                            }
+                        }
+                    }
+                });
 
+                if (minOffset <= 4 && minOffset > 0) { 
+                    statusKey = isPostMatch ? `MD+${minOffset}` : `MD-${minOffset}`;
+                }
+            } else {
+                 statusKey = 'REST'; 
+            }
+
+            const style = COLOR_MAP[statusKey] || COLOR_MAP['REST'];
+            mdStatusElement.textContent = style.status;
+            
+            Object.values(COLOR_MAP).forEach(map => mdStatusElement.classList.remove(map.colorClass)); 
+            mdStatusElement.classList.add(style.colorClass); 
+
+            cell.title = `Фаза: ${style.status}`; 
+
+            const currentActivity = activitySelects[index].value;
+            toggleDayInputs(index, currentActivity, isPlanActive); 
+        });
+    }
+
+    // === ІНІЦІАЛІЗАЦІЯ ОБРОБНИКІВ ===
+    activitySelects.forEach(select => {
+        select.addEventListener('change', (event) => {
+            const dayIndex = parseInt(event.target.closest('td').dataset.dayIndex); 
+            const activityType = event.target.value;
+            
+            updateCycleColors(); 
+            updateMatchDetails(dayIndex, activityType); 
+        });
+    });
+
+    // === ПОЧАТКОВИЙ ЗАПУСК ===
+    updateCycleColors(); 
+});
