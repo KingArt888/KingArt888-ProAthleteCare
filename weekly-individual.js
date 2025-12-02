@@ -1,5 +1,5 @@
 // =========================================================
-// weekly-individual.js - ОСТАТОЧНА ВЕРСІЯ (V8.0: ФІКС ПОШУКУ ПОЛІВ)
+// weekly-individual.js - ОСТАТОЧНА ВЕРСІЯ (V10.0: ФІКС ЛОГІКИ ЦИКЛУ ТА ВИМКНЕННЯ ПОЛІВ)
 // =========================================================
 
 const COLOR_MAP = {
@@ -23,20 +23,28 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===========================================
 
     // =========================================================
-    // ФУНКЦІЯ 1: ВИМКНЕННЯ ПОЛІВ (V8.0 - НАЙНАДІЙНІШИЙ ПОШУК ЗА NAME)
+    // ФУНКЦІЯ 1: ВИМКНЕННЯ ПОЛІВ (V9.0 - НАЙТОЧНІШЕ НАЦІЛЕННЯ)
     // =========================================================
 
     function toggleDayInputs(dayIndex, activityType, isPlanActive) {
         
         const isDisabledOverall = !isPlanActive;
-        // Шукаємо ВСІ поля введення у всьому документі
         const allFormElements = document.body.querySelectorAll('input, select, textarea');
         const currentDayIndexStr = dayIndex.toString();
+        
+        // Список префіксів полів, які ми хочемо вимкнути для REST
+        const fieldPrefixesToDisable = [
+            'load',             
+            'tasks',            
+            'cardio',           
+            'opponent',         
+            'venue',            
+            'travel_km'         
+        ];
 
         allFormElements.forEach(element => {
             const elementName = element.name || '';
             
-            // Ігноруємо сам селектор активності
             if (element.classList.contains('activity-type-select')) {
                 return; 
             }
@@ -44,11 +52,12 @@ document.addEventListener('DOMContentLoaded', () => {
             let shouldBeDisabled = false;
             
             // 1. Встановлюємо, чи поле належить поточному Дню/Індексу
-            // Шукаємо name, що закінчується на _0, _1, ... _6
-            const isFieldRelatedToDay = elementName.endsWith(`_${currentDayIndexStr}`);
+            const isFieldRelatedToDay = fieldPrefixesToDisable.some(prefix => 
+                elementName.startsWith(prefix) && (elementName.endsWith(`_${currentDayIndexStr}`))
+            );
             
-            // 2. Додаткова перевірка для полів MD+2 (якщо вони окремі)
-            const isFieldRelatedToMDPlus2 = (dayIndex === 6 && elementName.includes('md_plus_2'));
+            // 2. Окремо для полів MD+2 (для Неділі)
+            const isFieldRelatedToMDPlus2 = (elementName.includes('md_plus_2')); 
             
             const isFieldRelevant = isFieldRelatedToDay || isFieldRelatedToMDPlus2;
             
@@ -56,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // 3. Встановлюємо стан disabled
             
             if (isDisabledOverall) {
-                shouldBeDisabled = true; // Вимкнути все, якщо MD не обрано
+                shouldBeDisabled = true; 
             } 
             else if (isFieldRelevant) {
                 
@@ -65,8 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     shouldBeDisabled = true; 
                 } 
                 
-                // Правило II: Вимкнути деталі матчу, якщо це не день матчу
-                // Перевірка, чи це одне з динамічних полів матчу: opponent_X, venue_X, travel_km_X
+                // Правило II: Вимкнути динамічні деталі матчу, якщо це не день матчу
                 else if (activityType !== 'MATCH' && (elementName.startsWith('opponent_') || elementName.startsWith('venue_') || elementName.startsWith('travel_km_'))) {
                      shouldBeDisabled = true;
                 }
@@ -83,44 +91,57 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================
-    // ФУНКЦІЯ 2: ПЕРЕРИВАННЯ ЦИКЛУ ТА ВІДЛІК ДО НАСТУПНОГО МАТЧУ (Без змін)
+    // ФУНКЦІЯ 2: ПЕРЕРИВАННЯ ЦИКЛУ ТА ВІДЛІК ДО НАСТУПНОГО МАТЧУ (V10.0 - ФІКС)
     // =========================================================
 
-    function resetCycleAfterRest(days, matchDays) {
-        let nextMatchIndex = -1;
-        
-        for (let i = 0; i < 7; i++) {
-            if (matchDays.includes(i)) {
-                nextMatchIndex = i;
-                break; 
-            }
-        }
-
-        if (nextMatchIndex === -1) return days; 
-
-        const updatedDays = [...days]; 
+    function resetCycleAfterRest(days, activityTypes, matchDays) {
+        const updatedDays = [...days]; // Копія оригінальних статусів
 
         for (let i = 0; i < 7; i++) {
-            if (activitySelects[i].value === 'REST') { // Використовуємо реальне значення
+            // Перевіряємо, чи це день Відпочинку
+            if (activityTypes[i] === 'REST') {
                 
-                for (let j = i + 1; j < 7; j++) {
-                    
-                    const offset = (nextMatchIndex - j + 7) % 7; 
-                    
-                    if (offset > 0 && offset <= 4) {
-                        updatedDays[j] = `MD-${offset}`;
-                    } else if (offset === 0) {
-                        updatedDays[j] = 'MD'; 
-                        break; 
-                    } else {
-                        updatedDays[j] = 'MD-4'; 
-                    }
-                    
-                    if (j === 6 && updatedDays[j] !== 'MD') {
-                        break; 
+                let nextMatchIndex = -1;
+                
+                // 1. Знаходимо індекс наступного матчу СУВОРО ПІСЛЯ REST дня (i)
+                for (let k = i + 1; k < 7; k++) {
+                    if (matchDays.includes(k)) {
+                        nextMatchIndex = k;
+                        break;
                     }
                 }
-                
+
+                // Якщо матчів після REST немає, то наступні дні не можуть бути MD-X
+                if (nextMatchIndex === -1) {
+                    continue; 
+                }
+
+                // 2. Перераховуємо дні (j) від дня після REST (i+1) до наступного MD
+                for (let j = i + 1; j < 7; j++) {
+                    
+                    // Якщо дійшли до дня матчу, встановлюємо MD і зупиняємо
+                    if (j === nextMatchIndex) {
+                        updatedDays[j] = 'MD'; 
+                        break; 
+                    }
+
+                    // Якщо наступний день j сам є REST (або TRAIN), не перераховуємо його статус, 
+                    // але це не повинно статися, оскільки ми перераховуємо цикл. 
+                    // Тільки якщо активність не MD, ми застосовуємо MD-X.
+                    if (activityTypes[j] === 'REST') {
+                         updatedDays[j] = 'REST';
+                         continue; 
+                    }
+                    
+                    // Відлік MD-X (наприклад, 6 (НД) - 4 (ПТ) = 2. MD-2)
+                    const offset = nextMatchIndex - j; 
+                    
+                    if (offset > 0 && offset <= 4) {
+                        updatedDays[j] = `MD-${offset}`; // MD-1, MD-2, MD-3, MD-4
+                    } else if (offset > 4) {
+                        updatedDays[j] = 'MD-4'; // Максимальний MD-4
+                    }
+                }
             }
         }
 
@@ -162,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // =========================================================
-    // ФУНКЦІЯ 4: РОЗРАХУНОК КОЛЬОРУ ЦИКЛУ (Оновлена)
+    // ФУНКЦІЯ 4: РОЗРАХУНОК КОЛЬОРУ ЦИКЛУ (Оновлена для нового виклику)
     // =========================================================
     
     function updateCycleColors() {
@@ -179,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const isPlanActive = matchDays.length > 0;
         let dayStatuses = new Array(7).fill('REST'); 
 
-        // 1. Стандартний розрахунок MD+X/MD-X
+        // 1. Стандартний розрахунок MD+X/MD-X (відбувається, якщо немає REST)
         dayCells.forEach((cell, index) => {
             if (matchDays.includes(index)) {
                 dayStatuses[index] = 'MD';
@@ -212,22 +233,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     dayStatuses[index] = isPostMatch ? `MD+${minOffset}` : `MD-${minOffset}`; 
                 }
             }
-            // Якщо обрано REST у селекторі, це поки що не впливає на колір.
         });
 
 
-        // 2. ПЕРЕРИВАННЯ ЦИКЛУ: Перезапускаємо відлік до наступного матчу, якщо було REST
+        // 2. ПЕРЕРИВАННЯ ЦИКЛУ: Перезапускаємо відлік (виправлено)
         let finalStatuses = dayStatuses;
 
         if (activityTypes.includes('REST') && isPlanActive) {
-            finalStatuses = resetCycleAfterRest(dayStatuses, matchDays);
+            // ПЕРЕДАЄМО activityTypes для перевірки REST
+            finalStatuses = resetCycleAfterRest(dayStatuses, activityTypes, matchDays);
         }
 
         // 3. ФІНАЛЬНЕ ОНОВЛЕННЯ КОЛЬОРІВ ТА ПОЛІВ
         dayCells.forEach((cell, index) => {
             const mdStatusElement = cell.querySelector('.md-status');
             
-            // Встановлюємо статус з фінального масиву АБО використовуємо REST, якщо обрано REST у селекторі
             let statusKey = finalStatuses[index] || 'REST'; 
             
             // Якщо селектор - REST, колір має бути REST, незалежно від розрахунку
@@ -253,6 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // === ІНІЦІАЛІЗАЦІЯ ОБРОБНИКІВ ===
     activitySelects.forEach(select => {
         select.addEventListener('change', (event) => {
+            // Оскільки в HTML є data-day-index, ми використовуємо його для отримання індексу
             const dayIndex = parseInt(event.target.closest('td').dataset.dayIndex); 
             const activityType = event.target.value;
             
