@@ -113,18 +113,34 @@ document.addEventListener('DOMContentLoaded', () => {
                     statusKey = isPostMatch ? `MD+${minDistance}` : `MD-${minDistance}`;
                 }
             }
+// ЗМІНА ПОТРІБНА ТУТ (у weekly_plan_logic.js):
 
-            // 3.2. Застосування стилів
-            const style = COLOR_MAP[statusKey];
-            mdStatusElement.textContent = style.status;
-            
-            // Видаляємо всі попередні класи кольорів та додаємо новий
-            Object.values(COLOR_MAP).forEach(map => cell.classList.remove(map.colorClass));
-            cell.classList.add(style.colorClass);
-            cell.title = `Фаза: ${style.status}`; 
-        });
-    }
+// 3.2. Застосування стилів
+const style = COLOR_MAP[statusKey];
+mdStatusElement.textContent = style.status;
 
-    // Початковий запуск логіки при завантаженні
-    updateCycleColors(); 
-});
+// Спочатку видаляємо всі попередні класи кольорів та додаємо новий
+Object.values(COLOR_MAP).forEach(map => cell.classList.remove(map.colorClass)); // cell - це TD
+cell.classList.add(style.colorClass); // <-- КЛАС ДОДАЄТЬСЯ ДО TD
+
+// ----------------------------------------------------
+// *** ВИПРАВЛЕННЯ #2: МЕНЯЄМО ЕЛЕМЕНТ, ЯКИЙ ФАРБУЄМО ***
+// ----------------------------------------------------
+
+// Фарбувати логічніше саме внутрішній елемент (span.md-status), 
+// щоб він був чітко видимим.
+// Змінюємо JS, щоб клас додавався до mdStatusElement (SPAN):
+
+// ... всередині updateCycleColors()...
+
+// 3.2. Застосування стилів
+const style = COLOR_MAP[statusKey];
+mdStatusElement.textContent = style.status;
+
+// Видаляємо всі класи з mdStatusElement (SPAN)
+Object.values(COLOR_MAP).forEach(map => mdStatusElement.classList.remove(map.colorClass)); 
+
+// Додаємо новий клас до mdStatusElement (SPAN)
+mdStatusElement.classList.add(style.colorClass); // <-- ТЕПЕР КЛАС ДОДАЄТЬСЯ ДО SPAN!
+
+// ...
