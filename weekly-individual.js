@@ -1,5 +1,5 @@
 // =========================================================
-// weekly-individual.js - ОСТАТОЧНА ВЕРСІЯ (V10.0: ФІКС ЛОГІКИ ЦИКЛУ ТА ВИМКНЕННЯ ПОЛІВ)
+// weekly-individual.js - ФІНАЛЬНА ВЕРСІЯ (V13.0: ВИДАЛЕНО LOAD AU)
 // =========================================================
 
 const COLOR_MAP = {
@@ -12,18 +12,34 @@ const COLOR_MAP = {
     'MD-3': { status: 'MD-3', colorClass: 'color-orange' }, 
     'MD-4': { status: 'MD-4', colorClass: 'color-blue' }, 
     'REST': { status: 'REST', colorClass: 'color-neutral' }, 
+    'TRAIN': { status: 'TRAIN', colorClass: 'color-neutral' },
 };
 
 document.addEventListener('DOMContentLoaded', () => {
     
-    // === ВИЗНАЧЕННЯ КРИТИЧНИХ ЗМІННИХ ===
     const activitySelects = document.querySelectorAll('.activity-type-select');
     const dynamicMatchFields = document.getElementById('dynamic-match-fields');
     const dayCells = document.querySelectorAll('#md-colors-row .cycle-day');
-    // ===========================================
+    
+    // Нова функція для отримання тексту шаблону
+    function getTemplateText(status) {
+        if (status === 'MD') return 'Матч: Сфокусуватися на розминці та відновленні після гри.';
+        if (status === 'REST') return 'Вихідний: Повний відпочинок або легке відновлення за шаблоном MD+2.';
+        
+        // Перетворюємо MD+X/MD-X в ім'я поля шаблону
+        let fieldName = '';
+        if (status.startsWith('MD+')) {
+            fieldName = `tasks_md_plus_${status.charAt(3)}`;
+        } else if (status.startsWith('MD-')) {
+            fieldName = `tasks_md_minus_${status.charAt(3)}`;
+        }
+
+        const templateElement = document.querySelector(`textarea[name="${fieldName}"]`);
+        return templateElement ? templateElement.value : '';
+    }
 
     // =========================================================
-    // ФУНКЦІЯ 1: ВИМКНЕННЯ ПОЛІВ (V9.0 - НАЙТОЧНІШЕ НАЦІЛЕННЯ)
+    // ФУНКЦІЯ 1: ВИМКНЕННЯ ПОЛІВ (V13.0 - ВИДАЛЕНО 'load')
     // =========================================================
 
     function toggleDayInputs(dayIndex, activityType, isPlanActive) {
@@ -32,9 +48,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const allFormElements = document.body.querySelectorAll('input, select, textarea');
         const currentDayIndexStr = dayIndex.toString();
         
-        // Список префіксів полів, які ми хочемо вимкнути для REST
         const fieldPrefixesToDisable = [
-            'load',             
+            // ВИДАЛЕНО 'load',
+            'daily_task',       
             'tasks',            
             'cardio',           
             'opponent',         
@@ -57,24 +73,21 @@ document.addEventListener('DOMContentLoaded', () => {
             );
             
             // 2. Окремо для полів MD+2 (для Неділі)
+            // Примітка: ця перевірка для полів шаблону, а не для щоденних полів, але ми її залишаємо, якщо вона потрібна.
             const isFieldRelatedToMDPlus2 = (elementName.includes('md_plus_2')); 
             
             const isFieldRelevant = isFieldRelatedToDay || isFieldRelatedToMDPlus2;
             
-            
-            // 3. Встановлюємо стан disabled
             
             if (isDisabledOverall) {
                 shouldBeDisabled = true; 
             } 
             else if (isFieldRelevant) {
                 
-                // Правило I: Вимкнути для "Відпочинку" (REST)
                 if (activityType === 'REST') {
                     shouldBeDisabled = true; 
                 } 
                 
-                // Правило II: Вимкнути динамічні деталі матчу, якщо це не день матчу
                 else if (activityType !== 'MATCH' && (elementName.startsWith('opponent_') || elementName.startsWith('venue_') || elementName.startsWith('travel_km_'))) {
                      shouldBeDisabled = true;
                 }
@@ -91,19 +104,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================
-    // ФУНКЦІЯ 2: ПЕРЕРИВАННЯ ЦИКЛУ ТА ВІДЛІК ДО НАСТУПНОГО МАТЧУ (V10.0 - ФІКС)
+    // ФУНКЦІЯ 2: ПЕРЕРИВАННЯ ЦИКЛУ ТА ВІДЛІК ДО НАСТУПНОГО МАТЧУ (V10.0)
     // =========================================================
+    // (Без змін)
 
     function resetCycleAfterRest(days, activityTypes, matchDays) {
-        const updatedDays = [...days]; // Копія оригінальних статусів
+        const updatedDays = [...days]; 
 
         for (let i = 0; i < 7; i++) {
-            // Перевіряємо, чи це день Відпочинку
             if (activityTypes[i] === 'REST') {
                 
                 let nextMatchIndex = -1;
-                
-                // 1. Знаходимо індекс наступного матчу СУВОРО ПІСЛЯ REST дня (i)
                 for (let k = i + 1; k < 7; k++) {
                     if (matchDays.includes(k)) {
                         nextMatchIndex = k;
@@ -111,35 +122,28 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
 
-                // Якщо матчів після REST немає, то наступні дні не можуть бути MD-X
                 if (nextMatchIndex === -1) {
                     continue; 
                 }
 
-                // 2. Перераховуємо дні (j) від дня після REST (i+1) до наступного MD
                 for (let j = i + 1; j < 7; j++) {
                     
-                    // Якщо дійшли до дня матчу, встановлюємо MD і зупиняємо
                     if (j === nextMatchIndex) {
                         updatedDays[j] = 'MD'; 
                         break; 
                     }
 
-                    // Якщо наступний день j сам є REST (або TRAIN), не перераховуємо його статус, 
-                    // але це не повинно статися, оскільки ми перераховуємо цикл. 
-                    // Тільки якщо активність не MD, ми застосовуємо MD-X.
                     if (activityTypes[j] === 'REST') {
                          updatedDays[j] = 'REST';
                          continue; 
                     }
                     
-                    // Відлік MD-X (наприклад, 6 (НД) - 4 (ПТ) = 2. MD-2)
                     const offset = nextMatchIndex - j; 
                     
                     if (offset > 0 && offset <= 4) {
-                        updatedDays[j] = `MD-${offset}`; // MD-1, MD-2, MD-3, MD-4
+                        updatedDays[j] = `MD-${offset}`;
                     } else if (offset > 4) {
-                        updatedDays[j] = 'MD-4'; // Максимальний MD-4
+                        updatedDays[j] = 'MD-4';
                     }
                 }
             }
@@ -183,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // =========================================================
-    // ФУНКЦІЯ 4: РОЗРАХУНОК КОЛЬОРУ ЦИКЛУ (Оновлена для нового виклику)
+    // ФУНКЦІЯ 4: РОЗРАХУНОК КОЛЬОРУ ЦИКЛУ та АВТОЗАПОВНЕННЯ (V13.0)
     // =========================================================
     
     function updateCycleColors() {
@@ -200,7 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const isPlanActive = matchDays.length > 0;
         let dayStatuses = new Array(7).fill('REST'); 
 
-        // 1. Стандартний розрахунок MD+X/MD-X (відбувається, якщо немає REST)
+        // 1. Стандартний розрахунок MD+X/MD-X
         dayCells.forEach((cell, index) => {
             if (matchDays.includes(index)) {
                 dayStatuses[index] = 'MD';
@@ -235,22 +239,20 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-
-        // 2. ПЕРЕРИВАННЯ ЦИКЛУ: Перезапускаємо відлік (виправлено)
+        // 2. ПЕРЕРИВАННЯ ЦИКЛУ
         let finalStatuses = dayStatuses;
 
         if (activityTypes.includes('REST') && isPlanActive) {
-            // ПЕРЕДАЄМО activityTypes для перевірки REST
             finalStatuses = resetCycleAfterRest(dayStatuses, activityTypes, matchDays);
         }
 
-        // 3. ФІНАЛЬНЕ ОНОВЛЕННЯ КОЛЬОРІВ ТА ПОЛІВ
+        // 3. ФІНАЛЬНЕ ОНОВЛЕННЯ КОЛЬОРІВ ТА АВТОЗАПОВНЕННЯ ПОЛІВ
         dayCells.forEach((cell, index) => {
             const mdStatusElement = cell.querySelector('.md-status');
             
             let statusKey = finalStatuses[index] || 'REST'; 
             
-            // Якщо селектор - REST, колір має бути REST, незалежно від розрахунку
+            // Якщо селектор - REST, колір має бути REST
             if (activitySelects[index].value === 'REST') {
                 statusKey = 'REST'; 
             }
@@ -264,8 +266,18 @@ document.addEventListener('DOMContentLoaded', () => {
             cell.title = `Фаза: ${style.status}`; 
 
             const currentActivity = activitySelects[index].value;
-            // Викликаємо функцію вимкнення полів
             toggleDayInputs(index, currentActivity, isPlanActive); 
+            
+            // АВТОЗАПОВНЕННЯ daily_task
+            const dailyTaskField = document.querySelector(`textarea[name="daily_task_${index}"]`);
+            if (dailyTaskField && currentActivity !== 'MATCH') {
+                 // Заповнюємо, якщо це не "Матч"
+                 const templateText = getTemplateText(statusKey);
+                 dailyTaskField.value = templateText;
+            } else if (dailyTaskField && currentActivity === 'MATCH') {
+                 dailyTaskField.value = 'Матч: Індивідуальна розминка/завершення гри';
+            }
+            
         });
     }
 
@@ -273,7 +285,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // === ІНІЦІАЛІЗАЦІЯ ОБРОБНИКІВ ===
     activitySelects.forEach(select => {
         select.addEventListener('change', (event) => {
-            // Оскільки в HTML є data-day-index, ми використовуємо його для отримання індексу
             const dayIndex = parseInt(event.target.closest('td').dataset.dayIndex); 
             const activityType = event.target.value;
             
@@ -282,6 +293,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // === ОБРОБНИКИ ДЛЯ ЗМІНИ ШАБЛОНІВ ===
+    document.querySelectorAll('#recovery-details-container textarea').forEach(textarea => {
+        textarea.addEventListener('input', updateCycleColors);
+    });
+    
     // === ПОЧАТКОВИЙ ЗАПУСК ===
     updateCycleColors(); 
 });
