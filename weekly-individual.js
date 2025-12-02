@@ -1,5 +1,5 @@
 // =========================================================
-// weekly-individual.js - ФІНАЛЬНА ВЕРСІЯ: З ГАРАНТІЄЮ РОБОТИ
+// weekly-individual.js - ФІНАЛЬНА ВЕРСІЯ: ЧИСТИЙ КОНФЛІКТ
 // =========================================================
 
 const COLOR_MAP = {
@@ -14,18 +14,17 @@ const COLOR_MAP = {
     'REST': { status: 'REST', colorClass: 'color-neutral' }, 
 };
 
-// ВЕСЬ ВИКОНУВАНИЙ КОД ПОВИНЕН БУТИ ВСЕРЕДИНІ ЦЬОГО БЛОКУ!
 document.addEventListener('DOMContentLoaded', () => {
     
-    // === ВИЗНАЧЕННЯ ВСІХ КРИТИЧНИХ ЗМІННИХ (РЯДКИ 24-27) ===
-    const activitySelects = document.querySelectorAll('.activity-type-select'); // Визначаємо тут
+    // === ВИЗНАЧЕННЯ ВСІХ КРИТИЧНИХ ЗМІННИХ ===
+    const activitySelects = document.querySelectorAll('.activity-type-select');
     const dynamicMatchFields = document.getElementById('dynamic-match-fields');
     const dayCells = document.querySelectorAll('#md-colors-row .cycle-day');
     const weeklyPlanForm = document.getElementById('weekly-plan-form'); 
     // ===========================================
 
     // =========================================================
-    // НАЙБІЛЬШ НАДІЙНА ФУНКЦІЯ: ВИМКНЕННЯ ПОЛІВ
+    // ФУНКЦІЯ 1: ВИМКНЕННЯ ПОЛІВ (ОСТАТОЧНА ВЕРСІЯ)
     // =========================================================
 
     function toggleDayInputs(dayIndex, activityType, isPlanActive) {
@@ -44,15 +43,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let shouldBeDisabled = false;
             
-            // 1. Визначаємо, чи поле стосується поточного дня
-            const isFieldRelatedToCurrentDay = elementName.includes(`_${currentDayIndexStr}`) || 
-                                               (dayIndex === 6 && elementName.includes('md_plus_2')); 
+            // 1. Визначаємо, чи поле стосується поточного дня (Load_X або md_plus_2)
+            const isFieldRelatedToDayIndex = elementName.includes(`_${currentDayIndexStr}`);
+            const isFieldRelatedToMDPlus2 = (dayIndex === 6 && elementName.includes('md_plus_2')); 
+            const isFieldRelatedToCurrentDay = isFieldRelatedToDayIndex || isFieldRelatedToMDPlus2;
             
             
             // 2. Встановлюємо стан disabled
             
             if (isDisabledOverall) {
-                shouldBeDisabled = true;
+                shouldBeDisabled = true; // Вимкнути все, якщо MD не обрано
             } 
             else if (isFieldRelatedToCurrentDay) {
                 
@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================
-    // ОБРОБНИКИ ПОДІЙ ТА ЛОГІКА
+    // ФУНКЦІЯ 2: ОНОВЛЕННЯ ДЕТАЛЕЙ МАТЧУ
     // =========================================================
 
     function updateMatchDetails(dayIndex, activityType) {
@@ -110,9 +110,12 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleDayInputs(dayIndex, activityType, isPlanActive);
     }
     
+    // =========================================================
+    // ФУНКЦІЯ 3: РОЗРАХУНОК КОЛЬОРУ ЦИКЛУ
+    // =========================================================
+    
     function updateCycleColors() {
         let matchDays = [];
-        // ВІДПРАЦЬОВУЄ ТІЛЬКИ ПІСЛЯ ВИЗНАЧЕННЯ activitySelects
         activitySelects.forEach((select, index) => {
             if (select.value === 'MATCH') {
                 matchDays.push(index); 
@@ -128,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (matchDays.includes(index)) {
                 statusKey = 'MD';
             } else if (isPlanActive) { 
-                
+                // Логіка розрахунку MD+X/MD-X (без змін)
                 let minOffset = 7;
                 let isPostMatch = false; 
                 
@@ -182,63 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updateMatchDetails(dayIndex, activityType); 
         });
     });
-// =========================================================
-// ФІНАЛЬНА ФУНКЦІЯ toggleDayInputs (ОСТАТОЧНА ПЕРЕВІРКА СЕЛЕКТОРІВ)
-// =========================================================
-function toggleDayInputs(dayIndex, activityType, isPlanActive) {
-    
-    const isDisabledOverall = !isPlanActive;
-    const allFormElements = weeklyPlanForm.querySelectorAll('input, select, textarea');
-    const currentDayIndexStr = dayIndex.toString();
 
-    allFormElements.forEach(element => {
-        const elementName = element.name || '';
-        
-        // Ігноруємо сам селектор активності
-        if (element.classList.contains('activity-type-select')) {
-            return; 
-        }
-
-        let shouldBeDisabled = false;
-        
-        // 1. Визначаємо, чи поле стосується поточного дня
-        // Включає: load_0, load_1, travel_km_5 і т.д.
-        const isFieldRelatedToDayIndex = elementName.includes(`_${currentDayIndexStr}`);
-        
-        // Включає: tasks_md_plus_2, cardio_md_plus_2 (які стосуються НД, індекс 6)
-        const isFieldRelatedToMDPlus2 = (dayIndex === 6 && elementName.includes('md_plus_2')); 
-        
-        const isFieldRelatedToCurrentDay = isFieldRelatedToDayIndex || isFieldRelatedToMDPlus2;
-        
-        
-        // 2. Встановлюємо стан disabled
-        
-        if (isDisabledOverall) {
-            shouldBeDisabled = true; // Вимкнути все, якщо MD не обрано
-        } 
-        else if (isFieldRelatedToCurrentDay) {
-            
-            // Правило I: Вимкнути для "Відпочинку" (REST)
-            if (activityType === 'REST') {
-                shouldBeDisabled = true; 
-            } 
-            
-            // Правило II: Вимкнути деталі матчу, якщо це не день матчу
-            else if (activityType !== 'MATCH' && element.closest(`.match-detail-block[data-day-index="${dayIndex}"]`)) {
-                 shouldBeDisabled = true;
-            }
-        }
-        
-        element.disabled = shouldBeDisabled;
-        
-        if (shouldBeDisabled) {
-            element.classList.add('day-disabled');
-        } else {
-            element.classList.remove('day-disabled');
-        }
-    });
-}
-// =========================================================
     // === ПОЧАТКОВИЙ ЗАПУСК ===
     updateCycleColors(); 
 });
