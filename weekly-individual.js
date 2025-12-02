@@ -182,7 +182,63 @@ document.addEventListener('DOMContentLoaded', () => {
             updateMatchDetails(dayIndex, activityType); 
         });
     });
+// =========================================================
+// ФІНАЛЬНА ФУНКЦІЯ toggleDayInputs (ОСТАТОЧНА ПЕРЕВІРКА СЕЛЕКТОРІВ)
+// =========================================================
+function toggleDayInputs(dayIndex, activityType, isPlanActive) {
+    
+    const isDisabledOverall = !isPlanActive;
+    const allFormElements = weeklyPlanForm.querySelectorAll('input, select, textarea');
+    const currentDayIndexStr = dayIndex.toString();
 
+    allFormElements.forEach(element => {
+        const elementName = element.name || '';
+        
+        // Ігноруємо сам селектор активності
+        if (element.classList.contains('activity-type-select')) {
+            return; 
+        }
+
+        let shouldBeDisabled = false;
+        
+        // 1. Визначаємо, чи поле стосується поточного дня
+        // Включає: load_0, load_1, travel_km_5 і т.д.
+        const isFieldRelatedToDayIndex = elementName.includes(`_${currentDayIndexStr}`);
+        
+        // Включає: tasks_md_plus_2, cardio_md_plus_2 (які стосуються НД, індекс 6)
+        const isFieldRelatedToMDPlus2 = (dayIndex === 6 && elementName.includes('md_plus_2')); 
+        
+        const isFieldRelatedToCurrentDay = isFieldRelatedToDayIndex || isFieldRelatedToMDPlus2;
+        
+        
+        // 2. Встановлюємо стан disabled
+        
+        if (isDisabledOverall) {
+            shouldBeDisabled = true; // Вимкнути все, якщо MD не обрано
+        } 
+        else if (isFieldRelatedToCurrentDay) {
+            
+            // Правило I: Вимкнути для "Відпочинку" (REST)
+            if (activityType === 'REST') {
+                shouldBeDisabled = true; 
+            } 
+            
+            // Правило II: Вимкнути деталі матчу, якщо це не день матчу
+            else if (activityType !== 'MATCH' && element.closest(`.match-detail-block[data-day-index="${dayIndex}"]`)) {
+                 shouldBeDisabled = true;
+            }
+        }
+        
+        element.disabled = shouldBeDisabled;
+        
+        if (shouldBeDisabled) {
+            element.classList.add('day-disabled');
+        } else {
+            element.classList.remove('day-disabled');
+        }
+    });
+}
+// =========================================================
     // === ПОЧАТКОВИЙ ЗАПУСК ===
     updateCycleColors(); 
 });
