@@ -165,3 +165,34 @@ input[type="text"], input[type="number"], select {
     background-color: #1A1A1A;
     color: #FFD700;
     box-sizing: border-box;
+}
+/* ========================================= */
+/* 6. РЯДОК: ВПРАВИ/ЗАВДАННЯ (TEXTAREA) */
+/* (Покращений дизайн) */
+/* ========================================= */
+.daily-tasks-row td {
+    padding: 4px;
+}
+
+.daily-tasks-row textarea {
+    width: 100%;
+    height: 90px; 
+    min-height: 90px;
+    padding: 8px; /* Збільшимо внутрішній відступ */
+    box-sizing: border-box;
+    border: 2px solid #555555; /* Товстіша, але м'якша рамка */
+    border-radius: 6px; /* Більш округлі кути */
+    font-size: 13px; 
+    resize: vertical; 
+    
+    background-color: #111111; /* Трохи темніший фон для контрасту */
+    color: #DDDDDD; /* Світліший текст для кращої читабельності */
+    transition: border-color 0.2s, box-shadow 0.2s; /* Додаємо плавний перехід */
+}
+
+/* Ефект фокусу: робить поле "живим" */
+.daily-tasks-row textarea:focus:not([disabled]) {
+    border-color: #FFD700; /* Золота рамка при фокусі */
+    box-shadow: 0 0 5px rgba(255, 215, 0, 0.5); 
+    outline: none;
+}
