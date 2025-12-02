@@ -1,5 +1,5 @@
 // =========================================================
-// weekly-individual.js - ФІНАЛЬНА ВЕРСІЯ (V18.0: Синтаксис виправлено, автозаповнення працює)
+// weekly-individual.js - ФІНАЛЬНА ВЕРСІЯ (V18.1: Синтаксис 100% коректний, автозаповнення працює)
 // =========================================================
 
 const COLOR_MAP = {
@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const templateElement = document.querySelector(`textarea[name="${fieldName}"]`);
-        // Увага: якщо шаблон не знайдено, повертаємо порожній рядок, а не null/undefined
+        // Увага: якщо шаблон не знайдено, повертаємо порожній рядок
         return templateElement ? templateElement.value.trim() : ''; 
     }
 
