@@ -1,5 +1,5 @@
 // =========================================================
-// weekly_plan_logic.js - ФІНАЛЬНА ВЕРСІЯ: ВИПРАВЛЕНО ВИМКНЕННЯ "ВІДПОЧИНОК"
+// weekly-individual.js - ФІНАЛЬНА ВЕРСІЯ: ВИПРАВЛЕНО ВИМКНЕННЯ "ВІДПОЧИНОК"
 // =========================================================
 
 const COLOR_MAP = {
@@ -21,18 +21,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const dynamicMatchFields = document.getElementById('dynamic-match-fields');
     const dayCells = document.querySelectorAll('#md-colors-row .cycle-day');
     const microcycleTable = document.querySelector('.microcycle-table'); 
-    // Вам потрібно переконатися, що у Вашому HTML є <form id="weekly-plan-form">
     const weeklyPlanForm = document.getElementById('weekly-plan-form'); 
     // ===========================================
 
     // =========================================================
     // НАЙБІЛЬШ НАДІЙНА ФУНКЦІЯ: ВИМКНЕННЯ ПОЛІВ
-    // Перевіряє всі поля форми на відповідність індексу дня
+    // Вона перевіряє всі поля форми на відповідність індексу дня або назві MD+2
     // =========================================================
 
     function toggleDayInputs(dayIndex, activityType, isPlanActive) {
         
         const isDisabledOverall = !isPlanActive;
+        // Вибираємо ВСІ поля вводу у всій формі
         const allFormElements = weeklyPlanForm.querySelectorAll('input, select, textarea');
         const currentDayIndexStr = dayIndex.toString();
 
@@ -46,26 +46,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let shouldBeDisabled = false;
             
-            // 1. Перевіряємо, чи елемент пов'язаний з поточним днем (за індексом у name)
-            // Приклад: name="opponent_5" для Суботи (індекс 5)
+            // 1. Визначаємо, чи поле стосується поточного дня
+            // Перевіряємо за індексом, або за назвою MD+2 для неділі (індекс 6)
             const isFieldRelatedToCurrentDay = elementName.includes(`_${currentDayIndexStr}`) || 
-                                               (dayIndex === 6 && elementName.includes('md_plus_2')); // Спец. випадок НД (6)
+                                               (dayIndex === 6 && elementName.includes('md_plus_2')); 
+            
             
             // 2. Встановлюємо стан disabled
             
-            // Умова 1: Вимкнути все, якщо не обрано жодного MD
+            // Умова A: Вимкнути все, якщо не обрано жодного MD
             if (isDisabledOverall) {
                 shouldBeDisabled = true;
             } 
-            // Умова 2: Якщо план активний, застосовуємо day-specific правила
+            // Умова B: Якщо план активний, застосовуємо day-specific правила
             else if (isFieldRelatedToCurrentDay) {
                 
-                // Правило A: Вимкнути для "Відпочинку" (REST)
+                // Правило I: Вимкнути для "Відпочинку" (REST)
                 if (activityType === 'REST') {
                     shouldBeDisabled = true; 
                 } 
                 
-                // Правило B: Вимкнути деталі матчу, якщо це не день матчу
+                // Правило II: Вимкнути деталі матчу, якщо це не день матчу
+                // Перевіряємо, чи належить поле до динамічного блоку деталей матчу
                 else if (activityType !== 'MATCH' && element.closest(`.match-detail-block[data-day-index="${dayIndex}"]`)) {
                      shouldBeDisabled = true;
                 }
@@ -84,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================
-    // ОБРОБНИКИ ПОДІЙ ТА ЛОГІКА
+    // ОБРОБНИКИ ПОДІЙ ТА ЛОГІКА (БЕЗ ЗМІН)
     // =========================================================
 
     function updateMatchDetails(dayIndex, activityType) {
@@ -112,7 +114,6 @@ document.addEventListener('DOMContentLoaded', () => {
             existingBlock.remove();
         }
         
-        // Викликаємо toggleDayInputs після зміни деталей матчу
         const isPlanActive = document.querySelectorAll('.activity-type-select[value="MATCH"]').length > 0;
         toggleDayInputs(dayIndex, activityType, isPlanActive);
     }
@@ -165,7 +166,6 @@ document.addEventListener('DOMContentLoaded', () => {
                  statusKey = 'REST'; 
             }
 
-            // ЗАСТОСУВАННЯ СТИЛІВ
             const style = COLOR_MAP[statusKey] || COLOR_MAP['REST'];
             mdStatusElement.textContent = style.status;
             
@@ -174,7 +174,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             cell.title = `Фаза: ${style.status}`; 
 
-            // === ВИКЛИК З ТРЬОМА АРГУМЕНТАМИ ===
             const currentActivity = activitySelects[index].value;
             toggleDayInputs(index, currentActivity, isPlanActive); 
         });
@@ -183,7 +182,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // === ІНІЦІАЛІЗАЦІЯ ОБРОБНИКІВ ===
     activitySelects.forEach(select => {
         select.addEventListener('change', (event) => {
-            const dayIndex = event.target.closest('td').dataset.dayIndex;
+            // dataset.dayIndex завжди повертає рядок
+            const dayIndex = event.target.closest('td').dataset.dayIndex; 
             const activityType = event.target.value;
             
             updateCycleColors(); 
