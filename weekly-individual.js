@@ -1,20 +1,38 @@
 // =========================================================
-// weekly-individual.js - V22.0 (Перевірка елементів у консолі)
-// Використовувати з Вашим поточним HTML!
+// weekly-individual.js - V22.0 (ВИПРАВЛЕНО: Повний Код)
 // =========================================================
 
 const STORAGE_KEY = 'weeklyPlanData';
-// ... (COLOR_MAP залишається без змін) ...
+const COLOR_MAP = {
+    'MD': { status: 'MD', colorClass: 'color-red' },
+    'MD+1': { status: 'MD+1', colorClass: 'color-dark-green' }, 
+    'MD+2': { status: 'MD+2', colorClass: 'color-green' }, 
+    'MD+3': { status: 'MD+3', colorClass: 'color-neutral' }, 
+    'MD-1': { status: 'MD-1', colorClass: 'color-yellow' }, 
+    'MD-2': { status: 'MD-2', colorClass: 'color-deep-green' }, 
+    'MD-3': { status: 'MD-3', colorClass: 'color-orange' }, 
+    'MD-4': { status: 'MD-4', colorClass: 'color-blue' }, 
+    'REST': { status: 'REST', colorClass: 'color-neutral' }, 
+    'TRAIN': { status: 'TRAIN', colorClass: 'color-neutral' },
+};
 
 document.addEventListener('DOMContentLoaded', () => {
     
-    // ... (Оголошення констант залишається без змін) ...
-    
+    const activitySelects = document.querySelectorAll('.activity-type-select');
+    const dynamicMatchFields = document.getElementById('dynamic-match-fields');
+    const dayCells = document.querySelectorAll('#md-colors-row .cycle-day');
+    const form = document.getElementById('weekly-plan-form');
+    const saveButton = document.querySelector('.save-button'); 
+
+    if (activitySelects.length === 0 || dayCells.length === 0 || !form) {
+        console.error("Помилка: Не знайдено необхідних елементів таблиці або форми.");
+        return; 
+    }
+
     // =========================================================
-    // ФУНКЦІЯ: ІНІЦІАЛІЗАЦІЯ ШАБЛОНІВ (Залишається як у V20.0)
+    // ФУНКЦІЯ: ІНІЦІАЛІЗАЦІЯ ШАБЛОНІВ (Вставляє текст за замовчуванням)
     // =========================================================
     function initializeTemplates() {
-        // ... (Код initializeTemplates з V20.0) ...
         const templates = [
             { name: 'tasks_md_plus_2', defaultText: 'Ролінг (10 хв), Стречінг (15 хв), Мобілізація суглобів' },
             { name: 'tasks_md_plus_1', defaultText: 'Ролінг (10 хв), Мобілізація, Превентивні вправи, Темпова пробіжка після тренування' },
@@ -28,13 +46,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const textarea = document.querySelector(`textarea[name="${template.name}"]`);
             if (textarea && textarea.value.trim() === '') {
                 textarea.value = template.defaultText;
+                // Діагностика: Перевіряємо, чи спрацювало заповнення
+                console.log(`[INIT] Заповнено шаблон: ${template.name}`); 
             }
         });
     }
 
-
     // =========================================================
-    // ФУНКЦІЯ: ОТРИМАННЯ ШАБЛОНУ (ЗМІНЕНО - Агресивна перевірка)
+    // ФУНКЦІЯ: ОТРИМАННЯ ШАБЛОНУ (З блоку recovery-details-container)
     // =========================================================
     function getTemplateText(status) {
         if (status === 'MD') return 'Матч: Індивідуальна розминка/завершення гри';
@@ -67,14 +86,24 @@ document.addEventListener('DOMContentLoaded', () => {
         return templateText; 
     }
 
-    // ... (Всі інші функції залишаються без змін від V20.0) ...
-    // Включаючи updateCycleColors, loadData, saveData, toggleDayInputs, resetCycleAfterRest, updateMatchDetails
-    
-    // === ІНІЦІАЛІЗАЦІЯ ОБРОБНИКІВ ===
-    // ... (залишаються без змін) ...
-    
-    // === ПОЧАТКОВИЙ ЗАПУСК ===
-    initializeTemplates(); // Заповнює порожні шаблони текстом за замовчуванням
-    loadData();           // Завантажує збережений план
-    updateCycleColors();  // Запускає фінальний розрахунок
-});
+    // =========================================================
+    // ФУНКЦІЯ: toggleDayInputs (Заборона введення для відпочинку/матчу)
+    // =========================================================
+    function toggleDayInputs(dayIndex, activityType, isPlanActive) {
+        try {
+            const isDisabledOverall = !isPlanActive;
+            const currentDayIndexStr = dayIndex.toString();
+            
+            const fieldPrefixesToDisable = [
+                'daily_task', 'tasks', 'cardio', 'opponent', 'venue', 'travel_km'
+            ];
+
+            // Перевіряємо лише елементи, які стосуються цього дня
+            fieldPrefixesToDisable.forEach(prefix => {
+                const element = document.querySelector(`[name="${prefix}_${currentDayIndexStr}"]`);
+                if (element) {
+                     let shouldBeDisabled = false;
+                     
+                     if (isDisabledOverall) {
+                         shouldBeDisabled = true; 
+                     } else if (
