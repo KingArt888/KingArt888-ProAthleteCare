@@ -277,9 +277,26 @@ document.addEventListener('DOMContentLoaded', () => {
             const mdPlusMap = ['MD+1', 'MD+2', 'MD+3', 'MD+4', 'MD+5', 'MD+6']; 
             
             
+            // --- ПІДГОТОВКА: Визначення індексів найближчого матчу (для MD-) ---
+            let nextMatchIndex = -1;
+            let matchIndices = [];
+            for (let i = 0; i < 7; i++) {
+                if (dayStatuses[i] === 'MD') {
+                    matchIndices.push(i);
+                }
+            }
+            
             // 1. РОЗРАХУНОК MD+ ФАЗ (Вперед від кожного MD)
             let lastMatchIndex = -1;
             for (let i = 0; i < 7; i++) {
+                
+                // Знайдемо індекс наступного матчу (зациклено, якщо немає наступного на цьому тижні)
+                nextMatchIndex = matchIndices.find(index => index > i);
+                if (nextMatchIndex === undefined) {
+                     // Якщо наступний матч у межах тижня не знайдено, беремо перший матч наступного тижня (для розрахунку MD-)
+                     nextMatchIndex = matchIndices.length > 0 ? matchIndices[0] + 7 : 7;
+                }
+                
                 if (dayStatuses[i] === 'MD') {
                     lastMatchIndex = i;
                 } else if (dayStatuses[i] === 'REST') {
@@ -287,10 +304,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (lastMatchIndex !== -1) {
                     const daysAfterMatch = i - lastMatchIndex; 
                     
-                    if (daysAfterMatch > 0 && daysAfterMatch <= mdPlusMap.length) {
-                        // MD+ має пріоритет над TRAIN/MATCH, але не над MD/REST
-                        if (dayStatuses[i] !== 'REST' && dayStatuses[i] !== 'MD') {
-                            dayStatuses[i] = mdPlusMap[daysAfterMatch - 1]; 
+                    // MD+1 та MD+2 завжди ставляться першими, якщо день не REST/MD
+                    if (daysAfterMatch === 1) {
+                        dayStatuses[i] = 'MD+1'; 
+                    } else if (daysAfterMatch === 2) {
+                        dayStatuses[i] = 'MD+2';
+                    }
+                    
+                    // Якщо день далі, ніж MD+2, перевіряємо MD+3+
+                    if (daysAfterMatch > 2 && daysAfterMatch <= mdPlusMap.length) {
+                        
+                        const daysUntilNextMatch = nextMatchIndex - i; 
+
+                        // Якщо до наступної гри залишилося MD-4, MD-3, MD-2, MD-1, то MD+ цикл завершується, ставимо TRAIN
+                        if (daysUntilNextMatch <= 4) { 
+                            dayStatuses[i] = 'TRAIN';
+                        } else {
+                             // В іншому випадку, якщо MD- цикл ще не почався, продовжуємо MD+
+                             if (dayStatuses[i] !== 'REST' && dayStatuses[i] !== 'MD') {
+                                  dayStatuses[i] = mdPlusMap[daysAfterMatch - 1]; 
+                             }
                         }
                     } else if (daysAfterMatch > mdPlusMap.length) {
                         // Якщо цикл MD+ закінчився, ставимо TRAIN (якщо це не MD/REST)
@@ -315,7 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     foundUpcomingMatch = false;
                 } else if (foundUpcomingMatch && currentMDMinus >= 0 && currentMDMinus < mdMinusCycle.length) {
                     
-                    // MD- має пріоритет над MD+3, TRAIN, але НЕ над MD+1 та MD+2
+                    // MD- має пріоритет над MD+3, TRAIN, але НЕ над MD+1 та MD+2 (які захищені)
                     if (dayStatuses[i] !== 'MD+1' && dayStatuses[i] !== 'MD+2') {
                          dayStatuses[i] = mdMinusCycle[currentMDMinus];
                          currentMDMinus++;
@@ -376,8 +409,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const dayIndex = parseInt(dayIndexElement.dataset.dayIndex); 
             const activityType = event.target.value;
             
+            // Викликаємо функції оновлення
             updateCycleColors(); 
             updateMatchDetails(dayIndex, activityType); 
+            // Зберігаємо дані після зміни активності
+            saveData();
         });
     });
 
