@@ -31,19 +31,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================================================
     function saveData() {
         try {
-            const formData = new FormData(form);
             const data = {};
-            // Обробляємо лише поля, які присутні у формі на момент збереження
-            activitySelects.forEach((select, index) => {
-                data[`activity_type_${index}`] = select.value;
-            });
             
+            // Збираємо дані з усіх елементів форми
             document.querySelectorAll('#weekly-plan-form [name]').forEach(element => {
                 const name = element.name;
-                // Ігноруємо activity selects, оскільки ми їх вже додали
-                if (!name.startsWith('activity_type_')) { 
-                    data[name] = element.value;
-                }
+                // Зберігаємо значення, незалежно від типу елемента
+                data[name] = element.value;
             });
 
             localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -99,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         ];
 
-        // !!! ВАЖЛИВО: Ці елементи повинні існувати у вашому HTML !!!
+        // Заповнення шаблонів, якщо вони порожні в HTML
         templates.forEach(template => {
             const textarea = document.querySelector(`textarea[name="${template.name}"]`);
             if (textarea && textarea.value.trim() === '') {
@@ -136,6 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const templateElement = document.querySelector(`textarea[name="${fieldName}"]`);
 
         if (!templateElement) {
+            // Ця помилка виникає, якщо ви не додали необхідні textarea в HTML
             console.error(`Помилка: Не знайдено textarea з іменем: ${fieldName}`); 
             return '';
         }
@@ -255,23 +250,27 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = JSON.parse(savedData);
             let matchDetailsData = {};
 
+            // Спочатку завантажуємо селекти активності
             activitySelects.forEach((select, index) => {
-                 if (data[`activity_type_${index}`]) {
-                     select.value = data[`activity_type_${index}`];
+                 const selectName = select.name;
+                 if (data[selectName]) {
+                     select.value = data[selectName];
                  }
             });
 
-            Object.keys(data).forEach(name => {
-                const element = form.querySelector(`[name="${name}"]`);
-                if (element) {
-                    element.value = data[name];
+            // Потім завантажуємо всі інші поля
+            document.querySelectorAll('#weekly-plan-form [name]').forEach(element => {
+                 const name = element.name;
+                 if (data[name] !== undefined) {
+                     element.value = data[name];
                     
                     if (name.startsWith('opponent_') || name.startsWith('venue_') || name.startsWith('travel_km_')) {
                         matchDetailsData[name] = data[name];
                     }
-                }
+                 }
             });
 
+            // Нарешті, оновлюємо динамічні блоки матчів
             activitySelects.forEach((select, index) => {
                 const activityType = select.value;
                 updateMatchDetails(index, activityType, matchDetailsData);
@@ -301,7 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const isPlanActive = activityTypes.includes('MATCH');
 
-            // === ВІДМІНА РОЗРАХУНКІВ, ЯКЩО НЕМАЄ МАТЧУ ===
+            // === ВІДМІНА РОЗРАХУНКІВ, ЯКЩО НЕМАЄ МАТЧУ (Початковий неактивний стан) ===
             if (!isPlanActive) {
                 dayCells.forEach((cell, index) => {
                     const mdStatusElement = cell.querySelector('.md-status');
@@ -446,6 +445,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Обробники для всіх інших полів вводу
     document.querySelectorAll('input, select, textarea').forEach(input => {
+        // Виключаємо ті, що мають власний обробник (шаблони та селекти активності)
         if (input.name.startsWith('tasks_md_') || input.name.startsWith('activity_type_')) {
             return;
         }
