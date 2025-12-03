@@ -235,7 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================
-    // ФУНКЦІЯ: updateCycleColors (ОСНОВНИЙ РОЗРАХУНОК ФАЗ - Версія 3.3)
+    // ФУНКЦІЯ: updateCycleColors (ОСНОВНИЙ РОЗРАХУНОК ФАЗ - Версія 3.4)
     // =========================================================
     function updateCycleColors() {
         try {
@@ -244,8 +244,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 activityTypes[index] = select.value;
             });
             
-            // Ініціалізуємо статуси відповідно до вибору користувача (MD, REST або TRAIN/MATCH)
-            let dayStatuses = activityTypes.map(type => (type === 'MATCH' ? 'MD' : type)); 
+            // Ініціалізуємо статуси: MD/REST за вибором, решта TRAIN
+            let dayStatuses = activityTypes.map(type => (type === 'MATCH' ? 'MD' : (type === 'REST' ? 'REST' : 'TRAIN'))); 
             const isPlanActive = activityTypes.includes('MATCH');
 
             // === ОБРОБКА НЕАКТИВНОГО СТАНУ ===
@@ -273,102 +273,57 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const mdMinusCycle = ['MD-1', 'MD-2', 'MD-3', 'MD-4', 'MD-5', 'MD-6']; 
             const mdPlusMap = ['MD+1', 'MD+2', 'MD+3', 'MD+4', 'MD+5', 'MD+6']; 
-            
             let matchIndices = dayStatuses.map((status, index) => status === 'MD' ? index : -1).filter(index => index !== -1);
 
 
             // =========================================================
-            // 1. РОЗРАХУНОК MD+ ФАЗ (Вперед від кожного MD)
-            //    Включає фікс для коректного wrap-around (daysAfterMatch)
+            // 1. РОЗРАХУНОК MD+ ФАЗ (Вищий пріоритет: MD+1 та MD+2)
+            //    ГАРАНТУЄ коректний wrap-around.
             // =========================================================
-            let lastMatchIndex = -1;
-            for (let i = 0; i < 7; i++) {
-                
-                // Знаходимо індекс наступного матчу (для перевірки MD- зони)
-                let nextMatchIndex = matchIndices.find(index => index > i);
-                if (nextMatchIndex === undefined) {
-                     nextMatchIndex = matchIndices.length > 0 ? matchIndices[0] + 7 : 7;
-                }
-                
-                if (dayStatuses[i] === 'MD') {
-                    lastMatchIndex = i;
-                } else if (activityTypes[i] === 'REST') { 
-                    lastMatchIndex = -1; 
-                    dayStatuses[i] = 'REST'; 
-                } else if (lastMatchIndex !== -1) {
+            for (const matchIdx of matchIndices) {
+                for (let j = 1; j <= 2; j++) { // MD+1 та MD+2
+                    const currentIdx = (matchIdx + j) % 7;
                     
-                    // Обчислення daysAfterMatch з урахуванням обгортання (wrap-around)
-                    // (i - lastMatchIndex) може бути від'ємним, тому додаємо 7 та беремо modulo
-                    let daysAfterMatch = (i - lastMatchIndex + 7) % 7; 
-
-                    if (daysAfterMatch === 0) continue; 
-                    
-                    if (daysAfterMatch <= 2) {
-                         // MD+1 та MD+2
-                        dayStatuses[i] = mdPlusMap[daysAfterMatch - 1]; 
-                    } else if (daysAfterMatch <= mdPlusMap.length) {
-                        
-                        let daysUntilNextMatch = nextMatchIndex - i; 
-                        if (daysUntilNextMatch <= 0) { 
-                            daysUntilNextMatch += 7;
-                        }
-
-                        // Якщо до наступної гри залишилося 4 дні або менше, готуємо слот для MD-
-                        if (daysUntilNextMatch <= 4) { 
-                             dayStatuses[i] = 'TRAIN';
-                        } else {
-                             dayStatuses[i] = mdPlusMap[daysAfterMatch - 1]; 
-                        }
-                    } else {
-                        // Кінець циклу MD+
-                        dayStatuses[i] = 'TRAIN';
-                    }
-                } else {
-                     // Дні перед першим матчем або після REST початково TRAIN
-                     dayStatuses[i] = 'TRAIN';
-                }
-            }
-
-
-            // =========================================================
-            // 2. РОЗРАХУНОК MD- ФАЗ (Назад від кожного MD)
-            //    Включає фікс для коректного скидання при кількох матчах.
-            // =========================================================
-            if (matchIndices.length > 0) {
-                
-                let lastMatchIdx = matchIndices[matchIndices.length - 1]; // Індекс останнього MD
-                let currentMDMinus = 0;
-                
-                // Проходимо назад 7 днів, починаючи з дня перед останнім MD
-                for (let j = lastMatchIdx - 1; j > lastMatchIdx - 8; j--) {
-                    let i = (j % 7 + 7) % 7; // Циклічний індекс
-                    
-                    // 1. Пріоритет: Користувацький REST завжди перериває цикл
-                    if (activityTypes[i] === 'REST') {
-                        currentMDMinus = -1; 
-                        dayStatuses[i] = 'REST'; 
-                        continue;
-                    }
-                    
-                    // 2. Пріоритет: Наступний MD (попередній у зворотному циклі) скидає лічильник MD-
-                    // Якщо ми зустрічаємо інший MD (який був у Pass 1), це початок його MD- циклу
-                    if (dayStatuses[i] === 'MD' && i !== lastMatchIdx) {
-                        currentMDMinus = 0; 
-                        continue;
-                    }
-
-                    // 3. ПРИЗНАЧЕННЯ MD- ФАЗ
-                    if (currentMDMinus >= 0 && currentMDMinus < 4) { // MD- цикл 4 дні
-                        
-                        // MD+1 та MD+2 захищені (вищий пріоритет)
-                        if (dayStatuses[i] !== 'MD+1' && dayStatuses[i] !== 'MD+2') {
-                            dayStatuses[i] = mdMinusCycle[currentMDMinus];
-                        }
-                        currentMDMinus++;
+                    // Якщо день не MD і не REST, встановлюємо MD+
+                    if (activityTypes[currentIdx] !== 'REST' && dayStatuses[currentIdx] !== 'MD') {
+                         // MD+1/MD+2 має найвищий пріоритет і перезаписує все (навіть MD+1/MD+2 від іншого матчу)
+                         dayStatuses[currentIdx] = mdPlusMap[j - 1]; 
                     }
                 }
             }
             
+            // =========================================================
+            // 2. РОЗРАХУНОК MD- ФАЗ (Пріоритет: MD- над TRAIN)
+            //    Перезаписує всі "TRAIN" дні, якщо вони знаходяться у циклі MD-4/3/2/1.
+            // =========================================================
+            
+            // Проходимо по кожному матчу
+            for (const matchIdx of matchIndices) {
+                let currentMDMinus = 0;
+                
+                // Перевіряємо 7 днів назад від дня перед матчем
+                for (let j = 1; j <= 7; j++) {
+                    let i = (matchIdx - j + 7) % 7; // Циклічний індекс дня MD-1, MD-2, ...
+                    
+                    // Якщо зустрічаємо REST або MD (від іншого матчу), цикл MD- від цього матчу переривається
+                    if (dayStatuses[i] === 'MD' || activityTypes[i] === 'REST') {
+                        break;
+                    }
+                    
+                    // Тільки MD-1, MD-2, MD-3, MD-4
+                    if (currentMDMinus < 4) {
+                        // Захист MD+1 та MD+2
+                        if (dayStatuses[i] !== 'MD+1' && dayStatuses[i] !== 'MD+2') {
+                            // MD- завжди перезаписує TRAIN/MD+3+/...
+                            dayStatuses[i] = mdMinusCycle[currentMDMinus];
+                        }
+                        currentMDMinus++;
+                    } else {
+                        break;
+                    }
+                }
+            }
+
             // =========================================================
             // 3. ФІНАЛЬНЕ ОНОВЛЕННЯ DOM
             // =========================================================
