@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================
-    // ФУНКЦІЯ: ОТРИМАННЯ ШАБЛОНУ (ВИПРАВЛЕНО: Коректна обробка MD-фаз)
+    // ФУНКЦІЯ: ОТРИМАННЯ ШАБЛОНУ (Коректна обробка MD-фаз)
     // =========================================================
     function getTemplateText(status) {
         if (status === 'MD') return 'Матч: Індивідуальна розминка/завершення гри';
@@ -138,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Додаємо заголовок фази перед шаблоном
         const phaseTitle = `**Фаза: ${status}**\n`;
         return phaseTitle + templateElement.value.trim();
-    } // Функція коректно завершується тут.
+    }
 
     // =========================================================
     // ФУНКЦІЯ: toggleDayInputs (Заборона введення для відпочинку/матчу)
@@ -259,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================
-    // ФУНКЦІЯ: updateCycleColors (Головний розрахунок MD-фаз та автозаповнення)
+    // ФУНКЦІЯ: updateCycleColors (Виправлений розрахунок MD-фаз)
     // =========================================================
     function updateCycleColors() {
         try {
@@ -275,58 +275,70 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const isPlanActive = matchDays.length > 0;
             let dayStatuses = new Array(7).fill('TRAIN'); 
+            
+            // 1. MD CALCULATION (Strict 7-day cycle for a single match)
+            if (matchDays.length === 1) {
+                const mdIndex = matchDays[0];
+                // Фіксована послідовність MD-фаз: MD, MD+1, MD+2, MD-4, MD-3, MD-2, MD-1
+                const cycleMap = ['MD', 'MD+1', 'MD+2', 'MD-4', 'MD-3', 'MD-2', 'MD-1']; 
 
-            // 1. Стандартний розрахунок MD-фаз (MD+X / MD-X) на основі найближчого матчу
-            dayCells.forEach((cell, index) => {
-                
-                if (matchDays.includes(index)) {
-                    dayStatuses[index] = 'MD';
-                    return; 
-                } 
-                
-                if (isPlanActive) { 
-                    let minOffset = 7;
-                    let isPostMatch = false; 
-                    
-                    matchDays.forEach(mdIndex => {
-                        // MD+X (дні після матчу)
-                        const offsetForward = (index - mdIndex + 7) % 7; 
-                        // MD-X (дні до матчу)
-                        const offsetBackward = (mdIndex - index + 7) % 7; 
-                        
-                        // MD+1, MD+2, MD+3
-                        if (offsetForward > 0 && offsetForward <= 3) { 
-                            if (offsetForward < minOffset) {
-                                minOffset = offsetForward;
-                                isPostMatch = true;
-                            }
-                        } 
-                        // MD-1, MD-2, MD-3, MD-4
-                        else if (offsetBackward > 0 && offsetBackward <= 4) { 
-                            if (offsetBackward < minOffset) {
-                                minOffset = offsetBackward;
-                                isPostMatch = false;
-                            }
-                        }
-                    });
+                dayCells.forEach((cell, index) => {
+                    // Розрахунок циклічного зміщення, починаючи з mdIndex
+                    const cycleOffset = (index - mdIndex + 7) % 7; 
+                    dayStatuses[index] = cycleMap[cycleOffset];
+                });
 
-                    if (minOffset <= 4 && minOffset > 0) { 
-                        dayStatuses[index] = isPostMatch ? `MD+${minOffset}` : `MD-${minOffset}`; 
-                    } else if (minOffset <= 7) {
-                        dayStatuses[index] = 'TRAIN'; // MD-5, MD-6, MD+4 і далі - це TRAIN
-                    }
-                } else {
-                    dayStatuses[index] = 'TRAIN';
-                }
-            });
+            } else {
+                // For multiple matches or no matches: TRAIN/MD fallback 
+                // (оскільки логіка для 2+ матчів дуже специфічна та не була повністю уточнена)
+                dayCells.forEach((cell, index) => {
+                    if (activityTypes[index] === 'MATCH') {
+                        dayStatuses[index] = 'MD';
+                    } else {
+                        dayStatuses[index] = 'TRAIN';
+                    }
+                });
+            }
 
-            // 2. Застосовуємо REST, якщо обрано (перезаписуємо MD-статус)
+
+            // 2. APPLY REST/TRAIN OVERRIDES (Вихідний день та перезапуск відліку)
             let finalStatuses = [...dayStatuses];
-            for(let i = 0; i < 7; i++) {
-                if(activityTypes[i] === 'REST') {
-                    finalStatuses[i] = 'REST';
-                }
-            }
+            let restEncountered = false;
+
+            for (let i = 0; i < 7; i++) {
+                const currentActivity = activityTypes[i];
+                
+                if (currentActivity === 'REST') {
+                    finalStatuses[i] = 'REST';
+                    restEncountered = true;
+                    continue; // Переходимо до наступного дня
+                }
+                
+                // Rule: "Відлік починається від наступної гри" після вихідного
+                if (restEncountered && currentActivity !== 'MATCH') {
+                    // Знаходимо всі матчі, які будуть після поточного дня 'i'
+                    const upcomingMDs = matchDays.filter(md => md > i);
+                    
+                    if (upcomingMDs.length > 0) {
+                        const nearestNextMDIndex = Math.min(...upcomingMDs);
+                        const daysToNextMD = nearestNextMDIndex - i; 
+                        
+                        if (daysToNextMD >= 1 && daysToNextMD <= 4) {
+                            // Якщо до матчу менше 4 днів, застосовуємо MD-фазу
+                            finalStatuses[i] = `MD-${daysToNextMD}`;
+                        } else {
+                            finalStatuses[i] = 'TRAIN'; 
+                        }
+                    } else {
+                        finalStatuses[i] = 'TRAIN'; // Немає більше матчів після REST
+                    }
+                }
+                
+                // Скидаємо прапорець, якщо натрапляємо на Матч
+                if (currentActivity === 'MATCH') {
+                    restEncountered = false;
+                }
+            }
 
 
             // 3. ФІНАЛЬНЕ ОНОВЛЕННЯ КОЛЬОРІВ ТА АВТОЗАПОВНЕННЯ ПОЛІВ
@@ -397,10 +409,11 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         saveData();
     });
-    
+
     // Обробники для полів вводу, щоб вони зберігалися при зміні
     document.querySelectorAll('input, select, textarea').forEach(input => {
         if (input.name !== 'travel_km_0' && !input.name.startsWith('tasks_md_')) {
+            // Зберігаємо дані при зміні будь-якого поля, крім шаблонів
             input.addEventListener('change', saveData);
             input.addEventListener('input', saveData);
         }
