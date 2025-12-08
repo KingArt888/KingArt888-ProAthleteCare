@@ -1,97 +1,43 @@
-/* weekly-individual.css - Оновлені стилі для ProAtletCare (Чорно-золотий стиль) */
-
-/* --- ЗАГАЛЬНІ СТИЛІ ТА КОЛЬОРИ --- */
-
-/* Загальні налаштування для чорного фону та золотого тексту */
-body {
-    background-color: #000; 
-    color: #FFF; 
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    line-height: 1.6;
-}
-
-/* Стили для елементів форми */
-.activity-type-select {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #FFD700; /* Золота рамка для селектів */
-    background-color: #1a1a1a;
-    color: #FFF;
-    border-radius: 4px;
-    appearance: none; /* Видаляємо стандартну стрілку */
-    cursor: pointer;
-}
-.activity-type-select:focus {
-    outline: none;
-    box-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
-}
-
-.sub-header {
-    color: #AAAAAA;
-    margin-bottom: 25px;
-}
-.note-info {
-    background-color: #1a1a1a;
-    border-left: 4px solid #FFD700;
-    padding: 10px 15px;
-    margin: 15px 0;
-    color: #ccc;
-    font-size: 0.9em;
-}
+/* weekly-individual.css */
 
 /* --- СТИЛІ MD-СТАТУСІВ (для таблиці та заголовків) --- */
-/* Зроблено MD-статуси більш насиченими та помітними */
 .md-status {
-    padding: 4px 8px; 
+    padding: 3px 6px;
     border-radius: 4px;
     font-weight: bold;
     display: inline-block;
-    color: #1a1a1a; /* Дуже темний текст на кольоровому фоні */
-    text-transform: uppercase;
-    font-size: 0.85em;
-    letter-spacing: 0.5px;
-    min-width: 55px; /* Фіксована ширина для однорідності */
+    color: #333; /* Текст на кольоровому фоні */
 }
 
-/* Колірна палітра MD-статусів */
-.color-red { background-color: #E74C3C; }         /* MD */
-.color-dark-green { background-color: #27AE60; }  /* MD+1 (Високе) */
-.color-green { background-color: #2ECC71; }       /* MD+2 (Середнє) */
-.color-yellow { background-color: #F1C40F; }      /* MD-1 (Низьке) */
-.color-deep-green { background-color: #1A522E; color: #fff; } /* MD-2 */
-.color-orange { background-color: #E67E22; }      /* MD-3 */
-.color-blue { background-color: #3498DB; }        /* MD-4 */
-.color-neutral { background-color: #7F8C8D; color: #FFF; }  /* REST */
-.color-dark-grey { background-color: #34495E; color: white; } /* TRAIN */
+/* Колірна палітра ProAtletCare */
+.color-red { background-color: #FF6347; }        /* MD */
+.color-dark-green { background-color: #3CB371; } /* MD+1 (Високе) */
+.color-green { background-color: #90EE90; }      /* MD+2 (Середнє) */
+.color-yellow { background-color: #FFD700; }     /* MD-1 (Низьке) */
+.color-deep-green { background-color: #2E8B57; } /* MD-2 */
+.color-orange { background-color: #FFA500; }     /* MD-3 */
+.color-blue { background-color: #4682B4; }       /* MD-4 */
+.color-neutral { background-color: #AAAAAA; }    /* REST */
+.color-dark-grey { background-color: #666666; color: white; } /* TRAIN */
 
-/* --- ОБЕРТКА ДНЯ --- */
 .day-template-wrapper {
     background-color: #1a1a1a;
     padding: 15px;
-    border: 1px solid #333; 
+    border: 1px solid #444;
     border-radius: 6px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-    display: flex;
-    flex-direction: column;
-    min-height: 250px; /* Мінімальна висота для сітки */
 }
 
 .day-md-title {
     margin-top: 0;
     margin-bottom: 15px;
-    border-bottom: 2px solid #FFD700; /* Золотий роздільник */
+    border-bottom: 2px solid #333;
     padding-bottom: 5px;
-    color: #FFD700; /* Золотий заголовок */
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
 }
 .md-status-label {
-    font-size: 0.9em;
-    font-weight: 300; 
+    font-size: 1.1em;
 }
 
-/* --- СТИЛІ ТАБЛИЦІ --- */
+/* --- СТИЛІ ТАБЛИЦІ (ПОВЕРНУТО ЗОЛОТУ РАМКУ) --- */
 .table-container {
     overflow-x: auto;
     margin-bottom: 30px;
@@ -100,36 +46,27 @@ body {
 .weekly-table {
     width: 100%;
     border-collapse: collapse;
-    border: 3px solid #FFD700; 
+    /* Золота рамка для ProAtletCare */
+    border: 2px solid #FFD700; 
 }
 
 .weekly-table th, 
 .weekly-table td {
-    border: 1px solid #333; 
-    padding: 12px 10px; 
+    border: 1px solid #444; /* Чорні/сірі внутрішні роздільники */
+    padding: 10px;
     text-align: center;
-    background-color: #0d0d0d; 
-    color: #FFF;
+    background-color: #1a1a1a; /* Чорний фон для клітинок */
 }
 
 .weekly-table thead th {
     background-color: #000;
-    color: #FFD700; 
+    color: #FFD700; /* Золотий текст у заголовку */
     font-weight: bold;
-    border-bottom: 2px solid #FFD700; 
-}
-.weekly-table tbody tr:nth-child(even) {
-    background-color: #1a1a1a;
 }
 /* ------------------------------------------- */
 
-/* --- СТИЛІ СІТКИ ЗАВДАНЬ ТА ШАБЛОНІВ --- */
-.daily-task-section h3 {
-    border-bottom: 1px solid #444;
-    padding-bottom: 5px;
-    color: #FFD700;
-}
 
+/* --- СТИЛІ СІТКИ ЗАВДАНЬ ТА ШАБЛОНІВ (без змін) --- */
 .tasks-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -141,43 +78,42 @@ body {
     color: #FFD700; 
     margin-top: 15px;
     margin-bottom: 8px;
-    font-size: 1em; 
+    font-size: 0.95em;
     text-transform: uppercase;
-    border-bottom: 1px solid #FFD700; 
+    border-bottom: 1px dashed #444;
     padding-bottom: 3px;
-    letter-spacing: 1px;
 }
 
-/* --- СТИЛІ ЕЛЕМЕНТІВ ФОРМИ ШАБЛОНУ --- */
+/* ... (решта стилів для кнопок, модального вікна та вправ) ... */
+
+/* [Продовження стилів weekly-individual.css...] */
 .template-row {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 8px; 
+    margin-bottom: 5px;
 }
 
 /* Кнопка-тег категорії */
 .template-category-button {
-    background-color: #333;
-    color: #FFD700; 
-    border: 1px solid #FFD700; 
-    padding: 6px 10px; 
+    background-color: #444;
+    color: #FFF;
+    border: 1px solid #555;
+    padding: 4px 8px;
     border-radius: 4px;
     cursor: pointer;
     font-size: 0.9em;
     flex-grow: 1;
-    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
-    text-align: left;
+    transition: background-color 0.2s, border-color 0.2s;
 }
 
 .template-category-button:hover {
-    background-color: #222; 
-    border-color: #FFF; 
+    background-color: #555;
 }
 
 .template-category-button.active-template {
     background-color: #FFD700;
-    color: #1a1a1a;
+    color: #333;
     border-color: #FFD700;
     font-weight: bold;
 }
@@ -185,24 +121,20 @@ body {
 /* Кнопки +/- для кількості */
 .count-controls {
     display: flex;
-    flex-shrink: 0;
 }
 
 .count-control-btn {
     background-color: #555;
     color: #FFF;
     border: 1px solid #666;
-    padding: 5px 10px; /* Збільшений паддінг */
+    padding: 3px 8px;
     cursor: pointer;
     line-height: 1;
     transition: background-color 0.2s;
-    font-weight: bold;
 }
 
 .count-control-btn:hover {
-    background-color: #FFD700;
-    color: #1a1a1a;
-    border-color: #FFD700;
+    background-color: #6a6a6a;
 }
 
 .count-minus {
@@ -215,45 +147,28 @@ body {
     border-bottom-right-radius: 4px;
 }
 
-.count-display {
-    padding: 5px 8px;
-    background-color: #222;
-    border-top: 1px solid #666;
-    border-bottom: 1px solid #666;
-    color: #FFD700;
-    font-weight: bold;
-    min-width: 25px;
-    text-align: center;
-}
-
 /* Кнопка "Додати вручну" */
 .add-manual-exercise-btn {
-    background-color: #3498DB; /* Синій */
+    background-color: #008CBA;
     color: white;
     border: none;
-    padding: 6px 10px;
+    padding: 4px 8px;
     border-radius: 4px;
     cursor: pointer;
     font-size: 0.9em;
-    margin-top: 10px;
-    transition: background-color 0.2s;
 }
-.add-manual-exercise-btn:hover {
-    background-color: #2980b9;
-}
-
 
 /* --- СТИЛІ ЗГЕНЕРОВАНИХ ВПРАВ --- */
 
 .generated-exercises-list {
     margin-top: 20px;
-    border-top: 1px solid #FFD700; /* Золота лінія */
+    border-top: 1px solid #444;
     padding-top: 10px;
 }
 
 .generated-exercises-list h4 {
     color: #FFF;
-    font-size: 1.1em;
+    font-size: 1em;
     margin-bottom: 10px;
 }
 
@@ -263,11 +178,6 @@ body {
     padding: 10px;
     margin-bottom: 10px;
     border-radius: 4px;
-    transition: box-shadow 0.2s;
-}
-
-.exercise-item:hover {
-    box-shadow: 0 0 5px rgba(255, 215, 0, 0.2);
 }
 
 .exercise-item label {
@@ -292,71 +202,60 @@ body {
     margin-top: 10px;
     display: flex;
     gap: 5px;
-    justify-content: flex-end;
 }
 
 .remove-btn, .replace-btn {
+    background-color: #555;
     color: white;
     border: none;
     padding: 5px 10px;
     cursor: pointer;
     border-radius: 3px;
     font-size: 0.8em;
-    transition: opacity 0.2s, background-color 0.2s;
 }
 
 .remove-btn {
-    background-color: #C0392B; /* Червоний */
-}
-.remove-btn:hover {
-    background-color: #E74C3C;
+    background-color: #CC3333;
 }
 
 .replace-btn {
-    background-color: #3498DB; /* Синій */
-}
-.replace-btn:hover {
-    background-color: #2980b9;
+    background-color: #007bff;
 }
 
-/* --- СТИЛІ МОДАЛЬНОГО ВІКНА --- */
+/* --- СТИЛІ МОДАЛЬНОГО ВІКНА (ПЕРЕНЕСЕНО З HTML) --- */
 
 .modal {
-    display: none;    
+    display: none; 
     position: fixed;
-    z-index: 1000;    
+    z-index: 1000; 
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgba(0,0,0,0.9);    
+    background-color: rgba(0,0,0,0.8); 
     justify-content: center;
     align-items: center;
-    backdrop-filter: blur(5px);
 }
 
 .modal-content {
-    background-color: #333;    
-    color: #FFD700;    
-    margin: 50px auto;
+    background-color: #333; 
+    color: #FFD700; 
+    margin: auto;
     padding: 30px;
     border: 3px solid #FFD700;
-    width: 90%;
-    max-width: 1000px;
+    width: 80%;
     max-height: 90vh;
     overflow-y: auto;
     border-radius: 8px;
-    box-shadow: 0 5px 15px rgba(255, 215, 0, 0.2);
 }
 
 .close-modal-btn {
     color: #FFD700;
     float: right;
-    font-size: 32px;
+    font-size: 28px;
     font-weight: bold;
     cursor: pointer;
-    line-height: 1;
 }
 
 .quality-filters-container {
@@ -373,19 +272,13 @@ body {
     padding: 5px 10px;
     cursor: pointer;
     border-radius: 4px;
-    transition: background-color 0.2s, color 0.2s;
-    font-size: 0.9em;
+    transition: background-color 0.2s;
 }
 
-.quality-filter-btn:hover {
-    background-color: #6a6a6a;
-}
-
-.quality-filter-btn.active {
+.quality-filter-btn:hover, .quality-filter-btn.active {
     background-color: #FFD700;
-    color: #1a1a1a;
+    color: #333;
     font-weight: bold;
-    border-color: #FFD700;
 }
 
 .exercise-list-container {
@@ -396,125 +289,46 @@ body {
 
 .exercise-select-item {
     padding: 15px;
-    border: 1px solid #555;
+    border: 1px solid #777;
     border-radius: 4px;
-    background-color: #222;
+    background-color: #444;
     display: flex;
     align-items: flex-start;
     cursor: pointer;
-    transition: background-color 0.2s, border-color 0.2s;
-    color: #FFF;
-}
-
-.exercise-select-item:hover {
-    background-color: #333;
+    transition: background-color 0.2s;
 }
 
 .exercise-select-item label {
     flex-grow: 1;
     cursor: pointer;
     padding-left: 10px;
-    color: #FFF;
-    font-weight: bold;
 }
 
 .exercise-select-item.selected-item {
-    border: 1px solid #FFD700;    
-    background-color: #383838;    
-    box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+    border: 1px solid #FFD700; 
+    background-color: #383838; 
+    box-shadow: 0 0 5px #FFD700;
 }
 
 .exercise-checkbox {
-    width: 20px;
-    height: 20px;
-    margin-top: 5px;
-    flex-shrink: 0;
-    accent-color: #FFD700; /* Золотий колір для чекбокса */
+     width: 20px;
+     height: 20px;
+     margin-top: 5px;
+     flex-shrink: 0;
 }
 
 .media-hint {
     font-size: 0.8em;
     color: #AAAAAA;
-    display: block;
-    margin-top: 5px;
-    font-weight: normal;
 }
 
-/* Кнопка "Зберегти/Додати" */
 .gold-button {
     background-color: #FFD700;
-    color: #1a1a1a;
+    color: #333;
     border: none;
     padding: 10px 20px;
     cursor: pointer;
     border-radius: 4px;
     font-weight: bold;
-    transition: background-color 0.2s, opacity 0.2s;
-    margin-top: 15px;
-}
-
-.gold-button:hover {
-    background-color: #e0c800;
-}
-
-.form-actions {
-    margin-top: 40px;
-    padding-top: 20px;
-    border-top: 1px dashed #444;
-    text-align: right;
-}
-
-/* Загальні стилі навігації та шапки (для style.css, але включено тут для повноти) */
-.main-header, .main-footer {
-    background-color: #1a1a1a;
-    color: #FFD700;
-    padding: 15px 30px;
-    text-align: center;
-    border-bottom: 2px solid #FFD700;
-}
-.main-footer {
-    border-top: 2px solid #FFD700;
-    border-bottom: none;
-    font-size: 0.9em;
-    color: #AAAAAA;
-}
-.logo {
-    height: 40px;
-    vertical-align: middle;
-    margin-right: 10px;
-}
-.sidebar {
-    width: 200px;
-    background-color: #1a1a1a;
-    padding: 15px;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
-    flex-shrink: 0;
-}
-.sidebar a {
-    display: block;
-    color: #FFF;
-    padding: 10px;
-    margin-bottom: 5px;
-    text-decoration: none;
-    border-radius: 4px;
-    transition: background-color 0.2s, color 0.2s;
-}
-.sidebar a:hover {
-    background-color: #2e2e2e;
-    color: #FFD700;
-}
-.sidebar a.active {
-    background-color: #FFD700;
-    color: #1a1a1a;
-    font-weight: bold;
-}
-.content-wrapper {
-    display: flex;
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 20px 0;
-}
-.main-content {
-    flex-grow: 1;
-    padding: 0 30px;
+    transition: opacity 0.2s;
 }
