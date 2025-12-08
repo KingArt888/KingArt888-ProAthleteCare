@@ -1,238 +1,313 @@
-/* daily-individual.css */
+// daily-individual.js
 
-/* --- ЗАГАЛЬНІ СТИЛІ --- */
+const STORAGE_KEY = 'weeklyPlanData';
+const YOUTUBE_EMBED_BASE = 'https://www.youtube.com/embed/';
 
-.daily-plan-header {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 20px;
-    flex-wrap: wrap; 
+// Колірна палітра MD
+const COLOR_MAP = {
+    'MD': { status: 'MD', colorClass: 'color-red' },
+    'MD+1': { status: 'MD+1', colorClass: 'color-dark-green' }, 
+    'MD+2': { status: 'MD+2', colorClass: 'color-green' }, 
+    'MD-1': { status: 'MD-1', colorClass: 'color-yellow' }, 
+    'MD-2': { status: 'MD-2', colorClass: 'color-deep-green' }, 
+    'MD-3': { status: 'MD-3', colorClass: 'color-orange' }, 
+    'MD-4': { status: 'MD-4', colorClass: 'color-blue' }, 
+    'REST': { status: 'REST', colorClass: 'color-neutral' }, 
+    'TRAIN': { status: 'TRAIN', colorClass: 'color-dark-grey' }, 
+};
+const dayNamesFull = ['Неділя', 'Понеділок', 'Вівторок', 'Середа', 'Четвер', 'П\'ятниця', 'Субота'];
+
+const MD_RECOMMENDATIONS = {
+    'MD': 'Сьогодні ігровий день. Зосередьтеся на швидкому відновленні, живленні та психологічній готовності. Уникайте важких фізичних навантажень, якщо вони не є частиною розминки.',
+    'MD+1': 'Високе навантаження! Це ключовий тренувальний день. Максимальна інтенсивність і концентрація. Обов’язково виконуйте відновлювальні процедури після тренування.',
+    'MD+2': 'Середнє навантаження. Хороший день для технічної роботи та помірної сили. Слідкуйте за самопочуттям, забезпечте якісний сон.',
+    'MD-1': 'Низьке навантаження. День перед матчем. Легке, активуюче тренування. Фокус на швидкості та тактиці. Відпочинок — пріоритет!',
+    'MD-2': 'Глибоке відновлення. Робота над якістю руху, мобільністю та м’язовою активацією. Використовуйте пінний ролик та стретчинг.',
+    'MD-3': 'Активний відпочинок або дуже низька інтенсивність. Прогулянка, плавання, легке кардіо. Важливо для ментального та фізичного розвантаження.',
+    'MD-4': 'Базове тренування/перехід. Можна включити легку загальнофізичну підготовку. Слідкуйте за тим, щоб не перевантажити м’язи.',
+    'REST': 'ПОВНИЙ ВІДПОЧИНОК. Не тренуватися. Харчування та сон — єдині завдання.',
+    'TRAIN': 'Стандартний тренувальний день без чіткої прив\'язки до матчу. Виконуйте заплановану програму згідно з вашим мікроциклом.'
+};
+
+/**
+ * Отримує індекс сьогоднішнього дня (0=Пн, 6=Нд)
+ */
+function getCurrentDayIndex() {
+    const today = new Date();
+    const jsDay = today.getDay(); 
+    return (jsDay === 0) ? 6 : jsDay - 1; 
 }
 
-#md-status-display {
-    font-size: 1.5em;
-    padding: 8px 12px;
-    border-radius: 6px;
+/**
+ * Зберігає/оновлює статус виконання вправи в localStorage
+ */
+function toggleCompletion(id, isChecked) {
+    localStorage.setItem(id, isChecked);
+    // Додайте тут зміну стилю (наприклад, затемнення)
+    const exerciseBlock = document.querySelector(`[data-exercise-id="${id}"]`);
+    if (exerciseBlock) {
+         // exerciseBlock.style.opacity = isChecked ? 0.7 : 1;
+    }
+    console.log(`Статус вправи ${id} встановлено: ${isChecked}`);
 }
 
-#mdx-range-display {
-    color: #FFD700; 
-    font-weight: bold; 
-    font-size: 1.1em;
-}
+/**
+ * Обробка відправки форми зворотного зв'язку
+ */
+function submitFeedback() {
+    const feedbackText = document.getElementById('user-feedback-text').value.trim();
+    const ratingValue = document.getElementById('user-rating').value;
 
-#md-recommendations {
-    border: 1px solid #FFD700; 
-    padding: 15px; 
-    border-radius: 6px; 
-    background-color: #333; 
-    margin-bottom: 20px; 
-    color: #EEE;
-}
+    if (!feedbackText && ratingValue === '3') { // Якщо оцінка 3 і немає тексту - вважаємо, що нічого не відправили
+        alert("Будь ласка, введіть відгук або оберіть оцінку, відмінну від 3, перед відправкою.");
+        return;
+    }
 
-/* --- СТИЛІ СПИСКУ ВПРАВ (КОМПАКТНИЙ МАКЕТ) --- */
-
-.daily-exercise-item {
-    background-color: #222; 
-    border: 2px solid #FFD700; 
-    padding: 15px;
-    margin-bottom: 20px; 
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    const todayIndex = getCurrentDayIndex();
+    const todayFeedbackKey = `feedback_day_${todayIndex}`;
     
-    /* FLEX LAYOUT */
-    display: flex;
-    flex-direction: row;
-    gap: 20px;
-    justify-content: space-between;
+    const feedbackData = {
+        date: new Date().toLocaleDateString('uk-UA'),
+        text: feedbackText,
+        rating: ratingValue
+    };
+
+    localStorage.setItem(todayFeedbackKey, JSON.stringify(feedbackData));
+
+    alert("Ваш відгук успішно збережено! Дякуємо.");
+    updateFeedbackDisplay(feedbackData);
 }
 
-.exercise-content {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-}
+/**
+ * Оновлення відображення форми/відгуку
+ */
+function updateFeedbackDisplay(feedbackData = null) {
+    const container = document.getElementById('user-feedback-container');
+    if (!container) return;
 
-.daily-exercise-item h4 {
-    color: #FFD700;
-    margin-top: 0;
-    border-bottom: 1px solid #444;
-    padding-bottom: 5px;
-    font-size: 1.3em; 
-}
-
-.exercise-details p {
-    margin: 3px 0;
-    color: #ccc;
-    font-size: 0.95em;
-}
-
-/* Виділення Sets/Reps */
-.sets-reps-display {
-    padding: 5px 0;
-    margin-top: 5px;
-    font-weight: bold;
-    color: #FFF;
-}
-.sets-reps-display span {
-    color: #FFD700; /* Золотий для кількості */
-    font-size: 1.1em;
-}
-
-/* Групування за етапами (Stage) */
-.main-content h3.stage-header {
-    color: #FFF; 
-    margin-top: 30px; 
-    border-bottom: 2px solid #555; 
-    padding-bottom: 5px;
-    font-size: 1.2em; 
+    const todayIndex = getCurrentDayIndex();
+    const savedFeedback = feedbackData || JSON.parse(localStorage.getItem(`feedback_day_${todayIndex}`) || 'null');
+    
+    if (savedFeedback) {
+        container.innerHTML = `
+            <h3>✅ Ваш Відгук на Сьогодні:</h3>
+            <p><strong>Оцінка навантаження:</strong> ${savedFeedback.rating} / 5</p>
+            <p><strong>Коментар:</strong> ${savedFeedback.text || 'Коментар відсутній.'}</p>
+        `;
+    } else {
+        container.innerHTML = `
+            <h3>✍️ Зворотний Зв'язок на Кінець Дня</h3>
+            <div class="feedback-form">
+                <p>Як ви оцінюєте загальне навантаження сьогодні (1-легко, 5-дуже важко)?</p>
+                <input type="range" id="user-rating" min="1" max="5" value="3" oninput="document.getElementById('rating-value-display').innerText = this.value">
+                <span id="rating-value-display">3</span> / 5
+                
+                <p>Ваш коментар для тренера:</p>
+                <textarea id="user-feedback-text" rows="3" placeholder="Введіть ваші відчуття, проблеми чи успіхи..."></textarea>
+                
+                <button onclick="submitFeedback()">Відправити Відгук</button>
+            </div>
+        `;
+    }
 }
 
 
-/* --- СТИЛІ МЕДІА ТА ГАЛОЧКИ --- */
+/**
+ * Визначає тижневий діапазон MD-статусів (MDX)
+ */
+function calculateMdxRange(savedData) {
+    const mdStatuses = [];
+    
+    for (let i = 0; i < 7; i++) {
+        const planKey = `day_plan_${i}`;
+        let status = '';
+        
+        if (savedData[planKey] && savedData[planKey].mdStatus) {
+            status = savedData[planKey].mdStatus;
+        } else if (savedData[`activity_${i}`]) {
+            status = savedData[`activity_${i}`] === 'MATCH' ? 'MD' : (savedData[`activity_${i}`] === 'REST' ? 'REST' : 'TRAIN');
+        }
 
-.media-container {
-    width: 320px; 
-    min-width: 320px;
-    margin-top: 0;
-    padding-top: 0;
-    border-top: none;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end; 
-    gap: 10px;
-}
-
-.media-container img, .media-container iframe {
-    max-width: 100%;
-    width: 300px; 
-    height: 180px; 
-    border: 1px solid #FFD700;
-    border-radius: 4px;
-}
-
-.completion-section {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: #FFD700;
-    font-weight: bold;
-    font-size: 1.1em;
-}
-
-input[type="checkbox"] {
-    appearance: none;
-    width: 25px;
-    height: 25px;
-    border: 2px solid #FFD700;
-    border-radius: 4px;
-    background-color: #000;
-    cursor: pointer;
-    position: relative;
-    outline: none;
-}
-
-input[type="checkbox"]:checked {
-    background-color: #FFD700; 
-}
-
-input[type="checkbox"]:checked::after {
-    content: '✔';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 18px;
-    color: #000; 
-    font-weight: bolder;
-}
-
-/* --- СТИЛІ ЗВОРОТНОГО ЗВ'ЯЗКУ --- */
-
-.feedback-block {
-    background-color: #1a1a1a;
-    border: 1px solid #FFD700;
-    padding: 25px;
-    border-radius: 8px;
-    margin-top: 30px;
-    color: #EEE;
-}
-
-.feedback-block h3 {
-    color: #FFD700;
-    border-bottom: 1px solid #444;
-    padding-bottom: 10px;
-    margin-top: 0;
-}
-
-.feedback-form textarea {
-    width: 100%;
-    background-color: #333;
-    color: #EEE;
-    border: 1px solid #555;
-    padding: 10px;
-    border-radius: 4px;
-    margin: 10px 0;
-    box-sizing: border-box;
-}
-
-.feedback-form input[type="range"] {
-    width: 80%;
-}
-
-.feedback-form button {
-    background-color: #FFD700;
-    color: #000;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-    margin-top: 15px;
-}
-
-.feedback-form button:hover {
-    background-color: #e0c100;
-}
-
-
-/* --- АДАПТИВНІСТЬ ДЛЯ МОБІЛЬНИХ --- */
-@media (max-width: 768px) {
-    /* Приховуємо меню */
-    .sidebar {
-        display: none; 
+        if (status.startsWith('MD')) {
+             mdStatuses.push(status);
+        }
     }
     
-    /* Робимо контент на всю ширину */
-    .content-wrapper {
-        flex-direction: column; 
+    const mdOrder = [
+        'MD+3', 'MD+2', 'MD+1', 'MD', 'MD-1', 'MD-2', 'MD-3', 'MD-4', 'MD-5', 'MD-6'
+    ]; 
+    
+    if (mdStatuses.length === 0) {
+        return "Базовий / REST";
     }
     
-    .main-content {
-        width: 100%; 
-        padding: 10px; 
-        margin-left: 0; 
+    let minIndex = mdOrder.length; 
+    let maxIndex = -1;             
+    
+    mdStatuses.forEach(status => {
+        const index = mdOrder.indexOf(status);
+        if (index !== -1) {
+            if (index < minIndex) minIndex = index; 
+            if (index > maxIndex) maxIndex = index; 
+        }
+    });
+
+    if (minIndex <= maxIndex && minIndex < mdOrder.length) {
+        return `${mdOrder[minIndex]} до ${mdOrder[maxIndex]}`;
+    }
+    
+    return "Не визначено";
+}
+
+
+/**
+ * Генерує HTML для відображення однієї вправи
+ */
+function createExerciseItemHTML(exercise, index) {
+    const uniqueId = `ex-${getCurrentDayIndex()}-${index}`; 
+    const isCompleted = localStorage.getItem(uniqueId) === 'true' ? 'checked' : '';
+
+    let mediaHtml = '';
+
+    if (exercise.imageURL) {
+        mediaHtml += `<img src="${exercise.imageURL}" alt="${exercise.name}">`;
     }
 
-    /* Вертикальний макет для вправ */
-    .daily-exercise-item {
-        flex-direction: column; 
-        gap: 15px;
+    if (exercise.videoKey) {
+        mediaHtml += `
+            <iframe 
+                    src="${YOUTUBE_EMBED_BASE}${exercise.videoKey}" 
+                    frameborder="0" allowfullscreen>
+            </iframe>
+        `;
     }
-    .media-container {
-        width: 100%; 
-        min-width: 100%;
-        align-items: center; 
-        order: -1; 
+
+    const stageDisplay = exercise.stage ? `<p><strong>Етап:</strong> ${exercise.stage.replace('-', ' ')}</p>` : '';
+    const categoryDisplay = exercise.category ? `<p><strong>Категорія:</strong> ${exercise.category}</p>` : '';
+
+    // Краще оформлення Sets/Reps
+    let descriptionDisplay = `<p><strong>Параметри/Опис:</strong> ${exercise.description}</p>`;
+    
+    if (exercise.sets || exercise.reps) {
+        const setsReps = (exercise.sets ? `${exercise.sets} підходів` : '') + 
+                         (exercise.sets && exercise.reps ? ', ' : '') + 
+                         (exercise.reps ? `${exercise.reps} повторень` : '');
+        
+        descriptionDisplay = `
+            <p class="sets-reps-display">
+                <span style="color:#FFD700; font-size:1.1em;">${setsReps}</span>
+            </p>
+            ${exercise.description ? `<p>Деталі: ${exercise.description}</p>` : ''}
+        `;
     }
-    .media-container img, .media-container iframe {
-        width: 100%;
-        height: auto;
-        max-height: 200px;
+
+    return `
+        <div class="daily-exercise-item" data-exercise-id="${uniqueId}">
+            
+            <div class="exercise-content">
+                <h4>${exercise.name}</h4>
+                <div class="exercise-details">
+                    ${stageDisplay}
+                    ${categoryDisplay}
+                    ${descriptionDisplay} 
+                </div>
+            </div>
+
+            <div class="media-container">
+                ${mediaHtml}
+                <div class="completion-section">
+                    <label for="${uniqueId}">Виконано:</label>
+                    <input type="checkbox" id="${uniqueId}" ${isCompleted} 
+                           onchange="toggleCompletion('${uniqueId}', this.checked)">
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+
+/**
+ * Завантажує та відображає план на сьогоднішній день
+ */
+function loadAndDisplayDailyPlan() {
+    const todayIndex = getCurrentDayIndex(); 
+    const planKey = `day_plan_${todayIndex}`;
+    
+    // 1. Отримання елементів DOM
+    const statusDisplay = document.getElementById('md-status-display');
+    const listContainer = document.getElementById('daily-exercise-list');
+    const dateDisplay = document.getElementById('current-date-display');
+    const recommendationContainer = document.getElementById('md-recommendations'); 
+    const mdxRangeDisplay = document.getElementById('mdx-range-display'); 
+    
+    if (!statusDisplay || !listContainer || !dateDisplay || !recommendationContainer || !mdxRangeDisplay) {
+        console.error("❌ Критична помилка: Не знайдено один або кілька контейнерів у daily-individual.html.");
+        if (listContainer) {
+            listContainer.innerHTML = '<p style="color:red;">❌ Критична помилка: Не знайдено контейнери для відображення плану. Перевірте HTML.</p>';
+        }
+        return;
     }
-    .feedback-form input[type="range"] {
-        width: 95%; /* Більше місця для повзунка */
+    
+    const today = new Date();
+    dateDisplay.textContent = `(${dayNamesFull[today.getDay()]}, ${today.toLocaleDateString('uk-UA')})`;
+
+    try {
+        const savedData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+        const todayPlan = savedData[planKey];
+        
+        let mdStatus = 'TRAIN';
+        if (todayPlan && todayPlan.mdStatus) {
+            mdStatus = todayPlan.mdStatus;
+        } else if (savedData[`activity_${todayIndex}`]) {
+            mdStatus = savedData[`activity_${todayIndex}`] === 'MATCH' ? 'MD' : (savedData[`activity_${todayIndex}`] === 'REST' ? 'REST' : 'TRAIN');
+        }
+
+        // --- Відображення MDX та статусу ---
+        mdxRangeDisplay.textContent = calculateMdxRange(savedData);
+        const style = COLOR_MAP[mdStatus] || COLOR_MAP['TRAIN'];
+        statusDisplay.textContent = style.status;
+        Object.values(COLOR_MAP).forEach(map => statusDisplay.classList.remove(map.colorClass)); 
+        statusDisplay.classList.add(style.colorClass); 
+        
+        // --- Відображення Рекомендацій ---
+        const recommendation = MD_RECOMMENDATIONS[mdStatus] || MD_RECOMMENDATIONS['TRAIN'];
+        recommendationContainer.innerHTML = `
+            <p><strong>Рекомендація:</strong> ${recommendation}</p>
+        `;
+
+        if (!todayPlan || !todayPlan.exercises || todayPlan.exercises.length === 0) {
+            listContainer.innerHTML = `
+                <div class="note-info" style="color: #EEE; border: 1px solid #FFD700; padding: 15px; border-radius: 6px; background-color: #333;">
+                    <h3 style="color:#FFD700;">На сьогодні немає запланованих вправ.</h3>
+                    ${style.status === 'REST' ? '<p>Це день повного відновлення. Добре відновлюйтесь!</p>' : '<p>Зверніться до тренера (Weekly Individual), щоб запланувати тренування.</p>'}
+                </div>
+            `;
+            // Важливо викликати updateFeedbackDisplay, навіть якщо немає вправ
+            updateFeedbackDisplay();
+            return;
+        }
+        
+        let exercisesHtml = '';
+        let currentStage = '';
+
+        todayPlan.exercises.forEach((exercise, index) => {
+            if (exercise.stage && exercise.stage !== currentStage) {
+                currentStage = exercise.stage;
+                exercisesHtml += `<h3 class="stage-header">${currentStage.replace('-', ' ')}</h3>`;
+            }
+            exercisesHtml += createExerciseItemHTML(exercise, index); 
+        });
+
+        listContainer.innerHTML = exercisesHtml;
+        
+        // Відображення секції зворотного зв'язку
+        updateFeedbackDisplay();
+
+    } catch (e) {
+        console.error("Помилка при завантаженні щоденного плану:", e);
+        listContainer.innerHTML = '<p style="color:red;">❌ Виникла критична помилка при завантаженні плану тренувань. Перевірте console.</p>';
     }
 }
+
+// Запуск при завантаженні сторінки
+document.addEventListener('DOMContentLoaded', loadAndDisplayDailyPlan);
