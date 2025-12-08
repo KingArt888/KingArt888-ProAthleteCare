@@ -43,10 +43,9 @@ function getCurrentDayIndex() {
  */
 function toggleCompletion(id, isChecked) {
     localStorage.setItem(id, isChecked);
-    // Додайте тут зміну стилю (наприклад, затемнення)
     const exerciseBlock = document.querySelector(`[data-exercise-id="${id}"]`);
     if (exerciseBlock) {
-         // exerciseBlock.style.opacity = isChecked ? 0.7 : 1;
+         // exerciseBlock.style.opacity = isChecked ? 0.7 : 1; 
     }
     console.log(`Статус вправи ${id} встановлено: ${isChecked}`);
 }
@@ -58,7 +57,7 @@ function submitFeedback() {
     const feedbackText = document.getElementById('user-feedback-text').value.trim();
     const ratingValue = document.getElementById('user-rating').value;
 
-    if (!feedbackText && ratingValue === '3') { // Якщо оцінка 3 і немає тексту - вважаємо, що нічого не відправили
+    if (!feedbackText && ratingValue === '3') { 
         alert("Будь ласка, введіть відгук або оберіть оцінку, відмінну від 3, перед відправкою.");
         return;
     }
@@ -282,7 +281,6 @@ function loadAndDisplayDailyPlan() {
                     ${style.status === 'REST' ? '<p>Це день повного відновлення. Добре відновлюйтесь!</p>' : '<p>Зверніться до тренера (Weekly Individual), щоб запланувати тренування.</p>'}
                 </div>
             `;
-            // Важливо викликати updateFeedbackDisplay, навіть якщо немає вправ
             updateFeedbackDisplay();
             return;
         }
@@ -309,10 +307,10 @@ function loadAndDisplayDailyPlan() {
     }
 }
 
-// Запуск при завантаженні сторінки
-document.addEventListener('DOMContentLoaded', loadAndDisplayDailyPlan);
-// daily-individual.js (Додайте в кінці файлу)
 
+/**
+ * Логіка для перемикання бічної панелі на мобільних пристроях
+ */
 function setupMenuToggle() {
     const toggleButton = document.getElementById('menu-toggle-button');
     const sidebar = document.getElementById('main-sidebar');
@@ -324,12 +322,9 @@ function setupMenuToggle() {
     }
 }
 
+
 // Запуск при завантаженні сторінки
 document.addEventListener('DOMContentLoaded', () => {
     loadAndDisplayDailyPlan();
-    setupMenuToggle(); // !!! Додаємо ініціалізацію перемикача
+    setupMenuToggle(); 
 });
-
-// Або, якщо ви використовуєте старий синтаксис:
-// document.addEventListener('DOMContentLoaded', loadAndDisplayDailyPlan);
-// document.addEventListener('DOMContentLoaded', setupMenuToggle);
