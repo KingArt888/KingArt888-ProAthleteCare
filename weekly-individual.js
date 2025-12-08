@@ -41,12 +41,11 @@ function generateRandomExercises(stage, category, count) {
 }
 
 // =========================================================
-// 2. ФУНКЦІЇ ЗБЕРЕЖЕННЯ/ЗАВАНТАЖЕННЯ 
+// 2. ФУНКЦІЇ ЗБЕРЕЖЕННЯ/ЗАВАНТАЖЕННЯ (ПЕРЕМІЩЕНО ВГОРУ ДЛЯ УНИКНЕННЯ REFERENCEERROR)
 // =========================================================
 
 function collectTemplatesFromUI() {
     const templateData = {};
-    // Збираємо дані з data-count на елементі template-category-button
     document.querySelectorAll('.template-category-button').forEach(button => {
         const mdStatus = button.dataset.mdStatus;
         const stage = button.dataset.stage;
@@ -84,7 +83,8 @@ function collectManualChanges() {
                 description: descTextarea ? descTextarea.value : '',
                 stage: item.dataset.stage,
                 category: item.dataset.category,
-                videoKey: item.dataset.videokey || ''
+                videoKey: item.dataset.videokey || '',
+                imageURL: item.dataset.imageurl || '' // Зберігаємо imageURL
             });
         });
 
@@ -310,7 +310,13 @@ function displayGeneratedExercises(dayIndex, mdStatus, exercises) {
              
              stageExercises.forEach((exercise) => {
                  html += `
-                    <div class="exercise-item" data-day-index="${dayIndex}" data-stage="${stage}" data-index="${index}" data-category="${exercise.category || ''}" data-videokey="${exercise.videoKey || ''}">
+                    <div class="exercise-item" 
+                         data-day-index="${dayIndex}" 
+                         data-stage="${stage}" 
+                         data-index="${index}" 
+                         data-category="${exercise.category || ''}" 
+                         data-videokey="${exercise.videoKey || ''}"
+                         data-imageurl="${exercise.imageURL || ''}">
                         <div class="exercise-fields">
                              <label>Назва вправи:</label>
                              <input type="text" value="${exercise.name || ''}" data-field="name">
@@ -357,6 +363,7 @@ function addExerciseControlListeners(dayBlock) {
                     item.querySelector('[data-field="name"]').value = newEx.name;
                     item.querySelector('[data-field="description"]').value = newEx.description;
                     item.dataset.videokey = newEx.videoKey || '';
+                    item.dataset.imageurl = newEx.imageURL || ''; // Оновлення imageURL
                     item.dataset.category = category;
                     
                     alert(`Вправу успішно замінено на: ${newEx.name}`);
@@ -472,232 +479,3 @@ function updateCycleColors(shouldGenerate = false) {
         }
         
         // 4. Оновлення відображення MD-статусу
-        const currentMdStatuses = [];
-
-        dayCells.forEach((cell, index) => {
-             let finalStatusKey = dayStatuses[index] || 'TRAIN'; 
-             if (finalStatusKey.startsWith('MD+') && parseInt(finalStatusKey.substring(3)) > 2) {
-                  finalStatusKey = 'TRAIN';
-             } else if (finalStatusKey.startsWith('MD-') && parseInt(finalStatusKey.substring(3)) > 4) {
-                  finalStatusKey = 'TRAIN'; 
-             }
-             
-             currentMdStatuses[index] = finalStatusKey;
-
-             const style = COLOR_MAP[finalStatusKey] || COLOR_MAP['TRAIN'];
-             const mdStatusElement = cell.querySelector('.md-status');
-             if (mdStatusElement) {
-                 mdStatusElement.textContent = style.status;
-                 Object.values(COLOR_MAP).forEach(map => mdStatusElement.classList.remove(map.colorClass)); 
-                 mdStatusElement.classList.add(style.colorClass); 
-             }
-             
-             const mdTitleElement = document.getElementById(`md-title-${index}`);
-             if (mdTitleElement) {
-                 mdTitleElement.innerHTML = `<span class="md-status-label">${style.status}</span> <span class="day-name-label">(${dayNamesShort[index]})</span>`;
-             }
-        });
-        
-        // 5. Рендеримо поля шаблонів
-        const savedData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-        const savedTemplates = {};
-        Object.keys(savedData).forEach(key => {
-            if (key.startsWith('template_')) {
-                savedTemplates[key] = savedData[key];
-            }
-        });
-        
-        dayCells.forEach((cell, index) => {
-             renderDayTemplateInput(index, currentMdStatuses[index], savedTemplates);
-        });
-
-
-        // 6. Генерація та відображення плану
-        if (shouldGenerate) {
-            const templatesFromUI = collectTemplatesFromUI();
-            const newWeeklyPlan = generateWeeklyPlan(currentMdStatuses, templatesFromUI);
-            saveData(newWeeklyPlan, templatesFromUI);
-        } else {
-            loadWeeklyPlanDisplay(savedData);
-        }
-
-    } catch (e) {
-        console.error("Критична помилка у updateCycleColors:", e);
-    }
-}
-
-function loadData() {
-    try {
-        const savedData = localStorage.getItem(STORAGE_KEY);
-        let data = savedData ? JSON.parse(savedData) : {};
-
-        document.querySelectorAll('#weekly-plan-form [name^="activity_"]').forEach(element => {
-             const name = element.name;
-             if (data[name] !== undefined) {
-                 element.value = data[name];
-             }
-        });
-        
-        updateCycleColors(false); 
-
-    } catch (e) {
-        console.error("Помилка при завантаженні даних:", e);
-    }
-}
-
-// =========================================================
-// 5. УПРАВЛІННЯ ВИБОРОМ ВПРАВ (МОДАЛЬНЕ ВІКНО)
-// =========================================================
-
-let currentExerciseContext = null; 
-let selectedExercises = []; // Зберігатиме тимчасовий список вибраних вправ
-
-function createExerciseHTML(exercise, stage, category) {
-    // Використовуємо videoKey як умовний URL для зображення, якщо imageURL відсутній
-    const mediaHint = exercise.videoKey ? 'Відео доступне' : 'Медіа відсутнє';
-
-    return `
-        <div class="exercise-select-item" 
-             data-name="${exercise.name}" 
-             data-description="${exercise.description}" 
-             data-videokey="${exercise.videoKey || ''}"
-             data-imageurl="${exercise.imageURL || ''}"
-             data-stage="${stage}"
-             data-category="${category}">
-            
-            <input type="checkbox" class="exercise-checkbox" id="ex-${Math.random().toString(36).substring(7)}" 
-                   data-name="${exercise.name}">
-            
-            <label for="ex-${Math.random().toString(36).substring(7)}">
-                <strong>${exercise.name}</strong> 
-                <span class="media-hint">(${mediaHint})</span>
-                <p>${exercise.description.substring(0, Math.min(exercise.description.length, 70))}...</p>
-            </label>
-            
-        </div>
-    `;
-}
-
-function renderExerciseList(exercises) {
-    const listContainer = document.getElementById('exercise-list-container');
-    const addButton = document.getElementById('add-selected-btn'); 
-    if (!listContainer || !addButton) return;
-    
-    // Очищаємо список вибраних вправ при рендері
-    selectedExercises = []; 
-
-    listContainer.innerHTML = ''; 
-
-    if (exercises.length === 0) {
-        listContainer.innerHTML = '<p>Не знайдено вправ за цими критеріями. Спробуйте іншу якість.</p>';
-        addButton.style.display = 'none';
-        return;
-    }
-
-    exercises.forEach(ex => {
-        listContainer.innerHTML += createExerciseHTML(ex, ex.stage, ex.category);
-    });
-    
-    // Додаємо слухача для чекбоксів
-    listContainer.querySelectorAll('.exercise-checkbox').forEach(checkbox => {
-        checkbox.addEventListener('change', (e) => {
-            const item = e.target.closest('.exercise-select-item');
-            const data = item.dataset;
-
-            const exerciseObj = {
-                name: data.name,
-                description: data.description,
-                videoKey: data.videokey,
-                imageURL: data.imageurl, // Зберігаємо новий ключ
-                stage: data.stage,
-                category: data.category
-            };
-
-            if (e.target.checked) {
-                // Додаємо вправу до тимчасового списку
-                selectedExercises.push(exerciseObj);
-            } else {
-                // Видаляємо вправу зі списку
-                selectedExercises = selectedExercises.filter(ex => ex.name !== data.name);
-            }
-            
-            // Оновлюємо текст кнопки "Додати вибрані"
-            addButton.textContent = `Додати вибрані (${selectedExercises.length})`;
-            addButton.style.display = selectedExercises.length > 0 ? 'block' : 'none';
-            
-            item.classList.toggle('selected-item', e.target.checked);
-        });
-    });
-    
-    // Приховуємо кнопку додавання, поки нічого не вибрано
-    addButton.style.display = 'none';
-}
-
-function handleSelectionComplete() {
-    if (!currentExerciseContext || selectedExercises.length === 0) return;
-    
-    // Додаємо всі вибрані вправи до плану
-    selectedExercises.forEach(exercise => {
-         insertExerciseManually(
-            currentExerciseContext.dayIndex,
-            currentExerciseContext.mdStatus,
-            exercise.stage, 
-            exercise.category, 
-            exercise
-         );
-    });
-    
-    // Скидаємо список і контекст, закриваємо модальне вікно
-    selectedExercises = [];
-    closeExerciseModal();
-}
-
-// ... (Функція filterExercises без змін)
-
-function insertExerciseManually(dayIndex, mdStatus, stage, category, exercise) {
-     const dayBlock = document.querySelector(`.task-day-container[data-day-index="${dayIndex}"]`);
-     if (!dayBlock) return;
-     
-     const newExHtml = `
-         <div class="exercise-item manual-added" 
-              data-day-index="${dayIndex}" 
-              data-stage="${stage}" 
-              data-category="${category}" 
-              data-videokey="${exercise.videoKey || ''}"
-              data-imageurl="${exercise.imageURL || ''}"> // ЗБЕРІГАЄМО imageURL
-             <div class="exercise-fields">
-                  <label>Назва вправи:</label>
-                  <input type="text" value="${exercise.name || ''}" data-field="name">
-                  <label>Параметри / Опис:</label>
-                  <textarea data-field="description">${exercise.description || ''}</textarea>
-                  <div class="exercise-actions">
-                      <button type="button" class="replace-btn" data-stage="${stage}" data-category="${category}">🔄 Замінити</button>
-                      <button type="button" class="remove-btn">❌ Видалити</button>
-                  </div>
-             </div>
-         </div>
-     `;
-
-     // ... (Логіка вставки в targetStageContainer без змін)
-     // ... (Додавання слухачів та saveData без змін)
-}
-
-// =========================================================
-// 6. ІНІЦІАЛІЗАЦІЯ ОБРОБНИКІВ
-// =========================================================
-
-document.addEventListener('DOMContentLoaded', () => {
-    // ... (Ініціалізація form та select без змін)
-    
-    // Слухач для кнопки "Додати вибрані"
-    const addSelectedBtn = document.getElementById('add-selected-btn');
-    if (addSelectedBtn) {
-        addSelectedBtn.addEventListener('click', handleSelectionComplete);
-    }
-    
-    // ... (Слухач для закриття модального вікна та loadData без змін)
-});
-    }
-
-    loadData();
-});
