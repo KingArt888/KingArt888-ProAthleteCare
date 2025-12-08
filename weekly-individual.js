@@ -11,7 +11,6 @@ const COLOR_MAP = {
     'TRAIN': { status: 'TRAIN', colorClass: 'color-dark-grey' }, 
 };
 
-const dayNamesFull = ['Понеділок', 'Вівторок', 'Середа', 'Четвер', 'П’ятниця', 'Субота', 'Неділя'];
 const dayNamesShort = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд'];
 
 // =========================================================
@@ -68,25 +67,41 @@ document.addEventListener('DOMContentLoaded', () => {
         const mdStatus = getMdStatusByDayIndex(dayIndex);
         const containerId = `exercise-list-${mdStatus}`; 
         const container = document.getElementById(containerId);
-        if (!container) return;
+        
+        // Знаходимо блок дня, щоб знайти точку вставки
+        const dayBlock = document.querySelector(`.task-day-container[data-day-index="${dayIndex}"]`);
+        
+        if (!container || !dayBlock) return;
 
         const existingItems = Array.from(container.querySelectorAll(`.exercise-item[data-stage="${stage}"]`));
         const newIndex = existingItems.length;
 
-        const newItem = document.createElement('div');
-        newItem.innerHTML = getExerciseHtml(mdStatus, stage, newIndex, exercise);
+        const newItemWrapper = document.createElement('div');
+        newItemWrapper.innerHTML = getExerciseHtml(mdStatus, stage, newIndex, exercise);
+        const newItem = newItemWrapper.firstElementChild;
         
-        const insertionPoint = document.querySelector(`.add-exercise-button[data-day-index="${dayIndex}"][data-stage="${stage}"]`);
+        // *** ВИПРАВЛЕННЯ ПОМИЛКИ INSERTBEFORE ***
+        // Вставляємо новий елемент вправи безпосередньо в контейнер, 
+        // а потім використовуємо reindexExercises, щоб привести порядок у відповідність.
+        // Оскільки вправи тепер групуються за MD-статусом, а не за днем, 
+        // просто додаємо в кінець контейнера.
+        
+        // знаходимо останню вправу цієї стадії, або null
+        const lastStageItem = existingItems[existingItems.length - 1];
 
-        if (insertionPoint) {
-            container.insertBefore(newItem.firstElementChild, insertionPoint);
+        if (lastStageItem) {
+             // Якщо є попередня вправа цієї стадії, вставляємо після неї
+             lastStageItem.after(newItem);
         } else {
-            container.appendChild(newItem.firstElementChild);
+             // Якщо це перша вправа цієї стадії, знаходимо, перед якою кнопкою вставляти
+             // Якщо контейнер порожній, вставляємо на початок контейнера.
+             container.insertBefore(newItem, container.firstChild);
         }
-        
-        // Потрібно переіндексувати та прикріпити слухачі для поточного MD-статусу
+
+        // Переіндексовуємо та прикріплюємо слухачі
         reindexExercises(mdStatus);
         attachExerciseListeners(mdStatus);
+        saveData(); // Зберігаємо після додавання
     }
     
     function attachExerciseListeners(mdStatus) {
@@ -122,7 +137,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         stages.forEach(stage => {
             let stageIndex = 0;
-            container.querySelectorAll(`.exercise-item[data-stage="${stage}"]`).forEach((item) => {
+            // Важливо: перебираємо тільки елементи, що належать цьому MD-статусу
+            container.querySelectorAll(`.exercise-item[data-md-status="${mdStatus}"][data-stage="${stage}"]`).forEach((item) => {
                 
                 item.dataset.index = stageIndex;
                 item.querySelector('.exercise-number').textContent = `${stage} #${stageIndex + 1}`;
@@ -131,6 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const idPrefix = `${mdStatus}_${stageSlug}_${stageIndex}`;
                 
                 item.querySelectorAll('input, textarea').forEach(input => {
+                    // Оновлюємо атрибути name та id
                     const nameParts = input.name.split('_');
                     const fieldType = nameParts[1]; 
                     input.name = `ex_${fieldType}_${idPrefix}`;
@@ -144,7 +161,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // Додаємо обробники для нових кнопок "Додати вправу"
     document.querySelectorAll('.add-exercise-button').forEach(button => {
         button.addEventListener('click', (event) => {
             event.preventDefault(); 
@@ -156,7 +172,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 videoKey: '',
                 description: ''
             });
-            saveData();
         });
     });
 
@@ -167,79 +182,58 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateCycleColors() {
         try {
-            // 1. Збір поточних типів активності (MD, TRAIN, REST)
             let activityTypes = Array.from(activitySelects).map(select => select.value);
             let dayStatuses = activityTypes.map(type => (type === 'MATCH' ? 'MD' : (type === 'REST' ? 'REST' : 'TRAIN'))); 
             const isPlanActive = activityTypes.includes('MATCH');
 
-            // Якщо матчів немає
-            if (!isPlanActive) {
-                dayCells.forEach((cell, index) => {
-                     const finalStatusKey = activityTypes[index] === 'REST' ? 'REST' : 'TRAIN';
-                     const mdStatusElement = cell.querySelector('.md-status');
-                     const style = COLOR_MAP[finalStatusKey];
-                     
-                     mdStatusElement.textContent = style.status;
-                     Object.values(COLOR_MAP).forEach(map => mdStatusElement.classList.remove(map.colorClass)); 
-                     mdStatusElement.classList.add(style.colorClass); 
-                     cell.title = `Фаза: ${style.status}`; 
-                     
-                     // Оновлення заголовка MD
-                     const mdTitleElement = document.getElementById(`md-title-${index}`);
-                     if (mdTitleElement) {
-                         mdTitleElement.innerHTML = `<span class="md-status-label">${style.status}</span> <span class="day-name-label">(${dayNamesShort[index]})</span>`;
-                     }
-                 });
-                 // Після оновлення кольорів оновлюємо контейнери
-                 updateExerciseContainers(dayStatuses.map(s => s || 'TRAIN'));
-                 return; 
-            }
-
-            // 2. Логіка розрахунку MD+
             const mdPlusMap = ['MD+1', 'MD+2', 'MD+3', 'MD+4', 'MD+5', 'MD+6']; 
-            let matchIndices = dayStatuses.map((status, index) => status === 'MD' ? index : -1).filter(index => index !== -1);
-
-            for (const matchIdx of matchIndices) {
-                 for (let j = 1; j <= 2; j++) { 
-                      const currentIdx = (matchIdx + j) % 7;
-                      
-                      if (activityTypes[currentIdx] !== 'REST' && dayStatuses[currentIdx] !== 'MD') {
-                           if (!dayStatuses[currentIdx].startsWith('MD+')) {
-                                dayStatuses[currentIdx] = mdPlusMap[j - 1]; 
-                           }
-                      }
-                 }
-            }
-            
-            // 3. Логіка розрахунку MD-
             const mdMinusCycle = ['MD-1', 'MD-2', 'MD-3', 'MD-4', 'MD-5', 'MD-6']; 
             
-            for (const matchIdx of matchIndices) {
-                 let currentMDMinus = 0;
-                 
-                 for (let j = 1; j <= 7; j++) {
-                      let i = (matchIdx - j + 7) % 7; 
-                      
-                      if (activityTypes[i] === 'REST' || dayStatuses[i] === 'MD') {
-                           break;
-                      }
-                      
-                      if (currentMDMinus < 4) {
-                           if (!dayStatuses[i].startsWith('MD+')) {
-                                dayStatuses[i] = mdMinusCycle[currentMDMinus];
-                           }
-                           currentMDMinus++;
-                      } else {
-                           break;
-                      }
-                 }
+            // Якщо є матч, застосовуємо MD-логіку
+            if (isPlanActive) {
+                let matchIndices = dayStatuses.map((status, index) => status === 'MD' ? index : -1).filter(index => index !== -1);
+
+                // MD+ logic (first 2 days)
+                for (const matchIdx of matchIndices) {
+                     for (let j = 1; j <= 2; j++) { 
+                          const currentIdx = (matchIdx + j) % 7;
+                          if (activityTypes[currentIdx] !== 'REST' && dayStatuses[currentIdx] !== 'MD') {
+                               if (!dayStatuses[currentIdx].startsWith('MD+')) {
+                                    dayStatuses[currentIdx] = mdPlusMap[j - 1]; 
+                               }
+                          }
+                     }
+                }
+                
+                // MD- logic (up to 4 days before)
+                for (const matchIdx of matchIndices) {
+                     let currentMDMinus = 0;
+                     
+                     for (let j = 1; j <= 7; j++) {
+                          let i = (matchIdx - j + 7) % 7; 
+                          
+                          if (activityTypes[i] === 'REST' || dayStatuses[i] === 'MD' || dayStatuses[i].startsWith('MD+')) {
+                               break;
+                          }
+                          
+                          if (currentMDMinus < 4) {
+                               dayStatuses[i] = mdMinusCycle[currentMDMinus];
+                               currentMDMinus++;
+                          } else {
+                               break;
+                          }
+                     }
+                }
+            } else {
+                 // Якщо немає матчів, використовуємо базовий TRAIN/REST
+                 dayStatuses = activityTypes.map(type => (type === 'REST' ? 'REST' : 'TRAIN')); 
             }
             
             // 4. Оновлення відображення та контейнерів
             dayCells.forEach((cell, index) => {
                  let finalStatusKey = dayStatuses[index] || 'TRAIN'; 
                  
-                 // Обмеження MD-статусу
+                 // Обмеження MD-статусу (для відображення)
                  if (finalStatusKey.startsWith('MD+') && parseInt(finalStatusKey.substring(3)) > 2) {
                       finalStatusKey = 'TRAIN';
                  } else if (finalStatusKey.startsWith('MD-') && parseInt(finalStatusKey.substring(3)) > 4) {
@@ -256,7 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
                      cell.title = `Фаза: ${style.status}`; 
                  }
                  
-                 // НОВЕ: Оновлення заголовка MD
+                 // Оновлення заголовка MD
                  const mdTitleElement = document.getElementById(`md-title-${index}`);
                  if (mdTitleElement) {
                      mdTitleElement.innerHTML = `<span class="md-status-label">${style.status}</span> <span class="day-name-label">(${dayNamesShort[index]})</span>`;
@@ -281,31 +275,33 @@ document.addEventListener('DOMContentLoaded', () => {
             const newMdStatus = newMdStatuses[dayIndex];
             const oldContainer = currentDayBlock.querySelector('.exercise-list-container');
             
+            // Якщо контейнер вже існує і має правильний ID, нічого не робимо
             if (oldContainer && oldContainer.id === `exercise-list-${newMdStatus}`) {
                 return;
             }
             
+            // 1. Створюємо новий контейнер з ID, прив'язаним до MD-статусу
             const newContainer = document.createElement('div');
             newContainer.className = 'exercise-list-container';
             newContainer.id = `exercise-list-${newMdStatus}`; 
 
+            // 2. Завантажуємо вправи для цього MD-статусу
             const planKey = `structured_plan_${newMdStatus}`;
             const exercisesToLoad = (savedData[planKey] && savedData[planKey].exercises) || [];
             
-            newContainer.innerHTML = ''; // Очищаємо перед заповненням
-            
+            // 3. Заповнюємо новий контейнер вправами
             exercisesToLoad.forEach(exercise => {
                 const stages = ['Pre-Training', 'Main Training', 'Post-Training'];
                 stages.forEach(stage => {
                      if (exercise.stage === stage) {
-                          const newItem = document.createElement('div');
-                          // Використовуємо 0 як тимчасовий індекс, reindexExercises виправить його
-                          newItem.innerHTML = getExerciseHtml(newMdStatus, exercise.stage, 0, exercise);
-                          newContainer.appendChild(newItem.firstElementChild);
+                          const newItemWrapper = document.createElement('div');
+                          newItemWrapper.innerHTML = getExerciseHtml(newMdStatus, exercise.stage, 0, exercise);
+                          newContainer.appendChild(newItemWrapper.firstElementChild);
                      }
                 });
             });
             
+            // 4. Замінюємо старий контейнер новим
             if (oldContainer) {
                  currentDayBlock.replaceChild(newContainer, oldContainer);
             } else {
@@ -315,6 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  }
             }
             
+            // 5. Переіндексовуємо та прив'язуємо слухачі
             reindexExercises(newMdStatus);
             attachExerciseListeners(newMdStatus);
         });
@@ -327,8 +324,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function saveData() {
         try {
+            let existingData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
             const structuredPlanData = {};
+            
+            // Видаляємо старі structured_plan_ ключі, щоб зберегти лише актуальні
+            Object.keys(existingData).forEach(key => {
+                if (key.startsWith('structured_plan_')) {
+                    delete existingData[key];
+                }
+            });
 
+            // 1. Збираємо унікальні MD-статуси
             const uniqueMdStatuses = new Set();
             document.querySelectorAll('#md-colors-row .md-status').forEach(el => {
                 uniqueMdStatuses.add(el.textContent);
@@ -336,12 +342,14 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const allMdStatuses = Array.from(uniqueMdStatuses).filter(s => s);
             
+            // Збираємо вправи, групуючи їх за MD-статусом
             allMdStatuses.forEach(mdStatus => {
                 const dayExercises = [];
                 const containerId = `exercise-list-${mdStatus}`;
                 const container = document.getElementById(containerId);
                 if (!container) return; 
 
+                // Збираємо всі елементи, які мають цей MD-статус
                 container.querySelectorAll(`.exercise-item[data-md-status="${mdStatus}"]`).forEach(item => {
                     const stage = item.dataset.stage;
                     
@@ -367,12 +375,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
             
+            // 2. Зберігаємо типи активності окремо (для таблиці)
             const activityData = {};
             document.querySelectorAll('#weekly-plan-form [name^="activity_"]').forEach(element => {
                 activityData[element.name] = element.value;
             });
             
-            const combinedData = { ...activityData, ...structuredPlanData };
+            // Комбінуємо старі дані (без structured_plan_), нові activityData та structuredPlanData
+            const combinedData = { ...existingData, ...activityData, ...structuredPlanData };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(combinedData));
             
             saveButton.textContent = 'Збережено! (✔)';
