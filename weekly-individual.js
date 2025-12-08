@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ФУНКЦІЯ: ІНІЦІАЛІЗАЦІЯ ШАБЛОНІВ 
     // =========================================================
     function initializeTemplates() {
-        // ВИДАЛЕНО tasks_md_plus_3, оскільки його фаза тепер TRAIN
+        // MD+3 тепер TRAIN, тому його шаблон видалено.
         const templates = [
             { name: 'tasks_md_plus_2', defaultText: `1. **Самомасаж (Ролінг/Перкусія):** 10 хв (фокус на квадрицепси, сідниці, спина).\n2. **Мобілізація суглобів:** 15 хв (комплекс на гомілкостоп, тазостегновий суглоб).\n3. **Легкий Стретчинг (статичний):** 15 хв.\n4. **Гідратація:** Посилений контроль водного балансу.` },
             { name: 'tasks_md_plus_1', defaultText: `1. **Кардіо в легкій зоні (LSD):** 20-30 хв (пульс 120-130 уд/хв) або велотренажер.\n2. **Превентивні вправи:** 15 хв (зміцнення CORE та ротаторної манжети).\n3. **Робота з м'ячем (легка):** Індивідуальні технічні елементи (30 хв).\n4. **Харчування:** Підвищене споживання білка та вуглеводів.` },
@@ -69,13 +69,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         
-        // Встановлюємо стандартний текст для MD+3/MD+4/MD+5/MD+6, які тепер TRAIN
+        // Додаємо заглушки для MD+3/MD+4/MD+5/MD+6, які тепер TRAIN, щоб уникнути помилок в консолі.
         const trainTemplate = 'Загальнокомандне тренування: Специфічні вправи вводити вручну.';
         ['tasks_md_plus_3', 'tasks_md_plus_4', 'tasks_md_plus_5', 'tasks_md_plus_6'].forEach(name => {
              let textarea = document.querySelector(`textarea[name="${name}"]`);
              if (!textarea) {
-                // Додаємо заглушку, якщо елемент відсутній
-                // Це виправляє "Помилка: Не знайдено textarea з іменем: tasks_md_plus_3"
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = `<textarea name="${name}" style="display:none;">${trainTemplate}</textarea>`;
                 document.body.appendChild(tempDiv.firstChild);
@@ -119,187 +117,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return phaseTitle + templateElement.value.trim();
     }
     
-    // ... (toggleDayInputs, updateMatchDetails, loadData - залишаються без змін) ...
-
     // =========================================================
-    // ФУНКЦІЯ: updateCycleColors (ОСНОВНИЙ РОЗРАХУНОК ФАЗ - Версія 3.5)
-    // =========================================================
-    function updateCycleColors() {
-        try {
-            let activityTypes = [];
-            activitySelects.forEach((select, index) => {
-                activityTypes[index] = select.value;
-            });
-            
-            // Ініціалізуємо статуси: MD/REST за вибором, решта TRAIN
-            let dayStatuses = activityTypes.map(type => (type === 'MATCH' ? 'MD' : (type === 'REST' ? 'REST' : 'TRAIN'))); 
-            const isPlanActive = activityTypes.includes('MATCH');
-
-            // === ОБРОБКА НЕАКТИВНОГО СТАНУ ===
-            if (!isPlanActive) {
-                // ... (Logic for inactive plan - kept for completeness) ...
-                dayCells.forEach((cell, index) => {
-                    const finalStatusKey = activityTypes[index] === 'REST' ? 'REST' : 'TRAIN';
-                    const mdStatusElement = cell.querySelector('.md-status');
-                    const style = COLOR_MAP[finalStatusKey];
-                    mdStatusElement.textContent = style.status;
-                    
-                    Object.values(COLOR_MAP).forEach(map => mdStatusElement.classList.remove(map.colorClass)); 
-                    mdStatusElement.classList.add(style.colorClass); 
-                    cell.title = `Фаза: ${style.status}`; 
-
-                    toggleDayInputs(index, activityTypes[index], false);
-                    
-                    const dailyTaskField = document.querySelector(`textarea[name="daily_task_${index}"]`);
-                    if (dailyTaskField && (dailyTaskField.value.trim() === '' || dailyTaskField.value.includes('Фаза: MD') || dailyTaskField.value.includes('Загальнокомандне тренування'))) {
-                         dailyTaskField.value = getTemplateText(finalStatusKey);
-                    }
-                });
-                return; 
-            }
-            // ===============================================
-
-            const mdMinusCycle = ['MD-1', 'MD-2', 'MD-3', 'MD-4', 'MD-5', 'MD-6']; 
-            const mdPlusMap = ['MD+1', 'MD+2', 'MD+3', 'MD+4', 'MD+5', 'MD+6']; 
-            let matchIndices = dayStatuses.map((status, index) => status === 'MD' ? index : -1).filter(index => index !== -1);
-
-
-            // =========================================================
-            // 1. РОЗРАХУНОК MD+ ФАЗ (Вищий пріоритет: MD+1 та MD+2)
-            //    ГАРАНТУЄ коректний wrap-around та уникнення MD+2, MD+2.
-            // =========================================================
-            for (const matchIdx of matchIndices) {
-                for (let j = 1; j <= 2; j++) { // MD+1 та MD+2
-                    const currentIdx = (matchIdx + j) % 7;
-                    
-                    // Якщо день не MD і не REST, встановлюємо MD+
-                    if (activityTypes[currentIdx] !== 'REST' && dayStatuses[currentIdx] !== 'MD') {
-                         
-                        // *** ВИПРАВЛЕННЯ: MD+1 повинен мати вищий пріоритет, ніж MD+2, 
-                        // щоб уникнути MD+2, MD+2, якщо MD йдуть підряд (ПН, НД) ***
-                        if (j === 1 || dayStatuses[currentIdx] !== 'MD+1') { 
-                            dayStatuses[currentIdx] = mdPlusMap[j - 1]; 
-                        }
-                    }
-                }
-            }
-            
-            // =========================================================
-            // 2. РОЗРАХУНОК MD- ФАЗ (Пріоритет: MD- над TRAIN)
-            // =========================================================
-            
-            for (const matchIdx of matchIndices) {
-                let currentMDMinus = 0;
-                
-                // Перевіряємо 7 днів назад від дня перед матчем
-                for (let j = 1; j <= 7; j++) {
-                    let i = (matchIdx - j + 7) % 7; // Циклічний індекс дня MD-1, MD-2, ...
-                    
-                    // Якщо зустрічаємо REST або MD, цикл MD- переривається
-                    if (activityTypes[i] === 'REST' || dayStatuses[i] === 'MD') {
-                        break;
-                    }
-                    
-                    // Тільки MD-1, MD-2, MD-3, MD-4
-                    if (currentMDMinus < 4) {
-                        // Захист MD+1 та MD+2
-                        if (dayStatuses[i] !== 'MD+1' && dayStatuses[i] !== 'MD+2') {
-                            // MD- завжди перезаписує TRAIN (включаючи MD+3+)
-                            dayStatuses[i] = mdMinusCycle[currentMDMinus];
-                        }
-                        currentMDMinus++;
-                    } else {
-                        break;
-                    }
-                }
-            }
-            // =========================================================
-            // 3. ФІНАЛЬНЕ ОНОВЛЕННЯ DOM
-            // =========================================================
-            dayCells.forEach((cell, index) => {
-                let finalStatusKey = dayStatuses[index] || 'TRAIN'; 
-                
-                // Всі фази MD+3 і вище вважаємо TRAIN для відображення
-                if (finalStatusKey.startsWith('MD+') && parseInt(finalStatusKey.substring(3)) > 2) {
-                    finalStatusKey = 'TRAIN';
-                }
-
-                const currentActivity = activityTypes[index]; 
-                const style = COLOR_MAP[finalStatusKey] || COLOR_MAP['TRAIN'];
-                const mdStatusElement = cell.querySelector('.md-status');
-
-                mdStatusElement.textContent = style.status;
-                Object.values(COLOR_MAP).forEach(map => mdStatusElement.classList.remove(map.colorClass)); 
-                mdStatusElement.classList.add(style.colorClass); 
-                cell.title = `Фаза: ${style.status}`; 
-
-                toggleDayInputs(index, currentActivity, isPlanActive); 
-                
-                const dailyTaskField = document.querySelector(`textarea[name="daily_task_${index}"]`);
-                if (dailyTaskField) {
-                    const templateText = getTemplateText(finalStatusKey);
-                    const currentTaskValue = dailyTaskField.value.trim();
-                    const isGenericTemplate = currentTaskValue === 'Загальнокомандне тренування: Специфічні вправи вводити вручну.' ||
-                                                 currentTaskValue === 'Матч: Індивідуальна розминка/завершення гри' ||
-                                                 currentTaskValue === 'Повний відпочинок, відновлення, сон.' ||
-                                                 currentTaskValue.includes('**Фаза: MD'); 
-
-                    if (templateText && (currentTaskValue === '' || isGenericTemplate)) {
-                         dailyTaskField.value = templateText;
-                    }
-                }
-            });
-        } catch (e) {
-            console.error("Критична помилка у updateCycleColors:", e);
-        }
-    }
-
-    // ... (обробники подій та початковий запуск loadData, initializeTemplates, updateCycleColors) ...
-    
-    // === ІНІЦІАЛІЗАЦІЯ ОБРОБНИКІВ (без змін) ===
-    
-    activitySelects.forEach(select => {
-        select.addEventListener('change', (event) => {
-            const dayIndexElement = event.target.closest('td');
-            if (!dayIndexElement || dayIndexElement.dataset.dayIndex === undefined) return;
-            
-            const dayIndex = parseInt(dayIndexElement.dataset.dayIndex); 
-            const activityType = event.target.value;
-            
-            updateCycleColors(); 
-            updateMatchDetails(dayIndex, activityType); 
-            saveData();
-        });
-    });
-
-    document.querySelectorAll('[name^="tasks_md_"]').forEach(textarea => { 
-        textarea.addEventListener('input', updateCycleColors);
-        textarea.addEventListener('change', saveData); 
-    });
-    
-    document.querySelectorAll('input, select, textarea').forEach(input => {
-        if (input.name.startsWith('activity_')) {
-            return;
-        }
-
-        input.addEventListener('change', saveData);
-        input.addEventListener('input', saveData);
-    });
-
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        saveData(); 
-    });
-
-    // === ПОЧАТКОВИЙ ЗАПУСК ===
-    initializeTemplates();
-    loadData();
-    updateCycleColors();
-    
-    // =====================================================================================
-    // Функції, які були пропущені у вашому файлі:
-    
     // ФУНКЦІЯ: toggleDayInputs (Управління активністю полів)
+    // =========================================================
     function toggleDayInputs(dayIndex, activityType, isPlanActive) {
         try {
             const dailyTaskField = document.querySelector(`[name="daily_task_${dayIndex}"]`);
@@ -350,7 +170,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // =========================================================
     // ФУНКЦІЯ: updateMatchDetails
+    // =========================================================
     function updateMatchDetails(dayIndex, activityType, savedValues = {}) {
         const existingBlock = dynamicMatchFields.querySelector(`.match-detail-block[data-day-index="${dayIndex}"]`);
         const dayNames = ['Понеділок', 'Вівторок', 'Середа', 'Четвер', 'П’ятниця', 'Субота', 'Неділя'];
@@ -388,7 +210,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // =========================================================
     // ФУНКЦІЯ: loadData
+    // =========================================================
     function loadData() {
         try {
             const savedData = localStorage.getItem(STORAGE_KEY);
@@ -421,4 +245,101 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-}); // Закриття document.addEventListener('DOMContentLoaded')
+    // =========================================================
+    // ФУНКЦІЯ: updateCycleColors (ОСНОВНИЙ РОЗРАХУНОК ФАЗ - Версія 3.6)
+    // =========================================================
+    function updateCycleColors() {
+        try {
+            let activityTypes = [];
+            activitySelects.forEach((select, index) => {
+                activityTypes[index] = select.value;
+            });
+            
+            // Ініціалізуємо статуси: MD/REST за вибором, решта TRAIN
+            let dayStatuses = activityTypes.map(type => (type === 'MATCH' ? 'MD' : (type === 'REST' ? 'REST' : 'TRAIN'))); 
+            const isPlanActive = activityTypes.includes('MATCH');
+
+            // === ОБРОБКА НЕАКТИВНОГО СТАНУ ===
+            if (!isPlanActive) {
+                dayCells.forEach((cell, index) => {
+                    const finalStatusKey = activityTypes[index] === 'REST' ? 'REST' : 'TRAIN';
+                    const mdStatusElement = cell.querySelector('.md-status');
+                    const style = COLOR_MAP[finalStatusKey];
+                    mdStatusElement.textContent = style.status;
+                    
+                    Object.values(COLOR_MAP).forEach(map => mdStatusElement.classList.remove(map.colorClass)); 
+                    mdStatusElement.classList.add(style.colorClass); 
+                    cell.title = `Фаза: ${style.status}`; 
+
+                    toggleDayInputs(index, activityTypes[index], false);
+                    
+                    const dailyTaskField = document.querySelector(`textarea[name="daily_task_${index}"]`);
+                    if (dailyTaskField && (dailyTaskField.value.trim() === '' || dailyTaskField.value.includes('Фаза: MD') || dailyTaskField.value.includes('Загальнокомандне тренування'))) {
+                         dailyTaskField.value = getTemplateText(finalStatusKey);
+                    }
+                });
+                return; 
+            }
+            // ===============================================
+
+            const mdMinusCycle = ['MD-1', 'MD-2', 'MD-3', 'MD-4', 'MD-5', 'MD-6']; 
+            const mdPlusMap = ['MD+1', 'MD+2', 'MD+3', 'MD+4', 'MD+5', 'MD+6']; 
+            let matchIndices = dayStatuses.map((status, index) => status === 'MD' ? index : -1).filter(index => index !== -1);
+
+
+            // =========================================================
+            // 1. РОЗРАХУНОК MD+ ФАЗ (Вищий пріоритет: MD+1 та MD+2)
+            // =========================================================
+            for (const matchIdx of matchIndices) {
+                for (let j = 1; j <= 2; j++) { // MD+1 та MD+2
+                    const currentIdx = (matchIdx + j) % 7;
+                    
+                    if (activityTypes[currentIdx] !== 'REST' && dayStatuses[currentIdx] !== 'MD') {
+                         
+                        // MD+1 повинен мати вищий пріоритет, ніж MD+2, щоб уникнути MD+2, MD+2
+                        if (j === 1 || dayStatuses[currentIdx] !== 'MD+1') { 
+                            dayStatuses[currentIdx] = mdPlusMap[j - 1]; 
+                        }
+                    }
+                }
+            }
+            
+            // =========================================================
+            // 2. РОЗРАХУНОК MD- ФАЗ (Пріоритет: MD- над TRAIN)
+            // =========================================================
+            
+            for (const matchIdx of matchIndices) {
+                let currentMDMinus = 0;
+                
+                for (let j = 1; j <= 7; j++) {
+                    let i = (matchIdx - j + 7) % 7; 
+
+                    // Якщо зустрічаємо REST або MD, цикл MD- переривається
+                    if (activityTypes[i] === 'REST' || dayStatuses[i] === 'MD') {
+                        break;
+                    }
+                    
+                    // *** ВИПРАВЛЕННЯ: ЗАХИСТ НЕДІЛІ ВІД MD- (Індекс 6) ***
+                    if (i === 6) { 
+                        continue; // Пропускаємо призначення MD- для неділі
+                    }
+                    // ----------------------------------------------------
+                    
+                    // Тільки MD-1, MD-2, MD-3, MD-4
+                    if (currentMDMinus < 4) {
+                        // Захист MD+1 та MD+2
+                        if (dayStatuses[i] !== 'MD+1' && dayStatuses[i] !== 'MD+2') {
+                            dayStatuses[i] = mdMinusCycle[currentMDMinus];
+                        }
+                        currentMDMinus++;
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+            // =========================================================
+            // 3. ФІНАЛЬНЕ ОНОВЛЕННЯ DOM (ВКЛЮЧАЮЧИ ПРИХОВАННЯ ШАБЛОНУ НЕДІЛІ)
+            // =========================================================
+            dayCells.forEach((cell, index) => {
+                let
