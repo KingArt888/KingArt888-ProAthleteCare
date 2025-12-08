@@ -1,5 +1,53 @@
 /* daily-individual.css */
+/* daily-individual.css (Додайте ці стилі) */
 
+/* Стилі для іконки меню (видима тільки на мобільному) */
+.menu-toggle {
+    display: none; /* За замовчуванням приховано на великих екранах */
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: #FFD700;
+    color: #000;
+    border: none;
+    padding: 10px 15px;
+    font-size: 1.5em;
+    cursor: pointer;
+    border-radius: 4px;
+    z-index: 1000; /* Перекриває все інше */
+}
+
+
+/* --- АДАПТИВНІСТЬ ДЛЯ МОБІЛЬНИХ --- */
+@media (max-width: 768px) {
+    /* Робимо кнопку видимою */
+    .menu-toggle {
+        display: block; 
+    }
+    
+    /* Фіксоване позиціонування меню як оверлея */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 80%; /* Займає 80% екрана */
+        height: 100%;
+        padding-top: 80px; /* Місце для шапки */
+        transform: translateX(-100%); /* Приховано за лівим краєм */
+        transition: transform 0.3s ease-in-out;
+        z-index: 999;
+        background-color: #111; /* Чорний фон, щоб не просвічувало */
+        display: flex; /* Перевизначаємо display: none */
+        flex-direction: column;
+    }
+
+    /* Клас, що робить меню видимим */
+    .sidebar.active {
+        transform: translateX(0); /* Висувається зліва */
+    }
+    
+    /* ... (решта мобільних стилів, які вже були) ... */
+}
 /* --- ЗАГАЛЬНІ СТИЛІ --- */
 
 .daily-plan-header {
