@@ -1,226 +1,126 @@
-/* ======================================================= */
-/* 1. СТИЛІ ДЛЯ WEEKLY INDIVIDUAL (ЧОРНО-ЗОЛОТИЙ) */
-/* ======================================================= */
-
-body {
-    background-color: #000000;
-    color: #E0E0E0;
-    font-family: Arial, sans-serif;
-}
-
-.sub-header {
-    color: #999;
-    margin-bottom: 30px;
-    border-bottom: 1px solid #333;
-    padding-bottom: 15px;
-}
-
-/* ======================================================= */
-/* 2. ТАБЛИЦЯ ПЛАНУВАННЯ (MD Status) */
-/* ======================================================= */
+/* weekly-individual.css - Основні стилі для сітки та таблиці */
 
 .table-container {
     overflow-x: auto;
-    margin-bottom: 40px;
+    margin-bottom: 20px;
 }
 
 .weekly-table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 600px;
+    min-width: 700px; 
 }
 
 .weekly-table th, .weekly-table td {
-    border: 1px solid #222;
+    border: 1px solid #FFD700; /* Золота рамка */
     padding: 10px;
     text-align: center;
+    background-color: #1a1a1a; /* Чорний фон */
+    color: white;
 }
 
-.weekly-table th {
-    background-color: #1a1a1a;
-    color: #FFD700;
-}
-
-.cycle-day {
-    position: relative;
+.weekly-table thead th {
+    background-color: #FFD700; /* Золотий фон для заголовків */
+    color: #333;
     font-weight: bold;
 }
 
+/* Стилі для MD Status */
 .md-status {
-    display: block;
-    padding: 5px 0;
+    display: inline-block;
+    padding: 4px 8px;
     border-radius: 4px;
-    color: #000;
-    font-size: 0.9em;
-    font-weight: bold; 
+    font-weight: bold;
+    color: #333;
 }
 
-/* Кольори MD-статусів */
-.color-red { background-color: #FF0000; color: #fff; } /* MD */
-.color-dark-green { background-color: #006400; color: #E0E0E0; } /* MD+1 */
-.color-green { background-color: #00AA00; } /* MD+2 */
-.color-neutral { background-color: #555; color: #E0E0E0; } /* REST */
-.color-yellow { background-color: #FFD700; color: #000; } /* MD-1 */
-.color-deep-green { background-color: #008000; color: #E0E0E0; } /* MD-2 */
-.color-orange { background-color: #FFA500; } /* MD-3 */
-.color-blue { background-color: #0000FF; color: #E0E0E0; } /* MD-4 */
-.color-dark-grey { background-color: #333; color: #E0E0E0; } /* TRAIN */
+.color-red { background-color: #FF4136; } /* MD */
+.color-dark-green { background-color: #2ECC40; } /* MD+1 */
+.color-green { background-color: #3D9970; } /* MD+2 */
+.color-yellow { background-color: #FFDC00; color: #333; } /* MD-1 */
+.color-deep-green { background-color: #007F33; color: white; } /* MD-2 */
+.color-orange { background-color: #FF851B; } /* MD-3 */
+.color-blue { background-color: #0074D9; } /* MD-4 */
+.color-neutral { background-color: #AAAAAA; } /* REST */
+.color-dark-grey { background-color: #555555; } /* TRAIN */
 
-.activity-type-select {
-    background-color: #000;
-    color: #E0E0E0;
-    border: 1px solid #444;
-    padding: 5px;
-    width: 100%;
-}
-
-/* ======================================================= */
-/* 3. СЕКЦІЯ ЗАВДАНЬ ТА ВПРАВ (Grid) */
-/* ======================================================= */
-
+/* Стилі для сітки завдань (шаблонів) */
 .daily-task-section {
-    margin-top: 40px;
-}
-
-.note-info {
-    color: #FFD700;
-    margin-bottom: 20px;
-    display: block;
+    margin-top: 30px;
+    padding: 20px 0;
 }
 
 .tasks-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 20px;
 }
 
-.task-day-container {
-    padding: 20px;
+.day-template-wrapper {
     background-color: #111;
-    border: 1px solid #333;
+    border: 1px solid #444;
+    padding: 15px;
     border-radius: 6px;
-    position: relative; 
 }
 
-/* СТИЛІ ДЛЯ ДИНАМІЧНИХ ЗАГОЛОВКІВ */
 .day-md-title {
     font-size: 1.2em;
-    font-weight: bold;
-    color: #E0E0E0; 
-    margin-top: 0;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #333;
-    margin-bottom: 15px;
-}
-
-.day-md-title .md-status-label {
-    color: #FFD700; 
-    font-size: 1.2em;
-}
-
-.day-md-title .day-name-label {
-    color: #999;
-    font-size: 0.8em;
-}
-
-/* Контейнер для вправ (зберігається в JS) */
-.exercise-list-container {
-    margin-bottom: 10px; 
-}
-
-/* Кнопки "Додати вправу" */
-.add-exercise-button {
-    margin-top: 10px;
-    display: block;
-    width: 100%;
-    padding: 8px;
-    background-color: #FFD700;
-    color: #000;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background-color 0.2s;
-}
-
-.add-exercise-button:hover {
-    background-color: #ffe873;
-}
-
-/* ======================================================= */
-/* 4. СТРУКТУРА ОДНІЄЇ ВПРАВИ */
-/* ======================================================= */
-
-.exercise-item {
-    padding: 10px;
-    background-color: #000;
-    border: 1px solid #444;
-    border-radius: 4px;
+    border-bottom: 2px solid #FFD700;
+    padding-bottom: 5px;
     margin-bottom: 10px;
 }
 
-.exercise-item-header {
+.template-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 10px;
-    border-bottom: 1px dotted #333;
-    padding-bottom: 5px;
+    margin-bottom: 5px;
 }
 
-.exercise-number {
-    color: #FFD700;
-    font-weight: bold;
-    font-size: 0.9em;
+.template-row label {
+    flex-grow: 1;
 }
 
-.remove-exercise-button {
-    background: none;
-    border: none;
-    color: #FF0000;
-    cursor: pointer;
-    font-weight: bold;
-    padding: 2px 5px;
-    transition: color 0.2s;
-}
-
-.remove-exercise-button:hover {
-    color: #FF5555;
-}
-
-.exercise-fields label {
-    display: block;
-    color: #999;
-    font-size: 0.85em;
-    margin-top: 8px;
-    margin-bottom: 2px;
-}
-
-.exercise-fields input,
-.exercise-fields textarea {
-    width: 100%;
+.template-count-input {
+    width: 40px;
+    text-align: center;
+    margin-right: 5px;
+    background-color: #222;
+    color: white;
+    border: 1px solid #FFD700;
     padding: 5px;
-    background-color: #000;
+}
+
+/* Стилі для згенерованих вправ (ручне редагування) */
+.generated-exercises-list {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px dashed #777;
+}
+
+.exercise-item {
+    background-color: #222;
+    padding: 10px;
+    margin-bottom: 10px;
     border: 1px solid #444;
-    color: #E0E0E0;
-    resize: vertical;
+    border-left: 3px solid #FFD700;
 }
 
-/* ======================================================= */
-/* 5. ЗАГАЛЬНІ ЕЛЕМЕНТИ */
-/* ======================================================= */
+.exercise-fields input[type="text"], .exercise-fields textarea {
+    width: 100%;
+    background-color: #1a1a1a;
+    border: 1px solid #777;
+    color: white;
+    padding: 5px;
+    margin-bottom: 5px;
+}
 
-.gold-button {
-    background-color: #FFD700;
-    color: #000000;
+.exercise-actions button {
+    background-color: #555;
+    color: white;
     border: none;
-    padding: 10px 20px;
-    margin-top: 20px;
+    padding: 5px 10px;
     cursor: pointer;
-    font-weight: bold;
+    margin-right: 5px;
     border-radius: 4px;
-    transition: background-color 0.2s;
-}
-.gold-button:hover {
-    background-color: #ffe873;
 }
