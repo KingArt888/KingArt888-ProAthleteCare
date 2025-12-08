@@ -10,21 +10,18 @@
     flex-wrap: wrap; 
 }
 
-/* Стилі для відображення MD-статусу дня */
 #md-status-display {
     font-size: 1.5em;
     padding: 8px 12px;
     border-radius: 6px;
 }
 
-/* Стилі для MDX-діапазону */
 #mdx-range-display {
     color: #FFD700; 
     font-weight: bold; 
     font-size: 1.1em;
 }
 
-/* Стилі для блока рекомендацій */
 #md-recommendations {
     border: 1px solid #FFD700; 
     padding: 15px; 
@@ -34,16 +31,28 @@
     color: #EEE;
 }
 
-/* --- СТИЛІ СПИСКУ ВПРАВ --- */
+/* --- СТИЛІ СПИСКУ ВПРАВ (КОМПАКТНИЙ МАКЕТ) --- */
 
-/* Контейнер для однієї вправи */
 .daily-exercise-item {
     background-color: #222; 
-    border: 2px solid #FFD700; /* Золота рамка для кожної вправи (ProAtletCare style) */
-    padding: 20px;
-    margin-bottom: 25px;
+    border: 2px solid #FFD700; 
+    padding: 15px;
+    margin-bottom: 20px; 
     border-radius: 8px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    
+    /* FLEX LAYOUT */
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    justify-content: space-between;
+}
+
+.exercise-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
 }
 
 .daily-exercise-item h4 {
@@ -51,12 +60,25 @@
     margin-top: 0;
     border-bottom: 1px solid #444;
     padding-bottom: 5px;
-    font-size: 1.4em;
+    font-size: 1.3em; 
 }
 
 .exercise-details p {
-    margin: 5px 0;
+    margin: 3px 0;
     color: #ccc;
+    font-size: 0.95em;
+}
+
+/* Виділення Sets/Reps */
+.sets-reps-display {
+    padding: 5px 0;
+    margin-top: 5px;
+    font-weight: bold;
+    color: #FFF;
+}
+.sets-reps-display span {
+    color: #FFD700; /* Золотий для кількості */
+    font-size: 1.1em;
 }
 
 /* Групування за етапами (Stage) */
@@ -65,25 +87,152 @@
     margin-top: 30px; 
     border-bottom: 2px solid #555; 
     padding-bottom: 5px;
-    font-size: 1.2em; /* Трохи менше, ніж h2 */
+    font-size: 1.2em; 
 }
 
 
-/* --- СТИЛІ МЕДІА --- */
+/* --- СТИЛІ МЕДІА ТА ГАЛОЧКИ --- */
 
 .media-container {
-    margin-top: 15px;
-    padding-top: 10px;
-    border-top: 1px dashed #444;
+    width: 320px; 
+    min-width: 320px;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
     display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-    justify-content: flex-start;
+    flex-direction: column;
+    align-items: flex-end; 
+    gap: 10px;
 }
 
 .media-container img, .media-container iframe {
     max-width: 100%;
-    height: auto;
+    width: 300px; 
+    height: 180px; 
     border: 1px solid #FFD700;
     border-radius: 4px;
+}
+
+.completion-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #FFD700;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+input[type="checkbox"] {
+    appearance: none;
+    width: 25px;
+    height: 25px;
+    border: 2px solid #FFD700;
+    border-radius: 4px;
+    background-color: #000;
+    cursor: pointer;
+    position: relative;
+    outline: none;
+}
+
+input[type="checkbox"]:checked {
+    background-color: #FFD700; 
+}
+
+input[type="checkbox"]:checked::after {
+    content: '✔';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+    color: #000; 
+    font-weight: bolder;
+}
+
+/* --- СТИЛІ ЗВОРОТНОГО ЗВ'ЯЗКУ --- */
+
+.feedback-block {
+    background-color: #1a1a1a;
+    border: 1px solid #FFD700;
+    padding: 25px;
+    border-radius: 8px;
+    margin-top: 30px;
+    color: #EEE;
+}
+
+.feedback-block h3 {
+    color: #FFD700;
+    border-bottom: 1px solid #444;
+    padding-bottom: 10px;
+    margin-top: 0;
+}
+
+.feedback-form textarea {
+    width: 100%;
+    background-color: #333;
+    color: #EEE;
+    border: 1px solid #555;
+    padding: 10px;
+    border-radius: 4px;
+    margin: 10px 0;
+    box-sizing: border-box;
+}
+
+.feedback-form input[type="range"] {
+    width: 80%;
+}
+
+.feedback-form button {
+    background-color: #FFD700;
+    color: #000;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 15px;
+}
+
+.feedback-form button:hover {
+    background-color: #e0c100;
+}
+
+
+/* --- АДАПТИВНІСТЬ ДЛЯ МОБІЛЬНИХ --- */
+@media (max-width: 768px) {
+    /* Приховуємо меню */
+    .sidebar {
+        display: none; 
+    }
+    
+    /* Робимо контент на всю ширину */
+    .content-wrapper {
+        flex-direction: column; 
+    }
+    
+    .main-content {
+        width: 100%; 
+        padding: 10px; 
+        margin-left: 0; 
+    }
+
+    /* Вертикальний макет для вправ */
+    .daily-exercise-item {
+        flex-direction: column; 
+        gap: 15px;
+    }
+    .media-container {
+        width: 100%; 
+        min-width: 100%;
+        align-items: center; 
+        order: -1; 
+    }
+    .media-container img, .media-container iframe {
+        width: 100%;
+        height: auto;
+        max-height: 200px;
+    }
+    .feedback-form input[type="range"] {
+        width: 95%; /* Більше місця для повзунка */
+    }
 }
