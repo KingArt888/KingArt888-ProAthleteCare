@@ -1,64 +1,161 @@
-<!DOCTYPE html>
-<html lang="uk">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Individual | ProAthleteCare</title>
+/* daily-individual.css */
+
+/* --- ЗАГАЛЬНІ СТИЛІ --- */
+
+.daily-plan-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap; 
+}
+
+#md-status-display {
+    font-size: 1.5em;
+    padding: 8px 12px;
+    border-radius: 6px;
+}
+
+#mdx-range-display {
+    color: #FFD700; 
+    font-weight: bold; 
+    font-size: 1.1em;
+}
+
+#md-recommendations {
+    border: 1px solid #FFD700; 
+    padding: 15px; 
+    border-radius: 6px; 
+    background-color: #333; 
+    margin-bottom: 20px; 
+    color: #EEE;
+}
+
+/* --- СТИЛІ СПИСКУ ВПРАВ (КОМПАКТНИЙ МАКЕТ) --- */
+
+.daily-exercise-item {
+    background-color: #222; 
+    border: 2px solid #FFD700; 
+    padding: 15px; /* ЗМЕНШЕНО */
+    margin-bottom: 20px; 
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
     
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="weekly-individual.css"> 
-    <link rel="stylesheet" href="daily-individual.css"> 
-    
-</head>
-<body>
-    <header>
-        <a href="index.html" class="logo-link">
-            <img src="AK_logo.png" alt="ProAthleteCare Logo" class="logo">
-        </a>
-        <h1 class="project-title">ProAthleteCare</h1>
-        <p class="tagline">Онлайн-тренінг та професійний супровід атлетів</p>
-    </header>
+    /* FLEX LAYOUT */
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    justify-content: space-between;
+}
 
-    <div class="content-wrapper">
-        <nav class="sidebar">
-            <a href="wellness.html">Wellness Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="injury.html">Injury Story <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="load-season.html">Load Season <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="daily-individual.html" class="active">Daily Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="weekly-individual.html">Weekly Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="weight-control.html">Weight Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="velocity-control.html">Velocity Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-        </nav>
+.exercise-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
 
-        <main class="main-content">
-            <h2>🔥 Ваш Індивідуальний План на Сьогодні</h2>
-            <p id="current-date-display" class="sub-header"></p>
+.daily-exercise-item h4 {
+    color: #FFD700;
+    margin-top: 0;
+    border-bottom: 1px solid #444;
+    padding-bottom: 5px;
+    font-size: 1.3em; 
+}
 
-            <div class="daily-plan-header">
-                <h3>Статус дня:</h3>
-                <span id="md-status-display" class="md-status color-dark-grey">Завантаження...</span>
-                
-                <h3 style="margin-left: 20px;">Цикл MDX:</h3>
-                <span id="mdx-range-display">Завантаження...</span>
-            </div>
-            
-            <section id="md-recommendations">
-                <p>Завантаження рекомендацій...</p>
-            </section>
-            
-            <hr>
+.exercise-details p {
+    margin: 3px 0; /* ЗМЕНШЕНО */
+    color: #ccc;
+    font-size: 0.95em;
+}
 
-            <div id="daily-exercise-list">
-                <p id="loading-message">Завантаження плану тренування...</p>
-            </div>
-            
-        </main>
-    </div>
+/* Групування за етапами (Stage) */
+.main-content h3.stage-header {
+    color: #FFF; 
+    margin-top: 30px; 
+    border-bottom: 2px solid #555; 
+    padding-bottom: 5px;
+    font-size: 1.2em; 
+}
 
-    <footer>
-        &copy; 2025 ProAthleteCare. Створено з Gemini.
-    </footer>
 
-    <script src="daily-individual.js"></script>
-</body>
-</html>
+/* --- СТИЛІ МЕДІА ТА ГАЛОЧКИ --- */
+
+.media-container {
+    /* Робимо медіа-контейнер фіксованої ширини для компактності */
+    width: 320px; 
+    min-width: 320px;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end; /* Відео та галочка праворуч */
+    gap: 10px;
+}
+
+.media-container img, .media-container iframe {
+    max-width: 100%;
+    width: 300px; 
+    height: 180px; 
+    border: 1px solid #FFD700;
+    border-radius: 4px;
+}
+
+/* Стилі для галочки (Чекбокс) */
+.completion-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #FFD700;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+/* Стилі для самого чекбокса (наш чорно-золотий стиль) */
+input[type="checkbox"] {
+    appearance: none;
+    width: 25px;
+    height: 25px;
+    border: 2px solid #FFD700;
+    border-radius: 4px;
+    background-color: #000;
+    cursor: pointer;
+    position: relative;
+    outline: none;
+}
+
+input[type="checkbox"]:checked {
+    background-color: #FFD700; 
+}
+
+/* Стиль галочки (знак "галочка" всередині золотого квадрата) */
+input[type="checkbox"]:checked::after {
+    content: '✔';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+    color: #000; 
+    font-weight: bolder;
+}
+
+/* --- АДАПТИВНІСТЬ ДЛЯ МОБІЛЬНИХ (max-width: 768px) --- */
+@media (max-width: 768px) {
+    .daily-exercise-item {
+        flex-direction: column; /* Вертикальний макет на мобільних пристроях */
+        gap: 15px;
+    }
+    .media-container {
+        width: 100%; 
+        min-width: 100%;
+        align-items: center; /* Центруємо медіа */
+        order: -1; /* Відео та галочка йдуть першими на мобільних, над текстом */
+    }
+    .media-container img, .media-container iframe {
+        width: 100%;
+        height: auto;
+        max-height: 200px;
+    }
+}
