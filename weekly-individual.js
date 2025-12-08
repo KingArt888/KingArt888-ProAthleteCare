@@ -211,11 +211,6 @@ function renderDayTemplateInput(dayIndex, mdStatus, savedTemplates) {
     
     dayBlock.innerHTML += html;
     
-    // *** ВИДАЛЕНО СЛУХАЧІ: ТЕПЕР ВИКОРИСТОВУЄТЬСЯ ДЕЛЕГУВАННЯ У DOMContentLoaded ***
-
-    if (mdStatus === 'REST') {
-         dayBlock.innerHTML += `<div class="rest-message">День відновлення. Вправи не потрібні.</div>`;
-    }
 }
 
 function displayGeneratedExercises(dayIndex, mdStatus, exercises) {
@@ -231,7 +226,7 @@ function displayGeneratedExercises(dayIndex, mdStatus, exercises) {
     let index = 0;
     
     if (exercises.length === 0 && mdStatus !== 'REST') {
-        html += '<p style="color:red;">❗ Немає згенерованих вправ. Встановіть вимоги шаблону вище.</p>';
+        html += '<p style="color:red;">❗ Немає згенерованих вправ. Перевірте вимоги шаблону вище.</p>';
     } else {
         for (const stage of Object.keys(templateStages)) {
              const stageExercises = exercises.filter(ex => ex.stage === stage);
