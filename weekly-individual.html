@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weekly Individual | ProAthleteCare</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Тижневе Індивідуальне Планування (Weekly Individual) | ProAtletCare</title>
+    <link rel="stylesheet" href="style.css"> 
     <link rel="stylesheet" href="weekly-individual.css"> 
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
 </head>
-<body>
-    <header>
+<body class="dark-theme">
+    <header class="main-header">
         <a href="index.html" class="logo-link">
-            <img src="AK_logo.png" alt="ProAthleteCare Logo" class="logo">
+            <img src="AK_logo.png" alt="Логотип ProAtletCare" class="logo">
         </a>
         <h1 class="project-title">ProAthleteCare</h1>
         <p class="tagline">Онлайн-тренінг та професійний супровід атлетів</p>
@@ -18,19 +19,19 @@
 
     <div class="content-wrapper">
         <nav class="sidebar">
-            <a href="wellness.html">Wellness Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="injury.html">Injury Story <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="load-season.html">Load Season <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="daily-individual.html">Daily Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="weekly-individual.html" class="active">Weekly Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="weight-control.html">Weight Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="velocity-control.html">Velocity Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="wellness.html">🧠 Wellness Control</a>
+            <a href="injury.html">🩹 Injury Story</a>
+            <a href="load-season.html">📊 Load Season</a>
+            <a href="daily-individual.html">📅 Daily Individual</a>
+            <a href="weekly-individual.html" class="active">🗓️ Weekly Individual</a>
+            <a href="weight-control.html">⚖️ Weight Control</a>
+            <a href="velocity-control.html">🚀 Velocity Control</a>
         </nav>
 
         <main class="main-content">
-            <h2>🗓️ Weekly Individual: Планування мікроциклу</h2>
+            <h2 class="main-heading">🗓️ Weekly Individual: Планування мікроциклу</h2>
             <p class="sub-header">Ваш тижневий план, цикли навантаження та шаблони завдань.</p>
-
+            
             <form id="weekly-plan-form">
                 
                 <div class="table-container">
@@ -54,42 +55,14 @@
                             </tr>
                             
                             <tr>
-                                <td>Активність</td>
-                                <td data-day-index="0">
-                                    <select name="activity_0" class="activity-type-select">
-                                        <option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option>
-                                    </select>
-                                </td>
-                                <td data-day-index="1">
-                                    <select name="activity_1" class="activity-type-select">
-                                        <option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option>
-                                    </select>
-                                </td>
-                                <td data-day-index="2">
-                                    <select name="activity_2" class="activity-type-select">
-                                        <option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option>
-                                    </select>
-                                </td>
-                                <td data-day-index="3">
-                                    <select name="activity_3" class="activity-type-select">
-                                        <option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option>
-                                    </select>
-                                </td>
-                                <td data-day-index="4">
-                                    <select name="activity_4" class="activity-type-select">
-                                        <option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option>
-                                    </select>
-                                </td>
-                                <td data-day-index="5">
-                                    <select name="activity_5" class="activity-type-select">
-                                        <option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option>
-                                    </select>
-                                </td>
-                                <td data-day-index="6">
-                                    <select name="activity_6" class="activity-type-select">
-                                        <option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option>
-                                    </select>
-                                </td>
+                                <td class="table-label">Активність</td>
+                                <td data-day-index="0"><select name="activity_0" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option></select></td>
+                                <td data-day-index="1"><select name="activity_1" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option></select></td>
+                                <td data-day-index="2"><select name="activity_2" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option></select></td>
+                                <td data-day-index="3"><select name="activity_3" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option></select></td>
+                                <td data-day-index="4"><select name="activity_4" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option></select></td>
+                                <td data-day-index="5"><select name="activity_5" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option></select></td>
+                                <td data-day-index="6"><select name="activity_6" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option></select></td>
                             </tr>
                         </tbody>
                     </table>
@@ -97,51 +70,48 @@
 
                 <section class="daily-task-section">
                     <h3>📝 Налаштування Шаблонів Вправ</h3>
-                    <p class="note-info">❗ Тут ви вказуєте **яку категорію** і **скільки вправ** генерувати для MD-статусу, який має цей день.</p>
+                    <p class="note-info"> Тут ви вказуєте **яку категорію** і **скільки вправ** генерувати для MD-статусу, який має цей день. (Автоматичне застосування шаблонів JS)</p>
                     
-                    <div class="tasks-grid">
-                        
+                    <div class="tasks-grid" id="tasks-grid">
                         <div class="day-template-wrapper">
-                            <h4 class="day-md-title" id="md-title-0"></h4>
-                            <div class="task-day-container" data-day-index="0">
-                                 </div>
+                            <h4 class="day-md-title" id="md-title-0">Понеділок <span class="md-status-label">(MD Status)</span></h4>
+                            <div class="task-day-container" data-day-index="0"></div>
                         </div>
 
                         <div class="day-template-wrapper">
-                            <h4 class="day-md-title" id="md-title-1"></h4>
+                            <h4 class="day-md-title" id="md-title-1">Вівторок <span class="md-status-label">(MD Status)</span></h4>
                             <div class="task-day-container" data-day-index="1"></div>
                         </div>
                         
                         <div class="day-template-wrapper">
-                            <h4 class="day-md-title" id="md-title-2"></h4>
+                            <h4 class="day-md-title" id="md-title-2">Середа <span class="md-status-label">(MD Status)</span></h4>
                             <div class="task-day-container" data-day-index="2"></div>
                         </div>
                         
                         <div class="day-template-wrapper">
-                            <h4 class="day-md-title" id="md-title-3"></h4>
+                            <h4 class="day-md-title" id="md-title-3">Четвер <span class="md-status-label">(MD Status)</span></h4>
                             <div class="task-day-container" data-day-index="3"></div>
                         </div>
                         
                         <div class="day-template-wrapper">
-                            <h4 class="day-md-title" id="md-title-4"></h4>
+                            <h4 class="day-md-title" id="md-title-4">П'ятниця <span class="md-status-label">(MD Status)</span></h4>
                             <div class="task-day-container" data-day-index="4"></div>
                         </div>
                         
                         <div class="day-template-wrapper">
-                            <h4 class="day-md-title" id="md-title-5"></h4>
+                            <h4 class="day-md-title" id="md-title-5">Субота <span class="md-status-label">(MD Status)</span></h4>
                             <div class="task-day-container" data-day-index="5"></div>
                         </div>
                         
                         <div class="day-template-wrapper">
-                            <h4 class="day-md-title" id="md-title-6"></h4>
+                            <h4 class="day-md-title" id="md-title-6">Неділя <span class="md-status-label">(MD Status)</span></h4>
                             <div class="task-day-container" data-day-index="6"></div>
                         </div>
-
                     </div>
                 </section>
                 
                 <div class="form-actions">
-                    <button type="submit" class="save-button gold-button">Зберегти Тижневий План та Шаблони</button>
+                    <button type="submit" class="save-button gold-button">⭐ Зберегти Тижневий План та Шаблони</button>
                 </div>
             </form>
         </main>
@@ -149,25 +119,25 @@
     
     <div id="exercise-selection-modal" class="modal">
         <div class="modal-content">
-            <span class="close-modal-btn">&times;</span>
+            <span class="close-modal-btn" title="Закрити">&times;</span>
             <h3 id="modal-title-context">Вибір вправи</h3>
 
             <h4>Фільтр за якістю навантаження:</h4>
             <div id="quality-filters" class="quality-filters-container">
                 </div>
             
-            <hr>
+            <hr class="gold-separator">
 
             <div id="exercise-list-container" class="exercise-list-container">
                 </div>
             
             <button id="add-selected-btn" class="gold-button" style="display: none; margin-top: 20px;">
-                Додати вибрані (0)
+                ✅ Додати вибрані (<span id="selected-count">0</span>)
             </button>
         </div>
     </div>
 
-    <footer>
+    <footer class="main-footer">
         &copy; 2025 ProAthleteCare. 
     </footer>
 
