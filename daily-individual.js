@@ -43,14 +43,74 @@ function getCurrentDayIndex() {
  */
 function toggleCompletion(id, isChecked) {
     localStorage.setItem(id, isChecked);
-    // Додаткова логіка: зміна стилю виконаного блоку, якщо потрібно
+    // Додайте тут зміну стилю (наприклад, затемнення)
     const exerciseBlock = document.querySelector(`[data-exercise-id="${id}"]`);
     if (exerciseBlock) {
-        // Додайте тут зміну стилю (наприклад, затемнення)
-        // exerciseBlock.style.opacity = isChecked ? 0.7 : 1; 
+         // exerciseBlock.style.opacity = isChecked ? 0.7 : 1;
     }
     console.log(`Статус вправи ${id} встановлено: ${isChecked}`);
 }
+
+/**
+ * Обробка відправки форми зворотного зв'язку
+ */
+function submitFeedback() {
+    const feedbackText = document.getElementById('user-feedback-text').value.trim();
+    const ratingValue = document.getElementById('user-rating').value;
+
+    if (!feedbackText && ratingValue === '3') { // Якщо оцінка 3 і немає тексту - вважаємо, що нічого не відправили
+        alert("Будь ласка, введіть відгук або оберіть оцінку, відмінну від 3, перед відправкою.");
+        return;
+    }
+
+    const todayIndex = getCurrentDayIndex();
+    const todayFeedbackKey = `feedback_day_${todayIndex}`;
+    
+    const feedbackData = {
+        date: new Date().toLocaleDateString('uk-UA'),
+        text: feedbackText,
+        rating: ratingValue
+    };
+
+    localStorage.setItem(todayFeedbackKey, JSON.stringify(feedbackData));
+
+    alert("Ваш відгук успішно збережено! Дякуємо.");
+    updateFeedbackDisplay(feedbackData);
+}
+
+/**
+ * Оновлення відображення форми/відгуку
+ */
+function updateFeedbackDisplay(feedbackData = null) {
+    const container = document.getElementById('user-feedback-container');
+    if (!container) return;
+
+    const todayIndex = getCurrentDayIndex();
+    const savedFeedback = feedbackData || JSON.parse(localStorage.getItem(`feedback_day_${todayIndex}`) || 'null');
+    
+    if (savedFeedback) {
+        container.innerHTML = `
+            <h3>✅ Ваш Відгук на Сьогодні:</h3>
+            <p><strong>Оцінка навантаження:</strong> ${savedFeedback.rating} / 5</p>
+            <p><strong>Коментар:</strong> ${savedFeedback.text || 'Коментар відсутній.'}</p>
+        `;
+    } else {
+        container.innerHTML = `
+            <h3>✍️ Зворотний Зв'язок на Кінець Дня</h3>
+            <div class="feedback-form">
+                <p>Як ви оцінюєте загальне навантаження сьогодні (1-легко, 5-дуже важко)?</p>
+                <input type="range" id="user-rating" min="1" max="5" value="3" oninput="document.getElementById('rating-value-display').innerText = this.value">
+                <span id="rating-value-display">3</span> / 5
+                
+                <p>Ваш коментар для тренера:</p>
+                <textarea id="user-feedback-text" rows="3" placeholder="Введіть ваші відчуття, проблеми чи успіхи..."></textarea>
+                
+                <button onclick="submitFeedback()">Відправити Відгук</button>
+            </div>
+        `;
+    }
+}
+
 
 /**
  * Визначає тижневий діапазон MD-статусів (MDX)
@@ -109,7 +169,6 @@ function createExerciseItemHTML(exercise, index) {
 
     let mediaHtml = '';
 
-    // Розміри відео та зображення тепер контролюються CSS
     if (exercise.imageURL) {
         mediaHtml += `<img src="${exercise.imageURL}" alt="${exercise.name}">`;
     }
@@ -126,6 +185,22 @@ function createExerciseItemHTML(exercise, index) {
     const stageDisplay = exercise.stage ? `<p><strong>Етап:</strong> ${exercise.stage.replace('-', ' ')}</p>` : '';
     const categoryDisplay = exercise.category ? `<p><strong>Категорія:</strong> ${exercise.category}</p>` : '';
 
+    // Краще оформлення Sets/Reps
+    let descriptionDisplay = `<p><strong>Параметри/Опис:</strong> ${exercise.description}</p>`;
+    
+    if (exercise.sets || exercise.reps) {
+        const setsReps = (exercise.sets ? `${exercise.sets} підходів` : '') + 
+                         (exercise.sets && exercise.reps ? ', ' : '') + 
+                         (exercise.reps ? `${exercise.reps} повторень` : '');
+        
+        descriptionDisplay = `
+            <p class="sets-reps-display">
+                <span style="color:#FFD700; font-size:1.1em;">${setsReps}</span>
+            </p>
+            ${exercise.description ? `<p>Деталі: ${exercise.description}</p>` : ''}
+        `;
+    }
+
     return `
         <div class="daily-exercise-item" data-exercise-id="${uniqueId}">
             
@@ -134,7 +209,7 @@ function createExerciseItemHTML(exercise, index) {
                 <div class="exercise-details">
                     ${stageDisplay}
                     ${categoryDisplay}
-                    <p><strong>Параметри/Опис:</strong> ${exercise.description}</p>
+                    ${descriptionDisplay} 
                 </div>
             </div>
 
@@ -165,7 +240,6 @@ function loadAndDisplayDailyPlan() {
     const recommendationContainer = document.getElementById('md-recommendations'); 
     const mdxRangeDisplay = document.getElementById('mdx-range-display'); 
     
-    // Перевірка наявності основних елементів
     if (!statusDisplay || !listContainer || !dateDisplay || !recommendationContainer || !mdxRangeDisplay) {
         console.error("❌ Критична помилка: Не знайдено один або кілька контейнерів у daily-individual.html.");
         if (listContainer) {
@@ -208,6 +282,8 @@ function loadAndDisplayDailyPlan() {
                     ${style.status === 'REST' ? '<p>Це день повного відновлення. Добре відновлюйтесь!</p>' : '<p>Зверніться до тренера (Weekly Individual), щоб запланувати тренування.</p>'}
                 </div>
             `;
+            // Важливо викликати updateFeedbackDisplay, навіть якщо немає вправ
+            updateFeedbackDisplay();
             return;
         }
         
@@ -219,10 +295,13 @@ function loadAndDisplayDailyPlan() {
                 currentStage = exercise.stage;
                 exercisesHtml += `<h3 class="stage-header">${currentStage.replace('-', ' ')}</h3>`;
             }
-            exercisesHtml += createExerciseItemHTML(exercise, index); // Передаємо індекс
+            exercisesHtml += createExerciseItemHTML(exercise, index); 
         });
 
         listContainer.innerHTML = exercisesHtml;
+        
+        // Відображення секції зворотного зв'язку
+        updateFeedbackDisplay();
 
     } catch (e) {
         console.error("Помилка при завантаженні щоденного плану:", e);
