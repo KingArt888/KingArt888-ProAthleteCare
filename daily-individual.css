@@ -1,23 +1,21 @@
-/* ==================================== */
-/* НОВІ СТИЛІ ДЛЯ DAILY INDIVIDUAL (ЧОРНО-ЗОЛОТИЙ) */
-/* ==================================== */
+/* ======================================================= */
+/* 1. СТИЛІ ДЛЯ DAILY INDIVIDUAL (ЧОРНО-ЗОЛОТИЙ #FFD700) */
+/* ======================================================= */
 
-/* Основне тло сторінки (якщо воно не чорне) */
 body {
     background-color: #000000; 
     color: #E0E0E0;
 }
 
-/* Основний заголовок сторінки Daily Individual */
 #main-protocol-header {
-    color: #FFD700; /* Золотий */
+    color: #FFD700; 
     font-size: 1.8em;
     padding: 20px 0;
     margin-top: 0;
     border-bottom: 2px solid #333; 
 }
 
-/* Блок завдання (контейнер для відео та опису) */
+/* Блок завдання */
 .task-item {
     display: flex;
     gap: 20px;
@@ -33,14 +31,13 @@ body {
     border-color: #333; 
 }
 
-/* Стиль для головного блоку Main-Training */
-/* Додано акцентну рамку для головної частини */
+/* Акцент для головної частини тренування */
 .task-item[data-stage="Main-Training"] {
     border: 1px solid #FFD700; 
     background-color: #0d0d0d;
 }
 
-/* Лівий блок: Відео */
+/* Відео / Плейсхолдер */
 .task-video-container {
     width: 25%; 
     min-width: 150px;
@@ -51,7 +48,6 @@ body {
 .task-video-container .video-placeholder {
     width: 100%;
     height: 100px; 
-    /* aspect-ratio: 16 / 9; */ /* Вимкнено aspect-ratio, щоб залишити фіксовану висоту 100px */
     border: 1px solid #FFD700; 
     border-radius: 4px;
     overflow: hidden;
@@ -67,27 +63,26 @@ body {
     text-align: center;
     flex-direction: column;
 }
+
 .video-placeholder.video-active {
     background-color: #333; 
     color: #FFD700;
 }
 .video-placeholder img {
-    /* Додаємо фільтр для іконки, щоб вона була золотою, як у style.css */
     width: 30px;
     height: 30px;
     margin-right: 5px;
+    /* Фільтр для золотого кольору іконки */
     filter: invert(80%) sepia(80%) saturate(1000%) hue-rotate(0deg) brightness(120%); 
 }
 
-
-/* Правий блок: Опис */
+/* Опис завдання */
 .task-details-content {
     width: 75%;
     display: flex;
     flex-direction: column;
 }
 
-/* Заголовок фази (Наприклад, "До тренування") */
 .stage-label-header {
     color: #FFD700; 
     font-size: 1.2em;
@@ -95,21 +90,18 @@ body {
     margin-bottom: 5px;
 }
 
-/* Заголовок протоколу (Наприклад, "Протокол TRAIN на Понеділок") */
 .task-title-phase {
     color: #E0E0E0; 
     font-size: 1.1em;
     font-weight: normal;
     margin: 0 0 10px 0;
-    /* JS приховує цей елемент, якщо він не потрібен, але ми залишаємо його для Main Training */
 }
 
-/* Контейнер для нумерованого списку */
+/* Нумерований список */
 .task-description-list {
     margin-top: 5px;
 }
 
-/* Окремий елемент списку (рядок завдання) */
 .task-list-item {
     display: flex;
     align-items: baseline;
@@ -122,22 +114,20 @@ body {
     border-bottom: none;
 }
 
-/* Номер пункту */
 .task-list-item .list-number {
     color: #FFD700; 
     font-weight: bold;
     margin-right: 10px;
     font-size: 1.1em;
-    min-width: 25px; /* Забезпечує вирівнювання двозначних чисел */
+    min-width: 25px; 
 }
 
-/* Текст завдання */
 .task-list-item .list-text {
     color: #D4D4D4;
 }
 
 /* ======================================================= */
-/* СЕКЦІЯ ЗВОРОТНОГО ЗВ'ЯЗКУ (FEEDBACK) - Додано */
+/* 2. СЕКЦІЯ ЗВОРОТНОГО ЗВ'ЯЗКУ (FEEDBACK) */
 /* ======================================================= */
 
 .feedback-section {
@@ -184,7 +174,7 @@ body {
     background-color: #ffe873;
 }
 
-/* Адаптивність */
+/* 3. Адаптивність */
 @media (max-width: 768px) {
     .task-item {
         flex-direction: column;
