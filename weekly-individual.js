@@ -40,9 +40,8 @@ function generateRandomExercises(stage, category, count) {
     return shuffled.slice(0, count);
 }
 
-// =========================================================
-// 2. ФУНКЦІЇ ЗБЕРЕЖЕННЯ/ЗАВАНТАЖЕННЯ (ПЕРЕМІЩЕНО ВГОРУ ДЛЯ УНИКНЕННЯ REFERENCEERROR)
-// =========================================================
+
+// --- ФУНКЦІЇ ЗБЕРЕЖЕННЯ/ЗАВАНТАЖЕННЯ (ВИПРАВЛЕННЯ: ПЕРЕМІЩЕНО ВГОРУ ДЛЯ УНИКНЕННЯ REFERENCEERROR) ---
 
 function collectTemplatesFromUI() {
     const templateData = {};
@@ -84,7 +83,7 @@ function collectManualChanges() {
                 stage: item.dataset.stage,
                 category: item.dataset.category,
                 videoKey: item.dataset.videokey || '',
-                imageURL: item.dataset.imageurl || '' // Зберігаємо imageURL
+                imageURL: item.dataset.imageurl || '' 
             });
         });
 
@@ -162,7 +161,7 @@ function loadWeeklyPlanDisplay(data) {
 }
 
 // =========================================================
-// 3. УПРАВЛІННЯ ІНТЕРФЕЙСОМ ШАБЛОНІВ ДНЯ
+// 2. УПРАВЛІННЯ ІНТЕРФЕЙСОМ ШАБЛОНІВ ДНЯ
 // =========================================================
 
 function renderDayTemplateInput(dayIndex, mdStatus, savedTemplates) {
@@ -187,9 +186,7 @@ function renderDayTemplateInput(dayIndex, mdStatus, savedTemplates) {
         }
         
         categories.forEach(category => {
-            // Отримуємо збережену кількість (0 за замовчуванням)
             const currentCount = (template[stage] && template[stage][category] !== undefined) ? template[stage][category] : 0;
-            
             const rowStyle = mdStatus === 'REST' ? 'style="display: none;"' : '';
 
             html += `
@@ -228,25 +225,23 @@ function renderDayTemplateInput(dayIndex, mdStatus, savedTemplates) {
     
     dayBlock.querySelectorAll('.template-exercise-fields, .generated-exercises-list, .rest-message').forEach(el => el.remove());
     
-    dayBlock.innerHTML += html;
+    // Виправлення: вставляємо нові елементи в контейнер, щоб уникнути помилки insertBefore/appendChild
+    dayBlock.insertAdjacentHTML('afterbegin', html);
     
     addTemplateControlListeners();
 }
 
 function addTemplateControlListeners() {
-    // 1. Слухач для кнопок кількості (+ / -)
     document.querySelectorAll('.count-control-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const dayIndex = e.target.dataset.dayIndex;
             const categoryName = e.target.dataset.category;
             const step = parseInt(e.target.dataset.step);
             
-            // Знаходимо відповідну кнопку-тег, щоб оновити її data-count
             const templateButton = document.querySelector(`.template-category-button[data-day-index="${dayIndex}"][data-category="${categoryName}"]`);
             
             if (templateButton) {
                 let currentCount = parseInt(templateButton.dataset.count);
-                // Обмеження кількості вправ (від 0 до 5)
                 let newCount = Math.max(0, Math.min(5, currentCount + step)); 
                 
                 templateButton.dataset.count = newCount;
@@ -259,30 +254,22 @@ function addTemplateControlListeners() {
                     templateButton.classList.remove('active-template');
                 }
                 
-                // Після зміни кількості оновлюємо план (перегенерація)
                 updateCycleColors(true); 
             }
         });
     });
     
-    // 2. Слухач для кнопки "Додати вручну" (відкриває модальне вікно)
-    document.querySelectorAll('.add-manual-exercise-btn').forEach(btn => {
+    document.querySelectorAll('.add-manual-exercise-btn, .template-category-button').forEach(btn => {
          btn.addEventListener('click', (e) => {
-            // Ця кнопка відкриває модальне вікно для вибору
-            const { dayIndex, mdStatus, stage, category } = e.target.dataset;
+            // Перевірка, чи не був клік на кнопках +/-
+            if (e.target.classList.contains('count-control-btn')) return;
+            
+            const target = e.target.closest('.template-category-button') || e.target.closest('.add-manual-exercise-btn');
+            if (!target) return;
+            
+            const { dayIndex, mdStatus, stage, category } = target.dataset;
             openExerciseModal(dayIndex, mdStatus, stage, category);
          });
-    });
-
-    // 3. Слухач для кнопки-тега (для ручного вибору, якщо клікнули не на +/-)
-    document.querySelectorAll('.template-category-button').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            // Перевіряємо, чи клік відбувся саме на кнопці, а не на її дочірньому елементі (для уникнення конфлікту з count-controls)
-            if (e.target === btn) {
-                 const { dayIndex, mdStatus, stage, category } = e.target.dataset;
-                 openExerciseModal(dayIndex, mdStatus, stage, category);
-            }
-        });
     });
 }
 
@@ -319,9 +306,9 @@ function displayGeneratedExercises(dayIndex, mdStatus, exercises) {
                          data-imageurl="${exercise.imageURL || ''}">
                         <div class="exercise-fields">
                              <label>Назва вправи:</label>
-                             <input type="text" value="${exercise.name || ''}" data-field="name">
+                             <input type="text" value="${exercise.name || ''}" data-field="name" onchange="saveData(null, null)">
                              <label>Параметри / Опис:</label>
-                             <textarea data-field="description">${exercise.description || ''}</textarea>
+                             <textarea data-field="description" onchange="saveData(null, null)">${exercise.description || ''}</textarea>
                              <div class="exercise-actions">
                                  <button type="button" class="replace-btn" data-stage="${stage}" data-category="${exercise.category || ''}">🔄 Замінити</button>
                                  <button type="button" class="remove-btn">❌ Видалити</button>
@@ -363,7 +350,7 @@ function addExerciseControlListeners(dayBlock) {
                     item.querySelector('[data-field="name"]').value = newEx.name;
                     item.querySelector('[data-field="description"]').value = newEx.description;
                     item.dataset.videokey = newEx.videoKey || '';
-                    item.dataset.imageurl = newEx.imageURL || ''; // Оновлення imageURL
+                    item.dataset.imageurl = newEx.imageURL || ''; 
                     item.dataset.category = category;
                     
                     alert(`Вправу успішно замінено на: ${newEx.name}`);
@@ -405,12 +392,10 @@ function generateWeeklyPlan(mdStatuses, templates) {
             }
         }
         
-        // Зберігаємо ручні зміни як пріоритет (якщо є)
         const savedData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
         const manualPlanKey = `day_plan_${dayIndex}`;
         let finalExercises = generatedExercises;
         
-        // Якщо збережені вправи були, використовуємо їх, інакше використовуємо згенеровані
         if (savedData[manualPlanKey] && savedData[manualPlanKey].exercises.length > 0) {
             finalExercises = savedData[manualPlanKey].exercises;
         }
@@ -430,7 +415,7 @@ function generateWeeklyPlan(mdStatuses, templates) {
 }
 
 // =========================================================
-// 4. ОСНОВНА ЛОГІКА ЦИКЛУ
+// 3. ОСНОВНА ЛОГІКА ЦИКЛУ
 // =========================================================
 
 function updateCycleColors(shouldGenerate = false) {
@@ -478,4 +463,323 @@ function updateCycleColors(shouldGenerate = false) {
              dayStatuses = activityTypes.map(type => (type === 'REST' ? 'REST' : 'TRAIN')); 
         }
         
-        // 4. Оновлення відображення MD-статусу
+        const currentMdStatuses = [];
+
+        dayCells.forEach((cell, index) => {
+             let finalStatusKey = dayStatuses[index] || 'TRAIN'; 
+             if (finalStatusKey.startsWith('MD+') && parseInt(finalStatusKey.substring(3)) > 2) {
+                  finalStatusKey = 'TRAIN';
+             } else if (finalStatusKey.startsWith('MD-') && parseInt(finalStatusKey.substring(3)) > 4) {
+                  finalStatusKey = 'TRAIN'; 
+             }
+             
+             currentMdStatuses[index] = finalStatusKey;
+
+             const style = COLOR_MAP[finalStatusKey] || COLOR_MAP['TRAIN'];
+             const mdStatusElement = cell.querySelector('.md-status');
+             if (mdStatusElement) {
+                 mdStatusElement.textContent = style.status;
+                 Object.values(COLOR_MAP).forEach(map => mdStatusElement.classList.remove(map.colorClass)); 
+                 mdStatusElement.classList.add(style.colorClass); 
+             }
+             
+             const mdTitleElement = document.getElementById(`md-title-${index}`);
+             if (mdTitleElement) {
+                 mdTitleElement.innerHTML = `<span class="md-status-label">${style.status}</span> <span class="day-name-label">(${dayNamesShort[index]})</span>`;
+             }
+        });
+        
+        const savedData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+        const savedTemplates = {};
+        Object.keys(savedData).forEach(key => {
+            if (key.startsWith('template_')) {
+                savedTemplates[key] = savedData[key];
+            }
+        });
+        
+        dayCells.forEach((cell, index) => {
+             renderDayTemplateInput(index, currentMdStatuses[index], savedTemplates);
+        });
+
+
+        if (shouldGenerate) {
+            const templatesFromUI = collectTemplatesFromUI();
+            const newWeeklyPlan = generateWeeklyPlan(currentMdStatuses, templatesFromUI);
+            saveData(newWeeklyPlan, templatesFromUI);
+        } else {
+            loadWeeklyPlanDisplay(savedData);
+        }
+
+    } catch (e) {
+        console.error("Критична помилка у updateCycleColors:", e);
+    }
+}
+
+function loadData() {
+    try {
+        const savedData = localStorage.getItem(STORAGE_KEY);
+        let data = savedData ? JSON.parse(savedData) : {};
+
+        document.querySelectorAll('#weekly-plan-form [name^="activity_"]').forEach(element => {
+             const name = element.name;
+             if (data[name] !== undefined) {
+                 element.value = data[name];
+             }
+        });
+        
+        updateCycleColors(false); 
+
+    } catch (e) {
+        console.error("Помилка при завантаженні даних:", e);
+    }
+}
+
+// =========================================================
+// 4. УПРАВЛІННЯ ВИБОРОМ ВПРАВ (МОДАЛЬНЕ ВІКНО)
+// =========================================================
+
+let currentExerciseContext = null; 
+let selectedExercises = []; 
+
+function createExerciseHTML(exercise, stage, category) {
+    const mediaHint = exercise.videoKey ? 'Відео доступне' : 'Медіа відсутнє';
+
+    return `
+        <div class="exercise-select-item" 
+             data-name="${exercise.name}" 
+             data-description="${exercise.description}" 
+             data-videokey="${exercise.videoKey || ''}"
+             data-imageurl="${exercise.imageURL || ''}"
+             data-stage="${stage}"
+             data-category="${category}">
+            
+            <input type="checkbox" class="exercise-checkbox" id="ex-${Math.random().toString(36).substring(7)}" 
+                   data-name="${exercise.name}">
+            
+            <label for="ex-${Math.random().toString(36).substring(7)}">
+                <strong>${exercise.name}</strong> 
+                <span class="media-hint">(${mediaHint})</span>
+                <p>${exercise.description.substring(0, Math.min(exercise.description.length, 70))}...</p>
+            </label>
+            
+        </div>
+    `;
+}
+
+function renderExerciseList(exercises) {
+    const listContainer = document.getElementById('exercise-list-container');
+    const addButton = document.getElementById('add-selected-btn'); 
+    if (!listContainer || !addButton) return;
+    
+    selectedExercises = []; 
+    listContainer.innerHTML = ''; 
+
+    if (exercises.length === 0) {
+        listContainer.innerHTML = '<p>Не знайдено вправ за цими критеріями. Спробуйте іншу якість.</p>';
+        addButton.style.display = 'none';
+        return;
+    }
+
+    exercises.forEach(ex => {
+        listContainer.innerHTML += createExerciseHTML(ex, ex.stage, ex.category);
+    });
+    
+    listContainer.querySelectorAll('.exercise-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', (e) => {
+            const item = e.target.closest('.exercise-select-item');
+            const data = item.dataset;
+
+            const exerciseObj = {
+                name: data.name,
+                description: data.description,
+                videoKey: data.videokey,
+                imageURL: data.imageurl, 
+                stage: data.stage,
+                category: data.category
+            };
+
+            const index = selectedExercises.findIndex(ex => ex.name === data.name && ex.stage === data.stage && ex.category === data.category);
+
+            if (e.target.checked) {
+                if (index === -1) {
+                    selectedExercises.push(exerciseObj);
+                }
+            } else {
+                if (index !== -1) {
+                    selectedExercises.splice(index, 1);
+                }
+            }
+            
+            addButton.textContent = `Додати вибрані (${selectedExercises.length})`;
+            addButton.style.display = selectedExercises.length > 0 ? 'block' : 'none';
+            
+            item.classList.toggle('selected-item', e.target.checked);
+        });
+    });
+    
+    addButton.style.display = 'none';
+}
+
+function handleSelectionComplete() {
+    if (!currentExerciseContext || selectedExercises.length === 0) return;
+    
+    selectedExercises.forEach(exercise => {
+         insertExerciseManually(
+            currentExerciseContext.dayIndex,
+            currentExerciseContext.mdStatus,
+            exercise.stage, 
+            exercise.category, 
+            exercise
+         );
+    });
+    
+    selectedExercises = [];
+    closeExerciseModal();
+}
+
+function filterExercises(quality) {
+    const allExercises = [];
+
+    for (const [s, categories] of Object.entries(EXERCISE_LIBRARY)) {
+        for (const [c, data] of Object.entries(categories)) {
+            if (data.qualities && data.qualities.includes(quality)) {
+                 data.exercises.forEach(ex => {
+                     allExercises.push({ ...ex, stage: s, category: c });
+                 });
+            }
+        }
+    }
+    
+    renderExerciseList(allExercises);
+}
+
+function insertExerciseManually(dayIndex, mdStatus, stage, category, exercise) {
+     const dayBlock = document.querySelector(`.task-day-container[data-day-index="${dayIndex}"]`);
+     if (!dayBlock) return;
+     
+     const newExHtml = `
+         <div class="exercise-item manual-added" 
+              data-day-index="${dayIndex}" 
+              data-stage="${stage}" 
+              data-category="${category}" 
+              data-videokey="${exercise.videoKey || ''}"
+              data-imageurl="${exercise.imageURL || ''}">
+             <div class="exercise-fields">
+                  <label>Назва вправи:</label>
+                  <input type="text" value="${exercise.name || ''}" data-field="name" onchange="saveData(null, null)">
+                  <label>Параметри / Опис:</label>
+                  <textarea data-field="description" onchange="saveData(null, null)">${exercise.description || ''}</textarea>
+                  <div class="exercise-actions">
+                      <button type="button" class="replace-btn" data-stage="${stage}" data-category="${category}">🔄 Замінити</button>
+                      <button type="button" class="remove-btn">❌ Видалити</button>
+                  </div>
+             </div>
+         </div>
+     `;
+
+     let targetStageContainer = dayBlock.querySelector(`.generated-exercises-list`);
+     
+     if (!targetStageContainer) {
+          const listContainer = document.createElement('div');
+          listContainer.className = 'generated-exercises-list';
+          listContainer.innerHTML = '<h4>Згенерований план (ручне редагування)</h4>';
+          dayBlock.appendChild(listContainer);
+          targetStageContainer = listContainer;
+     }
+     
+     targetStageContainer.insertAdjacentHTML('beforeend', newExHtml);
+     
+     addExerciseControlListeners(dayBlock); 
+     saveData(null, null);
+}
+
+function openExerciseModal(dayIndex, mdStatus, stage, category) {
+    const modal = document.getElementById('exercise-selection-modal');
+    if (!modal) return;
+    
+    currentExerciseContext = { dayIndex: parseInt(dayIndex), mdStatus, stage, category };
+    
+    const qualityFilters = document.getElementById('quality-filters');
+
+    // Припускаємо, що QUALITIES визначено у exercise_library.js
+    if (typeof QUALITIES !== 'undefined' && QUALITIES.length > 0) {
+        qualityFilters.innerHTML = QUALITIES.map(q => 
+            `<button type="button" class="quality-filter-btn" data-quality="${q}">${q}</button>`
+        ).join('');
+    
+        qualityFilters.querySelectorAll('.quality-filter-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                 qualityFilters.querySelectorAll('.quality-filter-btn').forEach(b => b.classList.remove('active'));
+                 e.target.classList.add('active');
+                 filterExercises(e.target.dataset.quality);
+            });
+        });
+    } else {
+        qualityFilters.innerHTML = '<p>Фільтри якості недоступні. Перевірте exercise_library.js.</p>';
+    }
+
+
+    const initialCategoryData = EXERCISE_LIBRARY[stage] && EXERCISE_LIBRARY[stage][category] ? 
+                             EXERCISE_LIBRARY[stage][category] : { exercises: [] };
+    
+    const initialExercises = initialCategoryData.exercises.map(ex => ({ ...ex, stage, category }));
+
+    document.getElementById('modal-title-context').textContent = `Вибір вправи: ${stage} / ${category} (День ${dayNamesShort[dayIndex]})`;
+    
+    renderExerciseList(initialExercises);
+    
+    const addSelectedBtn = document.getElementById('add-selected-btn');
+    if (addSelectedBtn) {
+        addSelectedBtn.style.display = 'none'; 
+        addSelectedBtn.textContent = 'Додати вибрані (0)';
+    }
+
+    modal.style.display = 'flex';
+}
+
+function closeExerciseModal() {
+    const modal = document.getElementById('exercise-selection-modal');
+    if (modal) {
+        modal.style.display = 'none';
+        currentExerciseContext = null;
+        selectedExercises = [];
+    }
+}
+
+
+// =========================================================
+// 5. ІНІЦІАЛІЗАЦІЯ ОБРОБНИКІВ
+// =========================================================
+
+document.addEventListener('DOMContentLoaded', () => {
+    
+    const activitySelects = document.querySelectorAll('.activity-type-select');
+    const form = document.getElementById('weekly-plan-form');
+    
+    activitySelects.forEach((select) => { 
+         select.addEventListener('change', () => {
+             updateCycleColors(true); 
+         });
+    });
+
+    form.addEventListener('submit', (e) => {
+         e.preventDefault();
+         saveData(null, null);
+    });
+    
+    const addSelectedBtn = document.getElementById('add-selected-btn');
+    if (addSelectedBtn) {
+        addSelectedBtn.addEventListener('click', handleSelectionComplete);
+    }
+    
+    const modal = document.getElementById('exercise-selection-modal');
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target.id === 'exercise-selection-modal' || e.target.classList.contains('close-modal-btn')) {
+                closeExerciseModal();
+            }
+        });
+    }
+
+    loadData();
+});
