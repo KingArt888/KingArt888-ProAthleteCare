@@ -1,26 +1,5 @@
 /* weekly-individual.css */
-/* Додайте це до weekly-individual.css */
 
-.weekly-table {
-    width: 100%;
-    border-collapse: collapse;
-    /* Золота рамка для ProAtletCare */
-    border: 2px solid #FFD700; 
-}
-
-.weekly-table th, 
-.weekly-table td {
-    border: 1px solid #444; /* Чорні/сірі внутрішні роздільники */
-    padding: 10px;
-    text-align: center;
-    background-color: #1a1a1a; /* Чорний фон для клітинок */
-}
-
-.weekly-table thead th {
-    background-color: #000;
-    color: #FFD700; /* Золотий текст у заголовку */
-    font-weight: bold;
-}
 /* --- СТИЛІ MD-СТАТУСІВ (для таблиці та заголовків) --- */
 .md-status {
     padding: 3px 6px;
@@ -58,8 +37,36 @@
     font-size: 1.1em;
 }
 
-/* --- СТИЛІ СІТКИ ЗАВДАНЬ ТА ШАБЛОНІВ --- */
+/* --- СТИЛІ ТАБЛИЦІ (ПОВЕРНУТО ЗОЛОТУ РАМКУ) --- */
+.table-container {
+    overflow-x: auto;
+    margin-bottom: 30px;
+}
 
+.weekly-table {
+    width: 100%;
+    border-collapse: collapse;
+    /* Золота рамка для ProAtletCare */
+    border: 2px solid #FFD700; 
+}
+
+.weekly-table th, 
+.weekly-table td {
+    border: 1px solid #444; /* Чорні/сірі внутрішні роздільники */
+    padding: 10px;
+    text-align: center;
+    background-color: #1a1a1a; /* Чорний фон для клітинок */
+}
+
+.weekly-table thead th {
+    background-color: #000;
+    color: #FFD700; /* Золотий текст у заголовку */
+    font-weight: bold;
+}
+/* ------------------------------------------- */
+
+
+/* --- СТИЛІ СІТКИ ЗАВДАНЬ ТА ШАБЛОНІВ (без змін) --- */
 .tasks-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -68,7 +75,7 @@
 }
 
 .template-stage-header {
-    color: #FFD700; /* Золотий для заголовків етапів */
+    color: #FFD700; 
     margin-top: 15px;
     margin-bottom: 8px;
     font-size: 0.95em;
@@ -77,6 +84,9 @@
     padding-bottom: 3px;
 }
 
+/* ... (решта стилів для кнопок, модального вікна та вправ) ... */
+
+/* [Продовження стилів weekly-individual.css...] */
 .template-row {
     display: flex;
     align-items: center;
