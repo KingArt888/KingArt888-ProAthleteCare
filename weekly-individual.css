@@ -181,3 +181,38 @@
     margin-right: 5px;
     border-radius: 4px;
 }
+/* Стилі для чекбоксів у модальному вікні */
+.exercise-select-item {
+    /* ... існуючі стилі ... */
+    display: flex; /* Дозволяє розмістити чекбокс та текст поруч */
+    align-items: flex-start;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.exercise-select-item label {
+    flex-grow: 1;
+    cursor: pointer;
+    padding-left: 10px;
+}
+
+.exercise-checkbox {
+    /* Сховати стандартний чекбокс, якщо ви хочете власний дизайн */
+    /* appearance: none; */ 
+    width: 20px;
+    height: 20px;
+    margin-top: 5px;
+    flex-shrink: 0;
+}
+
+/* Візуальне підтвердження вибору */
+.exercise-select-item.selected-item {
+    border: 1px solid #FFD700; 
+    background-color: #383838; 
+    box-shadow: 0 0 5px #FFD700;
+}
+
+.media-hint {
+    font-size: 0.8em;
+    color: #AAA;
+}
