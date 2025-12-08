@@ -3,7 +3,7 @@ const COLOR_MAP = {
     'MD': { status: 'MD', colorClass: 'color-red' },
     'MD+1': { status: 'MD+1', colorClass: 'color-dark-green' }, 
     'MD+2': { status: 'MD+2', colorClass: 'color-green' }, 
-    'MD+3': { status: 'MD+3', colorClass: 'color-neutral' }, // Використовується як TRAIN
+    'MD+3': { status: 'MD+3', colorClass: 'color-neutral' }, 
     'MD-1': { status: 'MD-1', colorClass: 'color-yellow' }, 
     'MD-2': { status: 'MD-2', colorClass: 'color-deep-green' }, 
     'MD-3': { status: 'MD-3', colorClass: 'color-orange' }, 
@@ -52,7 +52,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // ФУНКЦІЯ: ІНІЦІАЛІЗАЦІЯ ШАБЛОНІВ 
     // =========================================================
     function initializeTemplates() {
-        // MD+3 тепер TRAIN, тому його шаблон видалено.
         const templates = [
             { name: 'tasks_md_plus_2', defaultText: `1. **Самомасаж (Ролінг/Перкусія):** 10 хв (фокус на квадрицепси, сідниці, спина).\n2. **Мобілізація суглобів:** 15 хв (комплекс на гомілкостоп, тазостегновий суглоб).\n3. **Легкий Стретчинг (статичний):** 15 хв.\n4. **Гідратація:** Посилений контроль водного балансу.` },
             { name: 'tasks_md_plus_1', defaultText: `1. **Кардіо в легкій зоні (LSD):** 20-30 хв (пульс 120-130 уд/хв) або велотренажер.\n2. **Превентивні вправи:** 15 хв (зміцнення CORE та ротаторної манжети).\n3. **Робота з м'ячем (легка):** Індивідуальні технічні елементи (30 хв).\n4. **Харчування:** Підвищене споживання білка та вуглеводів.` },
@@ -75,8 +74,20 @@ document.addEventListener('DOMContentLoaded', () => {
              let textarea = document.querySelector(`textarea[name="${name}"]`);
              if (!textarea) {
                 const tempDiv = document.createElement('div');
+                // Важливо: додаємо display:none; для заглушок
                 tempDiv.innerHTML = `<textarea name="${name}" style="display:none;">${trainTemplate}</textarea>`;
                 document.body.appendChild(tempDiv.firstChild);
+             }
+        });
+        
+        // --- ВИПРАВЛЕННЯ: ПРИХОВУЄМО ВСІ ШАБЛОНИ ВІД КОРИСТУВАЧІВ ---
+        document.querySelectorAll('[name^="tasks_md_"]').forEach(el => {
+             // Шукаємо батьківський елемент, щоб приховати його (наприклад, div або section)
+             let parent = el.closest('div') || el.closest('section') || el.closest('fieldset');
+             if (parent) {
+                 parent.style.display = 'none';
+             } else {
+                 el.style.display = 'none';
              }
         });
     }
@@ -245,8 +256,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+
     // =========================================================
-    // ФУНКЦІЯ: updateCycleColors (ОСНОВНИЙ РОЗРАХУНОК ФАЗ - Версія 3.6)
+    // ФУНКЦІЯ: updateCycleColors (ОСНОВНИЙ РОЗРАХУНОК ФАЗ - Версія 4.0)
     // =========================================================
     function updateCycleColors() {
         try {
@@ -261,6 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // === ОБРОБКА НЕАКТИВНОГО СТАНУ ===
             if (!isPlanActive) {
+                // ... (Логіка для неактивного плану) ...
                 dayCells.forEach((cell, index) => {
                     const finalStatusKey = activityTypes[index] === 'REST' ? 'REST' : 'TRAIN';
                     const mdStatusElement = cell.querySelector('.md-status');
@@ -289,14 +302,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // =========================================================
             // 1. РОЗРАХУНОК MD+ ФАЗ (Вищий пріоритет: MD+1 та MD+2)
+            //    ПОВЕРНУТО ФІКС MD+1/MD+2 (ПН/НД)
             // =========================================================
             for (const matchIdx of matchIndices) {
                 for (let j = 1; j <= 2; j++) { // MD+1 та MD+2
                     const currentIdx = (matchIdx + j) % 7;
                     
+                    // Якщо день не MD і не REST, встановлюємо MD+
                     if (activityTypes[currentIdx] !== 'REST' && dayStatuses[currentIdx] !== 'MD') {
                          
-                        // MD+1 повинен мати вищий пріоритет, ніж MD+2, щоб уникнути MD+2, MD+2
+                        // ГАРАНТУЄМО MD+1 > MD+2, щоб уникнути MD+2, MD+2
                         if (j === 1 || dayStatuses[currentIdx] !== 'MD+1') { 
                             dayStatuses[currentIdx] = mdPlusMap[j - 1]; 
                         }
@@ -306,29 +321,26 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // =========================================================
             // 2. РОЗРАХУНОК MD- ФАЗ (Пріоритет: MD- над TRAIN)
+            //    ПОВЕРНУТО ПОВНИЙ MD- ЦИКЛ (включаючи Неділю)
             // =========================================================
             
             for (const matchIdx of matchIndices) {
                 let currentMDMinus = 0;
                 
+                // Перевіряємо 7 днів назад від дня перед матчем
                 for (let j = 1; j <= 7; j++) {
-                    let i = (matchIdx - j + 7) % 7; 
-
+                    let i = (matchIdx - j + 7) % 7; // Циклічний індекс дня MD-1, MD-2, ...
+                    
                     // Якщо зустрічаємо REST або MD, цикл MD- переривається
                     if (activityTypes[i] === 'REST' || dayStatuses[i] === 'MD') {
                         break;
                     }
                     
-                    // *** ВИПРАВЛЕННЯ: ЗАХИСТ НЕДІЛІ ВІД MD- (Індекс 6) ***
-                    if (i === 6) { 
-                        continue; // Пропускаємо призначення MD- для неділі
-                    }
-                    // ----------------------------------------------------
-                    
                     // Тільки MD-1, MD-2, MD-3, MD-4
                     if (currentMDMinus < 4) {
                         // Захист MD+1 та MD+2
                         if (dayStatuses[i] !== 'MD+1' && dayStatuses[i] !== 'MD+2') {
+                            // MD- завжди перезаписує TRAIN (включаючи MD+3+)
                             dayStatuses[i] = mdMinusCycle[currentMDMinus];
                         }
                         currentMDMinus++;
@@ -337,9 +349,86 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
-
             // =========================================================
-            // 3. ФІНАЛЬНЕ ОНОВЛЕННЯ DOM (ВКЛЮЧАЮЧИ ПРИХОВАННЯ ШАБЛОНУ НЕДІЛІ)
+            // 3. ФІНАЛЬНЕ ОНОВЛЕННЯ DOM
             // =========================================================
             dayCells.forEach((cell, index) => {
-                let
+                let finalStatusKey = dayStatuses[index] || 'TRAIN'; 
+                
+                // Всі фази MD+3 і вище вважаємо TRAIN для відображення
+                if (finalStatusKey.startsWith('MD+') && parseInt(finalStatusKey.substring(3)) > 2) {
+                    finalStatusKey = 'TRAIN';
+                }
+
+                const currentActivity = activityTypes[index]; 
+                const style = COLOR_MAP[finalStatusKey] || COLOR_MAP['TRAIN'];
+                const mdStatusElement = cell.querySelector('.md-status');
+
+                mdStatusElement.textContent = style.status;
+                Object.values(COLOR_MAP).forEach(map => mdStatusElement.classList.remove(map.colorClass)); 
+                mdStatusElement.classList.add(style.colorClass); 
+                cell.title = `Фаза: ${style.status}`; 
+
+                toggleDayInputs(index, currentActivity, isPlanActive); 
+                
+                const dailyTaskField = document.querySelector(`textarea[name="daily_task_${index}"]`);
+                if (dailyTaskField) {
+                    const templateText = getTemplateText(finalStatusKey);
+                    const currentTaskValue = dailyTaskField.value.trim();
+                    const isGenericTemplate = currentTaskValue === 'Загальнокомандне тренування: Специфічні вправи вводити вручну.' ||
+                                                 currentTaskValue === 'Матч: Індивідуальна розминка/завершення гри' ||
+                                                 currentTaskValue === 'Повний відпочинок, відновлення, сон.' ||
+                                                 currentTaskValue.includes('**Фаза: MD'); 
+
+                    if (templateText && (currentTaskValue === '' || isGenericTemplate)) {
+                         dailyTaskField.value = templateText;
+                    }
+                }
+            });
+        } catch (e) {
+            console.error("Критична помилка у updateCycleColors:", e);
+        }
+    }
+
+
+    // === ІНІЦІАЛІЗАЦІЯ ОБРОБНИКІВ (без змін) ===
+    
+    activitySelects.forEach(select => {
+        select.addEventListener('change', (event) => {
+            const dayIndexElement = event.target.closest('td');
+            if (!dayIndexElement || dayIndexElement.dataset.dayIndex === undefined) return;
+            
+            const dayIndex = parseInt(dayIndexElement.dataset.dayIndex); 
+            const activityType = event.target.value;
+            
+            updateCycleColors(); 
+            updateMatchDetails(dayIndex, activityType); 
+            saveData();
+        });
+    });
+
+    // Важливо: обробник tasks_md_plus_x залишається, щоб редагувати шаблони
+    document.querySelectorAll('[name^="tasks_md_"]').forEach(textarea => { 
+        textarea.addEventListener('input', updateCycleColors);
+        textarea.addEventListener('change', saveData); 
+    });
+    
+    document.querySelectorAll('input, select, textarea').forEach(input => {
+        if (input.name.startsWith('activity_')) {
+            return;
+        }
+
+        input.addEventListener('change', saveData);
+        input.addEventListener('input', saveData);
+    });
+
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        saveData(); 
+    });
+
+    // === ПОЧАТКОВИЙ ЗАПУСК ===
+    initializeTemplates();
+    loadData();
+    updateCycleColors();
+});
