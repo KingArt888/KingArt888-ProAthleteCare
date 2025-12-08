@@ -29,18 +29,22 @@ const templateStages = {
 function generateRandomExercises(stage, category, count) {
     if (!EXERCISE_LIBRARY || !EXERCISE_LIBRARY[stage] || !EXERCISE_LIBRARY[stage][category]) {
         console.warn(`Категорія ${stage} / ${category} не знайдена в EXERCISE_LIBRARY.`);
+        // Запобігаємо збою, повертаючи помилковий об'єкт
         return [{ name: `Помилка: Немає вправ у ${category}`, videoKey: '', description: 'Перевірте exercise_library.js' }];
     }
     
     const availableExercises = EXERCISE_LIBRARY[stage][category];
-    if (availableExercises.length === 0) return [];
+    if (availableExercises.length === 0) {
+        console.warn(`Категорія ${stage} / ${category} порожня в EXERCISE_LIBRARY.`);
+        return [];
+    }
 
     const shuffled = [...availableExercises].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, count);
 }
 
 // =========================================================
-// 2. ФУНКЦІЇ ЗБЕРЕЖЕННЯ/ЗАВАНТАЖЕННЯ (Винесені в глобальну область видимості)
+// 2. ФУНКЦІЇ ЗБЕРЕЖЕННЯ/ЗАВАНТАЖЕННЯ
 // =========================================================
 
 function collectTemplatesFromUI() {
@@ -64,12 +68,44 @@ function collectTemplatesFromUI() {
     return templateData;
 }
 
+function collectManualChanges() {
+    const manualPlanData = {};
+    for (let i = 0; i < 7; i++) {
+        const dayPlan = [];
+        const dayBlock = document.querySelector(`.task-day-container[data-day-index="${i}"]`);
+        
+        // Перевіряємо, чи є взагалі згенерований список вправ
+        if (!dayBlock || dayBlock.querySelectorAll('.exercise-item').length === 0) continue;
+
+        dayBlock.querySelectorAll('.exercise-item').forEach((item) => {
+            const nameInput = item.querySelector('[data-field="name"]');
+            const descTextarea = item.querySelector('[data-field="description"]');
+            
+            dayPlan.push({
+                name: nameInput ? nameInput.value : 'Невідома вправа',
+                description: descTextarea ? descTextarea.value : '',
+                stage: item.dataset.stage,
+                category: item.dataset.category,
+                videoKey: item.dataset.videokey || ''
+            });
+        });
+
+        if (dayPlan.length > 0) {
+            manualPlanData[`day_plan_${i}`] = {
+                exercises: dayPlan
+            };
+        }
+    }
+    return manualPlanData;
+}
+
+
 function saveData(newWeeklyPlan = null, templatesFromUI = null) {
     const saveButton = document.querySelector('.save-button');
     try {
         let existingData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
         const activityData = {};
-        const finalData = {};
+        let finalPlanData = {};
         
         document.querySelectorAll('#weekly-plan-form [name^="activity_"]').forEach(element => {
             activityData[element.name] = element.value;
@@ -77,16 +113,33 @@ function saveData(newWeeklyPlan = null, templatesFromUI = null) {
         
         const templateData = templatesFromUI || collectTemplatesFromUI();
         
+        // 1. Очищуємо старі дані про план
+        Object.keys(existingData).forEach(key => {
+            if (key.startsWith('day_plan_')) {
+                 delete existingData[key];
+            }
+        });
+        
+        // 2. Зберігаємо дані плану
         if (newWeeklyPlan) {
-             Object.keys(existingData).forEach(key => {
-                 if (key.startsWith('day_plan_')) {
-                      delete existingData[key];
+             // Якщо була генерація (зміна шаблону/циклу) - зберігаємо новий план
+             finalPlanData = newWeeklyPlan;
+        } else {
+             // Якщо збереження викликано вручну (кнопкою "Зберегти")
+             finalPlanData = collectManualChanges();
+             
+             // Додаємо актуальні MD-статуси
+             for (let i = 0; i < 7; i++) {
+                 if (finalPlanData[`day_plan_${i}`]) {
+                     // Беремо актуальний MD-статус з UI, який був розрахований раніше
+                     const mdStatusEl = document.querySelector(`#md-title-${i} .md-status-label`);
+                     const mdStatus = mdStatusEl ? mdStatusEl.textContent.trim() : 'TRAIN';
+                     finalPlanData[`day_plan_${i}`].mdStatus = mdStatus;
                  }
-             });
-             Object.assign(finalData, newWeeklyPlan);
+             }
         }
         
-        const combinedData = { ...existingData, ...activityData, ...templateData, ...finalData };
+        const combinedData = { ...existingData, ...activityData, ...templateData, ...finalPlanData };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(combinedData));
         
         if (saveButton) {
@@ -153,15 +206,12 @@ function renderDayTemplateInput(dayIndex, mdStatus, savedTemplates) {
 
     html += `</div>`;
     
+    // Очищуємо старі блоки перед додаванням нових
     dayBlock.querySelectorAll('.template-exercise-fields, .generated-exercises-list, .rest-message').forEach(el => el.remove());
     
     dayBlock.innerHTML += html;
     
-    // ПРИКРІПЛЕННЯ СЛУХАЧА: це критично важливо, оскільки saveData тепер в глобальній області видимості
-    dayBlock.querySelectorAll('.template-count-input').forEach(input => {
-        input.removeEventListener('change', saveData);
-        input.addEventListener('change', () => updateCycleColors(true)); // При зміні шаблону, оновлюємо цикл
-    });
+    // *** ВИДАЛЕНО СЛУХАЧІ: ТЕПЕР ВИКОРИСТОВУЄТЬСЯ ДЕЛЕГУВАННЯ У DOMContentLoaded ***
 
     if (mdStatus === 'REST') {
          dayBlock.innerHTML += `<div class="rest-message">День відновлення. Вправи не потрібні.</div>`;
@@ -177,11 +227,11 @@ function displayGeneratedExercises(dayIndex, mdStatus, exercises) {
     const newContainer = document.createElement('div');
     newContainer.className = 'generated-exercises-list'; 
 
-    let html = '';
+    let html = '<h4>Згенерований план (ручне редагування)</h4>';
     let index = 0;
     
     if (exercises.length === 0 && mdStatus !== 'REST') {
-        html = '<p style="color:red;">❗ Немає згенерованих вправ. Перевірте вимоги шаблону вище.</p>';
+        html += '<p style="color:red;">❗ Немає згенерованих вправ. Встановіть вимоги шаблону вище.</p>';
     } else {
         for (const stage of Object.keys(templateStages)) {
              const stageExercises = exercises.filter(ex => ex.stage === stage);
@@ -192,12 +242,16 @@ function displayGeneratedExercises(dayIndex, mdStatus, exercises) {
              
              stageExercises.forEach((exercise) => {
                  html += `
-                    <div class="exercise-item" data-md-status="${mdStatus}" data-stage="${stage}" data-index="${index}">
+                    <div class="exercise-item" data-day-index="${dayIndex}" data-stage="${stage}" data-index="${index}" data-category="${exercise.category || ''}" data-videokey="${exercise.videoKey || ''}">
                         <div class="exercise-fields">
                              <label>Назва вправи:</label>
-                             <input type="text" value="${exercise.name || ''}" readonly>
+                             <input type="text" value="${exercise.name || ''}" data-field="name">
                              <label>Параметри / Опис:</label>
-                             <textarea readonly>${exercise.description || ''}</textarea>
+                             <textarea data-field="description">${exercise.description || ''}</textarea>
+                             <div class="exercise-actions">
+                                 <button type="button" class="replace-btn" data-stage="${stage}" data-category="${exercise.category || ''}">🔄 Замінити</button>
+                                 <button type="button" class="remove-btn">❌ Видалити</button>
+                             </div>
                         </div>
                     </div>
                  `;
@@ -207,7 +261,53 @@ function displayGeneratedExercises(dayIndex, mdStatus, exercises) {
     }
     newContainer.innerHTML = html;
     dayBlock.appendChild(newContainer);
+    
+    addExerciseControlListeners(dayBlock);
 }
+
+function addExerciseControlListeners(dayBlock) {
+    // Слухач для кнопки "Видалити"
+    dayBlock.querySelectorAll('.remove-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const item = e.target.closest('.exercise-item');
+            if (item && confirm('Видалити цю вправу зі списку?')) {
+                item.remove();
+                // Тут ми не викликаємо saveData, оскільки це може бути серія змін. 
+                // Збереження відбудеться при submit форми.
+            }
+        });
+    });
+
+    // Слухач для кнопки "Замінити"
+    dayBlock.querySelectorAll('.replace-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const item = e.target.closest('.exercise-item');
+            const stage = btn.dataset.stage;
+            const category = btn.dataset.category;
+            
+            if (item && stage && category) {
+                // 1. Генеруємо нову вправу
+                const newExercises = generateRandomExercises(stage, category, 1);
+                if (newExercises.length > 0 && newExercises[0].name !== 'Помилка: Немає вправ у undefined') {
+                    const newEx = newExercises[0];
+                    
+                    // 2. Оновлюємо поля в UI
+                    item.querySelector('[data-field="name"]').value = newEx.name;
+                    item.querySelector('[data-field="description"]').value = newEx.description;
+                    item.dataset.videokey = newEx.videoKey || '';
+                    item.dataset.category = category;
+                    
+                    alert(`Вправу успішно замінено на: ${newEx.name}`);
+                } else {
+                    alert(`Не вдалося знайти іншу вправу для категорії ${category}. Перевірте exercise_library.js.`);
+                }
+            }
+        });
+    });
+    
+    // Немає потреби у слухачі 'input', оскільки ми збираємо дані при saveData
+}
+
 
 function generateWeeklyPlan(mdStatuses, templates) {
     const weeklyPlan = {};
@@ -229,7 +329,8 @@ function generateWeeklyPlan(mdStatuses, templates) {
                           randomExercises.forEach(ex => {
                                generatedExercises.push({
                                     ...ex,
-                                    stage: stage 
+                                    stage: stage,
+                                    category: category 
                                });
                           });
                      }
@@ -245,7 +346,7 @@ function generateWeeklyPlan(mdStatuses, templates) {
         };
 
         // Відображаємо згенерований план під полями налаштування
-        displayGeneratedExercises(dayIndex, mdStatus, generatedExercises);
+        displayGeneratedExercises(dayIndex, mdStatus, weeklyPlan[`day_plan_${dayIndex}`].exercises);
     });
     
     return weeklyPlan;
@@ -260,8 +361,13 @@ function loadWeeklyPlanDisplay(data) {
     dayIndices.forEach(dayIndex => {
         const planKey = `day_plan_${dayIndex}`;
         const plan = data[planKey];
+        
+        // MD-статус беремо з UI (він вже був розрахований/завантажений)
+        const mdStatusEl = document.querySelector(`#md-title-${dayIndex} .md-status-label`);
+        const mdStatus = mdStatusEl ? mdStatusEl.textContent.trim() : 'TRAIN';
+        
         if (plan && plan.exercises) {
-            displayGeneratedExercises(dayIndex, plan.mdStatus, plan.exercises);
+            displayGeneratedExercises(dayIndex, mdStatus, plan.exercises);
         }
     });
 }
@@ -277,7 +383,7 @@ function updateCycleColors(shouldGenerate = false) {
         const mdPlusMap = ['MD+1', 'MD+2', 'MD+3', 'MD+4', 'MD+5', 'MD+6']; 
         const mdMinusCycle = ['MD-1', 'MD-2', 'MD-3', 'MD-4', 'MD-5', 'MD-6']; 
         
-        // ... (Логіка розрахунку MD-статусів залишається незмінною) ...
+        // --- ЛОГІКА РОЗРАХУНКУ MD-СТАТУСІВ (без змін) ---
         if (isPlanActive) {
             let matchIndices = dayStatuses.map((status, index) => status === 'MD' ? index : -1).filter(index => index !== -1);
             for (const matchIdx of matchIndices) {
@@ -355,10 +461,12 @@ function updateCycleColors(shouldGenerate = false) {
 
         // 6. Генерація та відображення плану
         if (shouldGenerate) {
+            // Генеруємо новий план, якщо цикл або шаблони змінились
             const templatesFromUI = collectTemplatesFromUI();
             const newWeeklyPlan = generateWeeklyPlan(currentMdStatuses, templatesFromUI);
             saveData(newWeeklyPlan, templatesFromUI);
         } else {
+            // Інакше відображаємо попередній згенерований (або вручну змінений) план
             loadWeeklyPlanDisplay(savedData);
         }
 
@@ -385,6 +493,7 @@ function loadData() {
              }
         });
         
+        // Спочатку завантажуємо дані, потім оновлюємо кольори (без генерації)
         updateCycleColors(false); 
 
     } catch (e) {
@@ -400,15 +509,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const activitySelects = document.querySelectorAll('.activity-type-select');
     const form = document.getElementById('weekly-plan-form');
     
+    // 1. СЛУХАЧІ ДЛЯ ВИБОРУ АКТИВНОСТІ
     activitySelects.forEach((select) => { 
          select.addEventListener('change', () => {
+             // Зміна активності вважається зміною циклу -> викликаємо генерацію (true)
              updateCycleColors(true); 
          });
     });
 
+    // 2. СЛУХАЧ ДЛЯ РУЧНОГО ЗБЕРЕЖЕННЯ
     form.addEventListener('submit', (e) => {
          e.preventDefault();
-         updateCycleColors(true); 
+         // Явне збереження збирає ручні зміни
+         saveData(null, null);
+    });
+    
+    // 3. НОВЕ: ДЕЛЕГУВАННЯ СЛУХАЧІВ ДЛЯ ПОЛІВ ШАБЛОНУ (Виправлення нестабільності)
+    // При зміні поля вводу кількості вправ (template-count-input)
+    form.addEventListener('change', (e) => {
+        if (e.target.classList.contains('template-count-input')) {
+            // Викликаємо оновлення циклу та генерацію нового плану
+            updateCycleColors(true); 
+        }
     });
 
     loadData();
