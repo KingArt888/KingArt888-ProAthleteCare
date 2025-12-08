@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="weekly-individual.css">
 </head>
 <body>
-
     <header>
         <a href="index.html" class="logo-link">
             <img src="AK_logo.png" alt="ProAthleteCare Logo" class="logo">
@@ -16,127 +15,169 @@
         <h1 class="project-title">ProAthleteCare</h1>
         <p class="tagline">Онлайн-тренінг та професійний супровід атлетів</p>
     </header>
-    
+
     <div class="content-wrapper">
         <nav class="sidebar">
             <a href="wellness.html">Wellness Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
             <a href="injury.html">Injury Story <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="load-season.html">Load Season <img src="AK_logo.png" class="menu-icon" alt="АК"></a> 
+            <a href="load-season.html">Load Season <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
             <a href="daily-individual.html">Daily Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            
             <a href="weekly-individual.html" class="active">Weekly Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            
             <a href="weight-control.html">Weight Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
             <a href="velocity-control.html">Velocity Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
         </nav>
-        
-       <main class="main-content">
-            <h2> Weekly Individual: Тижневий план та підсумки</h2>
-            
-            <div class="content-area">
-                <div class="proatlet-container">
-                    <h2>Планування Мікроциклу</h2>
-                    <p class="subtitle">Оберіть дні матчів (MD), щоб система автоматично розрахувала фази тренувань.</p>
 
-                    <form id="weekly-plan-form">
-                        
-                        <div class="microcycle-grid-wrapper">
-    <table class="microcycle-table">
-        <thead>
-            <tr>
-                <th>ПН</th><th>ВТ</th><th>СР</th><th>ЧТ</th><th>ПТ</th><th>СБ</th><th>НД</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr id="md-colors-row">
-                <td class="cycle-day" data-date="Mon" data-day-index="0"><span class="md-status">REST</span></td>
-                <td class="cycle-day" data-date="Tue" data-day-index="1"><span class="md-status">REST</span></td>
-                <td class="cycle-day" data-date="Wed" data-day-index="2"><span class="md-status">REST</span></td>
-                <td class="cycle-day" data-date="Thu" data-day-index="3"><span class="md-status">REST</span></td>
-                <td class="cycle-day" data-date="Fri" data-day-index="4"><span class="md-status">REST</span></td>
-                <td class="cycle-day" data-date="Sat" data-day-index="5"><span class="md-status">REST</span></td>
-                <td class="cycle-day" data-date="Sun" data-day-index="6"><span class="md-status">REST</span></td>
-            </tr>
-            
-            <tr id="activity-row">
-                <td data-day-index="0"><select name="activity_Mon" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч (MD)</option><option value="REST">Відпочинок</option></select></td>
-                <td data-day-index="1"><select name="activity_Tue" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч (MD)</option><option value="REST">Відпочинок</option></select></td>
-                <td data-day-index="2"><select name="activity_Wed" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч (MD)</option><option value="REST">Відпочинок</option></select></td>
-                <td data-day-index="3"><select name="activity_Thu" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч (MD)</option><option value="REST">Відпочинок</option></select></td>
-                <td data-day-index="4"><select name="activity_Fri" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч (MD)</option><option value="REST">Відпочинок</option></select></td>
-                <td data-day-index="5"><select name="activity_Sat" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч (MD)</option><option value="REST">Відпочинок</option></select></td>
-                <td data-day-index="6"><select name="activity_Sun" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч (MD)</option><option value="REST">Відпочинок</option></select></td>
-            </tr>
-            
-            <tr class="daily-tasks-row">
-                <td><textarea name="daily_task_0" placeholder="Вправи/Завдання"></textarea></td>
-                <td><textarea name="daily_task_1" placeholder="Вправи/Завдання"></textarea></td>
-                <td><textarea name="daily_task_2" placeholder="Вправи/Завдання"></textarea></td>
-                <td><textarea name="daily_task_3" placeholder="Вправи/Завдання"></textarea></td>
-                <td><textarea name="daily_task_4" placeholder="Вправи/Завдання"></textarea></td>
-                <td><textarea name="daily_task_5" placeholder="Вправи/Завдання"></textarea></td>
-                <td><textarea name="daily_task_6" placeholder="Вправи/Завдання"></textarea></td>
-            </tr>
-        </tbody>
-    </table>
-</div>
+        <main class="main-content">
+            <h2>🗓️ Weekly Individual: Планування мікроциклу</h2>
+            <p class="sub-header">Ваш тижневий план, цикли навантаження та шаблони завдань.</p>
 
-                        <div id="match-details-container" class="details-section">
-                            <h3>Деталі Матчу</h3>
-                            <div id="dynamic-match-fields">
-                            </div>
+            <form id="weekly-plan-form">
+                
+                <div class="table-container">
+                    <table class="weekly-table">
+                        <thead>
+                            <tr>
+                                <th class="table-header-day">День</th>
+                                <th>Пн</th><th>Вт</th><th>Ср</th><th>Чт</th><th>Пт</th><th>Сб</th><th>Нд</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr id="md-colors-row">
+                                <td>MD Status</td>
+                                <td class="cycle-day" data-day-index="0" id="day-status-0"><span class="md-status color-dark-grey">TRAIN</span></td>
+                                <td class="cycle-day" data-day-index="1" id="day-status-1"><span class="md-status color-dark-grey">TRAIN</span></td>
+                                <td class="cycle-day" data-day-index="2" id="day-status-2"><span class="md-status color-dark-grey">TRAIN</span></td>
+                                <td class="cycle-day" data-day-index="3" id="day-status-3"><span class="md-status color-dark-grey">TRAIN</span></td>
+                                <td class="cycle-day" data-day-index="4" id="day-status-4"><span class="md-status color-dark-grey">TRAIN</span></td>
+                                <td class="cycle-day" data-day-index="5" id="day-status-5"><span class="md-status color-dark-grey">TRAIN</span></td>
+                                <td class="cycle-day" data-day-index="6" id="day-status-6"><span class="md-status color-dark-grey">TRAIN</span></td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Активність</td>
+                                <td data-day-index="0">
+                                    <select name="activity_0" class="activity-type-select">
+                                        <option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option>
+                                    </select>
+                                </td>
+                                <td data-day-index="1">
+                                    <select name="activity_1" class="activity-type-select">
+                                        <option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option>
+                                    </select>
+                                </td>
+                                <td data-day-index="2">
+                                    <select name="activity_2" class="activity-type-select">
+                                        <option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option>
+                                    </select>
+                                </td>
+                                <td data-day-index="3">
+                                    <select name="activity_3" class="activity-type-select">
+                                        <option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option>
+                                    </select>
+                                </td>
+                                <td data-day-index="4">
+                                    <select name="activity_4" class="activity-type-select">
+                                        <option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option>
+                                    </select>
+                                </td>
+                                <td data-day-index="5">
+                                    <select name="activity_5" class="activity-type-select">
+                                        <option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option>
+                                    </select>
+                                </td>
+                                <td data-day-index="6">
+                                    <select name="activity_6" class="activity-type-select">
+                                        <option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option>
+                                    </select>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <section class="match-details-section">
+                    <h3>Деталі Матчу (автоматично з'являються при виборі "Матч")</h3>
+                    <div id="dynamic-match-fields" class="match-fields-container">
+                        </div>
+                </section>
+                
+                <section class="daily-task-section">
+                    <h3>📝 Завдання на День (Вправи та Протоколи)</h3>
+                    <p class="note-info">Тепер ви можете вводити окремі вправи зі своїми ключами відео (для Firebase) та параметрами.</p>
+                    <div class="tasks-grid">
+                        <div class="task-day-container" data-day-index="0">
+                            <h4>Понеділок (Пн)</h4>
+                            <div class="exercise-list-container" id="exercise-list-0"></div>
+                            <button type="button" class="gold-button add-exercise-button" data-day-index="0" data-stage="Pre-Training">+ Додати Розминку/Підготовку</button>
+                            <button type="button" class="gold-button add-exercise-button" data-day-index="0" data-stage="Main Training">+ Додати Основну Вправу</button>
+                            <button type="button" class="gold-button add-exercise-button" data-day-index="0" data-stage="Post-Training">+ Додати Відновлення/Завершення</button>
                         </div>
 
-                        <div id="recovery-details-container" class="details-section">
-    <h3>Шаблони Завдань за Фазами Циклу (Автоматичне підтягування)</h3>
-    
-<div class="cycle-task-block">
-    <h4>MD+2 (Відновлення/Вихідний)</h4>
-    <label>Завдання MD+2:</label>
-    <textarea name="tasks_md_plus_2" placeholder="Ролінг (10 хв), Стречінг (15 хв), Мобілізація суглобів"></textarea>
-</div>
+                        <div class="task-day-container" data-day-index="1">
+                            <h4>Вівторок (Вт)</h4>
+                            <div class="exercise-list-container" id="exercise-list-1"></div>
+                            <button type="button" class="gold-button add-exercise-button" data-day-index="1" data-stage="Pre-Training">+ Додати Розминку/Підготовку</button>
+                            <button type="button" class="gold-button add-exercise-button" data-day-index="1" data-stage="Main Training">+ Додати Основну Вправу</button>
+                            <button type="button" class="gold-button add-exercise-button" data-day-index="1" data-stage="Post-Training">+ Додати Відновлення/Завершення</button>
+                        </div>
+                        
+                         <div class="task-day-container" data-day-index="2">
+                            <h4>Середа (Ср)</h4>
+                            <div class="exercise-list-container" id="exercise-list-2"></div>
+                            <button type="button" class="gold-button add-exercise-button" data-day-index="2" data-stage="Pre-Training">+ Додати Розминку/Підготовку</button>
+                            <button type="button" class="gold-button add-exercise-button" data-day-index="2" data-stage="Main Training">+ Додати Основну Вправу</button>
+                            <button type="button" class="gold-button add-exercise-button" data-day-index="2" data-stage="Post-Training">+ Додати Відновлення/Завершення</button>
+                        </div>
+                        
+                         <div class="task-day-container" data-day-index="3">
+                            <h4>Четвер (Чт)</h4>
+                            <div class="exercise-list-container" id="exercise-list-3"></div>
+                            <button type="button" class="gold-button add-exercise-button" data-day-index="3" data-stage="Pre-Training">+ Додати Розминку/Підготовку</button>
+                            <button type="button" class="gold-button add-exercise-button" data-day-index="3" data-stage="Main Training">+ Додати Основну Вправу</button>
+                            <button type="button" class="gold-button add-exercise-button" data-day-index="3" data-stage="Post-Training">+ Додати Відновлення/Завершення</button>
+                        </div>
+                        
+                         <div class="task-day-container" data-day-index="4">
+                            <h4>П’ятниця (Пт)</h4>
+                            <div class="exercise-list-container" id="exercise-list-4"></div>
+                            <button type="button" class="gold-button add-exercise-button" data-day-index="4" data-stage="Pre-Training">+ Додати Розминку/Підготовку</button>
+                            <button type="button" class="gold-button add-exercise-button" data-day-index="4" data-stage="Main Training">+ Додати Основну Вправу</button>
+                            <button type="button" class="gold-button add-exercise-button" data-day-index="4" data-stage="Post-Training">+ Додати Відновлення/Завершення</button>
+                        </div>
+                        
+                         <div class="task-day-container" data-day-index="5">
+                            <h4>Субота (Сб)</h4>
+                            <div class="exercise-list-container" id="exercise-list-5"></div>
+                            <button type="button" class="gold-button add-exercise-button" data-day-index="5" data-stage="Pre-Training">+ Додати Розминку/Підготовку</button>
+                            <button type="button" class="gold-button add-exercise-button" data-day-index="5" data-stage="Main Training">+ Додати Основну Вправу</button>
+                            <button type="button" class="gold-button add-exercise-button" data-day-index="5" data-stage="Post-Training">+ Додати Відновлення/Завершення</button>
+                        </div>
+                        
+                         <div class="task-day-container" data-day-index="6">
+                            <h4>Неділя (Нд)</h4>
+                            <div class="exercise-list-container" id="exercise-list-6"></div>
+                            <button type="button" class="gold-button add-exercise-button" data-day-index="6" data-stage="Pre-Training">+ Додати Розминку/Підготовку</button>
+                            <button type="button" class="gold-button add-exercise-button" data-day-index="6" data-stage="Main Training">+ Додати Основну Вправу</button>
+                            <button type="button" class="gold-button add-exercise-button" data-day-index="6" data-stage="Post-Training">+ Додати Відновлення/Завершення</button>
+                        </div>
 
-<div class="cycle-task-block">
-    <h4>MD+3 (Загальне Тренування)</h4>
-    <label>Завдання MD+3:</label>
-    <textarea name="tasks_md_plus_3" id="tasks-md-plus-3" placeholder="Загальнокомандне тренування: Фокус на техніку/тактику."></textarea>
-</div>
-<div class="cycle-task-block">
-    <h4>MD+1 (Активне Відновлення)</h4>
-    <label>Завдання MD+1:</label>
-    <textarea name="tasks_md_plus_1" placeholder="Ролінг (10 хв), Мобілізація, Превентивні вправи, Темпова пробіжка після тренування"></textarea>
-</div>
+                    </div>
+                </section>
+                
+                <section class="template-section" style="display:none;">
+                    </section>
 
-<div class="cycle-task-block">
-    <h4>MD-4 (Силовий Розвиток/Активування)</h4>
-    <label>Завдання MD-4:</label>
-    <textarea name="tasks_md_minus_4" placeholder="Силова активація до тренувань, Вправи на розвиток вибухової сили"></textarea>
-</div>
-
-<div class="cycle-task-block">
-    <h4>MD-3 (Розвиток CORE/Швидкість)</h4>
-    <label>Завдання MD-3:</label>
-    <textarea name="tasks_md_minus_3" placeholder="Core до тренувань, та спринти після"></textarea>
-</div>
-
-<div class="cycle-task-block">
-    <h4>MD-2 (Спеціальна Сила/Верх Тіла)</h4>
-    <label>Завдання MD-2:</label>
-    <textarea name="tasks_md_minus_2" placeholder="Масаж на ролах, Превентивні вправи, Зал на верхню частину тіла"></textarea>
-</div>
-
-<div class="cycle-task-block">
-    <h4>MD-1 (Передматчева Підготовка)</h4>
-    <label>Завдання MD-1:</label>
-    <textarea name="tasks_md_minus_1" placeholder="Нейро активація до тренування, Легка ігрова розминка"></textarea>
-</div>
-                        <button type="submit" class="save-button">Зберегти Тижневий План</button>
-                    </form>
+                <div class="form-actions">
+                    <button type="submit" class="save-button gold-button">Зберегти Тижневий План</button>
                 </div>
-            </div>
+            </form>
         </main>
     </div>
 
-    <script src="weekly-individual.js"></script> 
+    <footer>
+        &copy; 2025 ProAthleteCare. Створено з Gemini.
+    </footer>
+
+    <script src="weekly-individual.js"></script>
 </body>
 </html>
