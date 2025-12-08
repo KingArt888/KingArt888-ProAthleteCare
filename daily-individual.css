@@ -1,0 +1,43 @@
+:root {
+    --proatlet-gold: #FFD700; /* Чистий золотий */
+    --proatlet-black: #121212;
+}
+body {
+    background-color: var(--proatlet-black);
+    color: #CCCCCC; /* Світло-сірий текст */
+}
+.gold-text {
+    color: var(--proatlet-gold) !important;
+}
+.gold-button {
+    background-color: var(--proatlet-gold);
+    color: var(--proatlet-black);
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.tasks-box {
+    background: #1f1f1f;
+    padding: 15px;
+    border-left: 5px solid var(--proatlet-gold);
+    white-space: pre-wrap;
+    font-family: monospace;
+}
+.video-placeholder {
+    border: 1px dashed var(--proatlet-gold);
+    padding: 20px;
+    margin: 20px 0;
+    text-align: center;
+}
+.md-status-label {
+    /* Приклад стилю для MD-фаз */
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 3px;
+    display: inline-block;
+}
+/* Приклад кольорів MD-фаз */
+.color-red { background-color: #ff4d4d; color: black; }
+.color-dark-green { background-color: #008000; color: white; }
+/* і так далі для всіх MD-фаз */
