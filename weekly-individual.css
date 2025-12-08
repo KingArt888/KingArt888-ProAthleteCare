@@ -4,7 +4,7 @@
     border-radius: 4px;
     font-weight: bold;
     display: inline-block;
-    color: #333; /* Текст на кольоровому фоні */
+    color: #333; 
 }
 
 /* Колірна палітра ProAtletCare */
@@ -35,7 +35,7 @@
     font-size: 1.1em;
 }
 
-/* --- СТИЛІ ТАБЛИЦІ (ПОВЕРНУТО ЗОЛОТУ РАМКУ) --- */
+/* --- СТИЛІ ТАБЛИЦІ --- */
 .table-container {
     overflow-x: auto;
     margin-bottom: 30px;
@@ -44,36 +44,30 @@
 .weekly-table {
     width: 100%;
     border-collapse: collapse;
-    /* Золота рамка для ProAtletCare */
     border: 2px solid #FFD700; 
 }
 
 .weekly-table th, 
 .weekly-table td {
-    border: 1px solid #444; /* Чорні/сірі внутрішні роздільники */
+    border: 1px solid #444; 
     padding: 10px;
     text-align: center;
-    background-color: #1a1a1a; /* Чорний фон для клітинок */
+    background-color: #1a1a1a; 
 }
 
 .weekly-table thead th {
     background-color: #000;
-    color: #FFD700; /* Золотий текст у заголовку */
+    color: #FFD700; 
     font-weight: bold;
 }
-/* ------------------------------------------- */
 
-/* --- СТИЛІ СІТКИ ЗАВДАНЬ ТА ШАБЛОНІВ (без змін) --- */
+/* --- СТИЛІ СІТКИ ЗАВДАНЬ ТА ШАБЛОНІВ --- */
 .tasks-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 20px;
     margin-top: 20px;
 }
-
-/* ... (інші стилі шаблонів) ... */
-
-/* [Продовження стилів weekly-individual.css...] */
 .template-stage-header {
     color: #FFD700; 
     margin-top: 15px;
@@ -100,9 +94,6 @@
     flex-grow: 1;
     transition: background-color 0.2s, border-color 0.2s;
 }
-.template-category-button:hover {
-    background-color: #555;
-}
 .template-category-button.active-template {
     background-color: #FFD700;
     color: #333;
@@ -119,85 +110,9 @@
     padding: 3px 8px;
     cursor: pointer;
     line-height: 1;
-    transition: background-color 0.2s;
-}
-.count-control-btn:hover {
-    background-color: #6a6a6a;
-}
-.count-minus {
-    border-top-left-radius: 4px;
-    border-bottom-left-radius: 4px;
-}
-.count-plus {
-    border-top-right-radius: 4px;
-    border-bottom-right-radius: 4px;
-}
-.add-manual-exercise-btn {
-    background-color: #008CBA;
-    color: white;
-    border: none;
-    padding: 4px 8px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9em;
 }
 
-/* --- СТИЛІ ЗГЕНЕРОВАНИХ ВПРАВ --- */
-.generated-exercises-list {
-    margin-top: 20px;
-    border-top: 1px solid #444;
-    padding-top: 10px;
-}
-.generated-exercises-list h4 {
-    color: #FFF;
-    font-size: 1em;
-    margin-bottom: 10px;
-}
-.exercise-item {
-    background-color: #252525;
-    border: 1px solid #383838;
-    padding: 10px;
-    margin-bottom: 10px;
-    border-radius: 4px;
-}
-.exercise-item label {
-    display: block;
-    margin-top: 5px;
-    color: #AAAAAA;
-    font-size: 0.85em;
-}
-.exercise-item input[type="text"],
-.exercise-item textarea {
-    width: 95%;
-    background-color: #333;
-    color: #FFF;
-    border: 1px solid #555;
-    padding: 5px;
-    border-radius: 3px;
-    margin-bottom: 5px;
-}
-.exercise-actions {
-    margin-top: 10px;
-    display: flex;
-    gap: 5px;
-}
-.remove-btn, .replace-btn {
-    background-color: #555;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    cursor: pointer;
-    border-radius: 3px;
-    font-size: 0.8em;
-}
-.remove-btn {
-    background-color: #CC3333;
-}
-.replace-btn {
-    background-color: #007bff;
-}
-
-/* --- СТИЛІ МОДАЛЬНОГО ВІКНА (ПЕРЕНЕСЕНО З HTML) --- */
+/* --- СТИЛІ МОДАЛЬНОГО ВІКНА --- */
 .modal {
     display: none; 
     position: fixed;
@@ -242,7 +157,6 @@
     padding: 5px 10px;
     cursor: pointer;
     border-radius: 4px;
-    transition: background-color 0.2s;
 }
 .quality-filter-btn:hover, .quality-filter-btn.active {
     background-color: #FFD700;
@@ -259,30 +173,12 @@
     border: 1px solid #777;
     border-radius: 4px;
     background-color: #444;
-    display: flex;
-    align-items: flex-start;
     cursor: pointer;
-    transition: background-color 0.2s;
-}
-.exercise-select-item label {
-    flex-grow: 1;
-    cursor: pointer;
-    padding-left: 10px;
 }
 .exercise-select-item.selected-item {
     border: 1px solid #FFD700; 
     background-color: #383838; 
     box-shadow: 0 0 5px #FFD700;
-}
-.exercise-checkbox {
-     width: 20px;
-     height: 20px;
-     margin-top: 5px;
-     flex-shrink: 0;
-}
-.media-hint {
-    font-size: 0.8em;
-    color: #AAAAAA;
 }
 .gold-button {
     background-color: #FFD700;
@@ -292,44 +188,21 @@
     cursor: pointer;
     border-radius: 4px;
     font-weight: bold;
-    transition: opacity 0.2s;
 }
 
 /* ======================================================= */
-/* ====== АДАПТИВНІСТЬ ДЛЯ MOBILE (як Daily Individual) ====== */
+/* ====== АДАПТИВНІСТЬ ДЛЯ MOBILE (СКОПІЙОВАНО З daily-individual.css) ====== */
 /* ======================================================= */
 
-/* Кнопка Меню */
-.menu-toggle {
-    display: none; /* Приховуємо на десктопі */
-    background: #000;
-    color: #FFD700;
-    border: 1px solid #FFD700;
-    padding: 10px 15px;
-    font-size: 1.5em;
-    cursor: pointer;
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    z-index: 101;
-    border-radius: 4px;
-}
-
-/* Загальна обгортка контенту для десктопу (Grid) */
+/* ЗАГАЛЬНА ОБГОРТКА КОНТЕНТУ ДЛЯ ДЕСКТОПУ (GRID) */
 .content-wrapper {
     display: grid;
-    grid-template-columns: 250px 1fr; /* Сайдбар 250px, контент решта */
+    grid-template-columns: 250px 1fr; 
     gap: 20px;
+    padding-top: 20px; 
 }
 
-/* Основний контент для зсуву на мобільному */
-.main-content {
-    padding: 20px;
-    background-color: #0d0d0d;
-    min-height: 80vh;
-}
-
-/* Сайдбар */
+/* САЙДБАР (на десктопі) */
 .sidebar {
     padding: 20px 0;
     background-color: #1a1a1a;
@@ -349,45 +222,101 @@
     padding-left: 16px;
 }
 
+/* 1. ПРИХОВУЄМО КНОПКУ МЕНЮ НА ДЕСКТОПІ ПРИМУСОВО */
+.menu-toggle {
+    display: none !important; 
+}
+
+
 /* Медіа-запит для мобільних пристроїв (до 768px) */
 @media (max-width: 768px) {
-    /* Робимо header адаптивним */
+    
+    /* ФІКСОВАНА ШАПКА */
     header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 1000; 
+        background-color: #000; 
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5); 
+        
         display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        padding-top: 60px; /* Місце для кнопки меню */
-        position: relative;
+        align-items: center; 
+        justify-content: flex-start;
+        padding: 10px 60px 5px 10px; 
     }
 
-    /* Відображаємо кнопку меню */
-    .menu-toggle {
-        display: block;
+    /* ОБМЕЖЕННЯ РОЗМІРУ ОСНОВНОГО ЛОГОТИПУ У ШАПЦІ */
+    header .logo { 
+        width: 40px; 
+        height: 40px;
     }
-
-    /* На мобільних пристроях приховуємо сайдбар і робимо основний контент на всю ширину */
+    
+    header .project-title {
+        font-size: 1.1em; 
+        margin-left: 10px;
+        flex-shrink: 1;
+    }
+    
+    header .tagline {
+        display: none; /* Приховуємо слоган */
+    }
+    
+    /* ЗСУВАЄМО ОСНОВНИЙ КОНТЕНТ */
     .content-wrapper {
-        grid-template-columns: 1fr;
+        padding-top: 70px; 
+        flex-direction: column; 
+        grid-template-columns: 1fr; /* Робимо контент на всю ширину */
     }
-
+    
+    /* СТИЛЬНА КНОПКА МЕНЮ (БУРГЕР): ВІДОБРАЖАЄМО ТА ФІКСУЄМО */
+    .menu-toggle {
+        display: block !important; /* ГАРАНТУЄМО ВІДОБРАЖЕННЯ */
+        position: fixed; /* ФІКСУЄМО ЇЇ НА ЕКРАНІ */
+        top: 15px; 
+        right: 15px;
+        z-index: 1010; /* ПЕРЕВІС У ШАРІ */
+        background: #FFD700; 
+        color: #000; 
+        border: none;
+        padding: 5px 10px;
+        font-size: 1.5em;
+        cursor: pointer;
+        border-radius: 6px; 
+        line-height: 1; 
+    }
+    
+    /* Фіксоване меню-оверлей */
     .sidebar {
         position: fixed;
         top: 0;
-        left: -250px; /* Приховано за екраном */
-        width: 250px;
-        height: 100%;
-        z-index: 100;
-        transition: left 0.3s ease;
-        padding-top: 70px; /* Відступ від верхнього краю */
-        overflow-y: auto;
-    }
-    
-    /* Клас, що додається JS для відкриття меню */
-    .sidebar.open {
         left: 0;
+        width: 80%; 
+        height: 100%;
+        padding-top: 80px; 
+        transform: translateX(-100%); 
+        transition: transform 0.3s ease-in-out;
+        z-index: 999;
+        background-color: #111; 
+        display: flex; 
+        flex-direction: column;
+        overflow-y: auto; 
     }
 
-    /* Зменшення розміру тексту в таблиці для кращого вміщення */
+    /* Клас для відображення меню */
+    .sidebar.active {
+        transform: translateX(0); 
+    }
+    
+    /* Робимо контент на всю ширину */
+    .main-content {
+        width: 100%; 
+        padding: 10px; 
+        margin-left: 0; 
+    }
+
+    /* Адаптуємо таблицю */
     .weekly-table th,
     .weekly-table td {
         padding: 8px 4px;
@@ -397,7 +326,7 @@
         font-size: 0.8em;
     }
     .table-header-day {
-        min-width: 70px; /* Фіксуємо ширину першого стовпця */
+        min-width: 70px; 
     }
 
     /* Змушуємо сітку шаблонів переходити на один стовпець */
