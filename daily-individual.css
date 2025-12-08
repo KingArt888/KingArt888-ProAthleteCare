@@ -2,7 +2,7 @@
 
 /* --- ЗАГАЛЬНІ СТИЛІ --- */
 
-/* 1. ПРИХОВУЄМО КНОПКУ МЕНЮ НА ДЕСКТОПІ */
+/* 1. ПРИХОВУЄМО КНОПКУ МЕНЮ НА ДЕСКТОПІ ПРИМУСОВО */
 .menu-toggle {
     display: none !important; 
 }
@@ -219,9 +219,9 @@ input[type="checkbox"]:checked::after {
         flex-direction: column; 
     }
     
-    /* СТИЛЬНА КНОПКА МЕНЮ (БУРГЕР): ТУТ ВОНА ВІДОБРАЖАЄТЬСЯ */
+    /* СТИЛЬНА КНОПКА МЕНЮ (БУРГЕР): ВІДОБРАЖАЄМО ТА ФІКСУЄМО */
     .menu-toggle {
-        display: block !important; /* ПРИМУСОВЕ ВІДОБРАЖЕННЯ */
+        display: block !important; /* ГАРАНТУЄМО ВІДОБРАЖЕННЯ */
         position: fixed; /* ФІКСУЄМО ЇЇ НА ЕКРАНІ */
         top: 15px; 
         right: 15px;
