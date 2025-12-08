@@ -1,9 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Константи для ProAthleteCare
     const STORAGE_KEY = 'weeklyPlanData';
+    // Назви днів, починаючи з Понеділка (індекс 0)
     const dayNames = ['Понеділок', 'Вівторок', 'Середа', 'Четвер', 'П’ятниця', 'Субота', 'Неділя'];
     
-    // Мапа кольорів (частина, що використовується для статусу)
+    // Мапа кольорів та описів (використовується для статусу)
     const COLOR_MAP = {
         'MD': { status: 'MD (Матч)', colorClass: 'color-red' },
         'MD+1': { status: 'MD+1 (Легке Відновлення)', colorClass: 'color-dark-green' }, 
@@ -17,12 +18,11 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const container = document.getElementById('daily-plan-view');
-    if (!container) return; // Захист від відсутності елемента
+    if (!container) return; 
 
-    // --- 1. Визначення сьогоднішнього дня ---
-    // new Date().getDay() повертає 0 для НД, 1 для ПН... 6 для СБ
+    // --- 1. Визначення сьогоднішнього дня (0 = ПН, 6 = НД) ---
     let todayIndex = new Date().getDay();
-    // Перетворюємо: НД (0) стає 6, ПН (1) стає 0, ВТ (2) стає 1, і т.д.
+    // Коригуємо індекс: НД (0) -> 6, ПН (1) -> 0, ...
     todayIndex = (todayIndex === 0) ? 6 : todayIndex - 1; 
 
     const savedData = localStorage.getItem(STORAGE_KEY);
@@ -32,17 +32,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const taskKey = `daily_task_${todayIndex}`;
     const activityKey = `activity_${todayIndex}`;
     
-    // --- 2. Витягнення даних ---
     let dailyTaskContent = planData[taskKey] || '';
     let activityType = planData[activityKey] || 'TRAIN';
     let isPlanActive = Object.keys(planData).length > 0;
 
-    // Якщо даних немає, відображаємо повідомлення
-    if (!isPlanActive || dailyTaskContent === '') {
+    // --- 2. Обробка відсутності даних ---
+    if (!isPlanActive || dailyTaskContent === '' || dailyTaskContent.includes('Оберіть МАТЧ для активації')) {
         container.innerHTML = `
             <div class="daily-card error-card">
-                <h3 class="gold-text">⚠️ Дані відсутні</h3>
-                <p>Не вдалося завантажити індивідуальний план. Будь ласка, перевірте та збережіть свій тижневий мікроцикл у розділі 
+                <h3 class="gold-text">⚠️ План на сьогодні не встановлено</h3>
+                <p>Не вдалося завантажити індивідуальний протокол на ${dayName}. Будь ласка, перевірте, чи був збережений тижневий план у розділі 
                 <a href="weekly-individual.html" class="gold-link">Weekly Individual</a>.</p>
             </div>
         `;
@@ -50,24 +49,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- 3. Визначення статусу MD для відображення ---
-    let statusMatch = dailyTaskContent.match(/\*\*Фаза: (MD[+-]?\d?|MD|REST|TRAIN)\*\*/);
+    // Витягуємо статус з вмісту, оскільки це найнадійніше джерело фази
+    const statusMatch = dailyTaskContent.match(/\*\*Фаза: (MD[+-]?\d?|MD|REST|TRAIN)\*\*/);
     let statusText = statusMatch ? statusMatch[1] : (activityType === 'MATCH' ? 'MD' : 'TRAIN');
     const statusStyle = COLOR_MAP[statusText] || COLOR_MAP['TRAIN'];
     
     // --- 4. Генерація HTML контенту ---
     
-    // Відео для тесту (Placeholder)
+    // Відео для тесту/інструкції
     const videoEmbed = `
         <div class="video-placeholder">
             <h4 class="gold-text">🎥 ВІДЕО-ІНСТРУКЦІЯ НА ДЕНЬ</h4>
             <a href="https://youtube.com/your-test-video-link" target="_blank" class="gold-button">
-                ПЕРЕГЛЯНУТИ ВІДЕО ТА ФІЛОСОФІЮ ДНЯ
+                ПЕРЕГЛЯНУТИ ВІДЕО: МЕТА ФАЗИ ${statusText}
             </a>
-            <p class="small-text">Ви, як тренер, маєте можливість завантажити відео, що пояснює мету та техніку тренування фази **${statusText}**.</p>
+            <p class="small-text">Цільове відео, що пояснює філософію та акценти тренування, розробленого Куликом Артемом.</p>
         </div>
     `;
 
-    // Деталі матчу
+    // Деталі матчу (якщо це MD)
     let matchDetailsHTML = '';
     if (activityType === 'MATCH') {
         matchDetailsHTML = `
@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const outputHTML = `
         <div class="daily-card">
-            <p class="day-of-week"><span class="gold-text">Сьогодні:</span> ${dayName}</p>
+            <p class="day-of-week"><span class="gold-text">Поточний день:</span> ${dayName}</p>
             <div class="status-indicator">
                 <span class="md-status-label ${statusStyle.colorClass}">${statusStyle.status}</span>
             </div>
