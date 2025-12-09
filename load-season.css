@@ -1,3 +1,7 @@
+/* =========================================================================
+    1. ОСНОВНА СТРУКТУРА ТА КАРТКИ
+    ========================================================================= */
+
 .dashboard-container {
     display: flex;
     gap: 30px;
@@ -23,7 +27,10 @@
     min-width: 350px; 
 }
 
-/* Стилі для елементів форми */
+/* =========================================================================
+    2. СТИЛІ ФОРМИ ТА КНОПОК
+    ========================================================================= */
+
 label {
     display: block;
     margin-bottom: 8px;
@@ -69,7 +76,7 @@ input[type="date"]:focus, input[type="number"]:focus {
 }
 
 /* =========================================================================
-    3. СТИЛІ RPE GROUP 
+    3. СТИЛІ RPE GROUP (БЛИСКАВКИ)
     ========================================================================= */
 
 .rpe-group {
@@ -115,6 +122,7 @@ input[type="date"]:focus, input[type="number"]:focus {
 }
 .rpe-group label::before { content: '⚡'; padding: 0 1px; display: block; }
 
+/* КОЛЬОРОВА ЛОГІКА RPE */
 .rpe-group input[value="1"]:checked ~ label,
 .rpe-group input[value="2"]:checked ~ label,
 .rpe-group input[value="3"]:checked ~ label,
@@ -144,7 +152,7 @@ input[type="date"]:focus, input[type="number"]:focus {
 }
 
 /* =========================================================================
-    4. СТИЛІ СПІДОМЕТРА ACWR (Без змін)
+    4. СТИЛІ СПІДОМЕТРА ACWR 
     ========================================================================= */
 
 .speedometer-widget {
@@ -256,7 +264,26 @@ input[type="date"]:focus, input[type="number"]:focus {
 .status-danger { color: #d9534f; font-weight: bold; }
 
 /* =========================================================================
-    6. ВИПРАВЛЕННЯ СТРИБКІВ КНОПКИ (СТАБІЛІЗАЦІЯ)
+    5. СТИЛІ ГРАФІКІВ
+    ========================================================================= */
+
+.chart-card {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #1E1E1E;
+    border-radius: 10px;
+    width: 100%; 
+}
+
+.chart-card h4 {
+    color: #4CAF50; 
+    margin-top: 0;
+    border-bottom: 1px solid #333;
+    padding-bottom: 10px;
+}
+
+/* =========================================================================
+    6. ВИПРАВЛЕННЯ СТРИБКІВ КНОПКИ (СТАБІЛІЗАЦІЯ ПОВІДОМЛЕНЬ)
     ========================================================================= */
 
 .status-box {
@@ -296,7 +323,7 @@ input[type="date"]:focus, input[type="number"]:focus {
 }
 
 /* =========================================================================
-    7. АДАПТИВНІСТЬ (УСУНЕННЯ МИГОТІННЯ ТА МОБІЛЬНИЙ ВИГЛЯД)
+    7. АДАПТИВНІСТЬ (МОБІЛЬНИЙ ВИГЛЯД ТА УСУНЕННЯ МИГОТІННЯ)
     ========================================================================= */
 
 /* БРЕЙКПОЙНТ ДЛЯ КОНСОЛІ (Усунення миготіння) */
@@ -323,9 +350,9 @@ input[type="date"]:focus, input[type="number"]:focus {
         background-color: #000;
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
         
-        /* ГНУЧКЕ РОЗТАШУВАННЯ З КНОПКОЮ СПРАВА */
         display: flex;
         align-items: center;
+        /* КНОПКА СПРАВА, ЛОГО + ТИТУЛ ЗЛІВА */
         justify-content: space-between; 
         padding: 10px 15px 5px 10px;
     }
@@ -358,11 +385,12 @@ input[type="date"]:focus, input[type="number"]:focus {
         border-radius: 6px; 
         line-height: 1; 
         margin-left: 10px;
+        z-index: 1010; 
     }
     
     /* ЗСУВАЄМО ОСНОВНИЙ КОНТЕНТ */
     .content-wrapper {
-        padding-top: 65px; /* Висота фіксованого header */
+        padding-top: 65px; 
         flex-direction: column;
         width: 100%;
     }
@@ -381,7 +409,7 @@ input[type="date"]:focus, input[type="number"]:focus {
         width: 80%; 
         max-width: 300px;
         height: 100%;
-        padding-top: 60px; /* Відступ під шапкою */
+        padding-top: 60px; 
         transform: translateX(-100%); 
         transition: transform 0.3s ease-in-out;
         z-index: 999;
@@ -395,8 +423,8 @@ input[type="date"]:focus, input[type="number"]:focus {
     .sidebar.active {
         transform: translateX(0); 
     }
-
-    /* ... (Інші стилі мобільної версії) ... */
+    
+    /* Інші стилі для адаптивності */
     .form-card, .stats-card, .chart-card {
         padding: 15px;
     }
