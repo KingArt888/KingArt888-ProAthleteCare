@@ -6,31 +6,13 @@
 }
 
 /* =========================================================================
-    0. ЗАГАЛЬНІ КОНТЕЙНЕРИ ТА ВИПРАВЛЕННЯ ЗМІЩЕННЯ ВПРАВО
-    ========================================================================= */
-
-.content-wrapper {
-    display: flex;
-    padding-top: 60px; /* Враховуємо висоту фіксованого header */
-    width: 100%; 
-}
-
-.main-content {
-    flex-grow: 1; /* КЛЮЧ: Займає весь доступний простір */
-    padding: 20px;
-    margin-left: 200px; /* Припускаємо, що sidebar має 200px ширини */
-}
-
-
-/* =========================================================================
-    1. ОСНОВНА СТРУКТУРА ТА КАРТКИ (ВИПРАВЛЕНО ШИРИНУ)
+    1. ОСНОВНА СТРУКТУРА ТА КАРТКИ
     ========================================================================= */
 
 .dashboard-container {
     display: flex;
     gap: 30px;
     flex-wrap: wrap; 
-    justify-content: flex-start; /* Переконаємося, що вміст притиснутий до лівого краю */
 }
 
 /* Стиль карток */
@@ -42,17 +24,15 @@
     margin-bottom: 20px;
 }
 
-/* !!! ВИПРАВЛЕННЯ: РОБИМО КОЛОНКИ ОДНАКОВИМИ (50% МІНУС ПОЛОВИНА GAP) !!! */
 .form-container {
-    flex: 1 1 calc(50% - 15px); 
+    width: 40%; 
     min-width: 320px; 
 }
 
 .stats-container {
-    flex: 1 1 calc(50% - 15px); 
+    flex: 1; 
     min-width: 350px; 
 }
-/* ========================================================================= */
 
 /* =========================================================================
     2. СТИЛІ ФОРМИ ТА КНОПОК
@@ -350,26 +330,18 @@ input[type="date"]:focus, input[type="number"]:focus {
 }
 
 /* =========================================================================
-    7. АДАПТИВНІСТЬ (МОБІЛЬНИЙ ВИГЛЯД)
+    7. АДАПТИВНІСТЬ (МОБІЛЬНИЙ ВИГЛЯД ТА ВИПРАВЛЕННЯ ПОЗИЦІЇ КНОПКИ)
     ========================================================================= */
 
-/* БРЕЙКПОЙНТ ДЛЯ КОНСОЛІ */
+/* БРЕЙКПОЙНТ ДЛЯ КОНСОЛІ (Усунення миготіння) */
 @media (max-width: 900px) {
     .dashboard-container {
         flex-direction: column;
     }
-    
-    /* На мобільних пристроях, нехай вони займають 100% */
+
     .form-container, .stats-container {
         width: 100%;
-        flex: 1 1 100%; 
         min-width: unset;
-    }
-    
-    /* ВИПРАВЛЕННЯ ЗМІЩЕННЯ ВПРАВО: Скидаємо margin-left для .main-content на мобільному */
-    .main-content {
-        margin-left: 0;
-        padding: 15px; /* Забезпечуємо відступи по краях */
     }
 }
 
@@ -387,10 +359,13 @@ input[type="date"]:focus, input[type="number"]:focus {
         
         display: flex;
         align-items: center;
+        /* Розділяємо ліву групу та кнопку-гамбургер */
         justify-content: space-between; 
+        /* Зменшуємо правий padding */
         padding: 10px 10px 5px 10px;
     }
 
+    /* ОБМЕЖЕННЯ РОЗМІРУ ОСНОВНОГО ЛОГОТИПУ У ШАПЦІ */
     header .logo { 
         width: 40px; 
         height: 40px;
@@ -421,7 +396,7 @@ input[type="date"]:focus, input[type="number"]:focus {
         border-radius: 6px; 
         line-height: 1; 
         
-        /* Зміщуємо кнопку вліво від краю */
+        /* !!! ВИПРАВЛЕННЯ: Зміщуємо кнопку вліво від краю на 20px !!! */
         margin-left: 10px;
         margin-right: 20px; 
         flex-shrink: 0;
@@ -434,6 +409,12 @@ input[type="date"]:focus, input[type="number"]:focus {
         width: 100%;
     }
     
+    .main-content {
+        padding: 15px;
+        width: 100%;
+        margin-left: 0;
+    }
+
     /* ФІКСОВАНЕ МЕНЮ-ОВЕРЛЕЙ */
     .sidebar {
         position: fixed;
@@ -457,11 +438,16 @@ input[type="date"]:focus, input[type="number"]:focus {
         transform: translateX(0); 
     }
 
+    /* Інші стилі для адаптивності */
     .form-card, .stats-card, .chart-card {
         padding: 15px;
     }
     .dashboard-container {
         gap: 15px;
+    }
+    .form-container, .stats-container {
+        min-width: unset;
+        width: 100%;
     }
 }
 
