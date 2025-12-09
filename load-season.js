@@ -245,7 +245,7 @@ function handleLoadFormSubmit(event) {
     const statusMessage = document.getElementById('form-status');
 
     if (!date || isNaN(duration) || isNaN(distance) || isNaN(rpe)) {
-        if (statusMessage) { // Додана перевірка на статус-бокс
+        if (statusMessage) { 
             statusMessage.textContent = 'Будь ласка, заповніть всі поля коректно.';
             statusMessage.className = 'status-box status-danger';
         }
