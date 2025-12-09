@@ -778,8 +778,25 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.target.id === 'exercise-selection-modal' || e.target.classList.contains('close-modal-btn')) {
                 closeExerciseModal();
             }
+        });/**
+ * Логіка для перемикання бічної панелі на мобільних пристроях
+ */
+function setupMenuToggle() {
+    const toggleButton = document.getElementById('menu-toggle-button');
+    const sidebar = document.getElementById('main-sidebar');
+
+    if (toggleButton && sidebar) {
+        toggleButton.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
         });
     }
+}
 
-    loadData();
+
+// Запуск при завантаженні сторінки
+document.addEventListener('DOMContentLoaded', () => {
+    loadAndDisplayDailyPlan();
+    setupMenuToggle(); 
+});
+    
 });
