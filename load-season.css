@@ -376,3 +376,11 @@ input[type="date"]:focus, input[type="number"]:focus {
         padding: 15px;
     }
 }
+.status-box {
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+    font-weight: bold;
+    min-height: 20px; /* Забезпечуємо мінімальну висоту, щоб не стрибало */
+}
