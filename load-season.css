@@ -202,40 +202,37 @@ input[type="date"]:focus, input[type="number"]:focus {
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
 }
 
-.gauge-display {
-    position: relative;
-    width: 280px; 
-    height: 140px; 
-    overflow: hidden;
-    margin-bottom: 20px;
-}
+@media (max-width: 450px) { 
+    /* Зменшуємо розмір спідометра, якщо екран занадто вузький */
+    .gauge-display {
+        width: 250px; /* Зменшуємо до 250px */
+        height: 125px; 
+    }
 
-/* Контейнер для кольорової дуги (Gauge Arc) */
-.gauge-arc {
-    position: absolute;
-    width: 280px; 
-    height: 280px;
-    border-radius: 50%;
-    top: 0;
-    left: 0;
-    
-    background: transparent;
-    border: 20px solid #333; /* Базовий темний колір для дуги */
-    
-    z-index: 5;
-    clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%);
-    transform: rotate(270deg); 
-}
+    .gauge-arc {
+        width: 250px; 
+        height: 250px;
+        border: 15px solid #333; /* Трохи тонше кільце */
+    }
 
-/* Накладений елемент для відображення кольорових зон */
-.gauge-arc::before {
-    content: '';
-    position: absolute;
-    top: -20px; 
-    left: -20px;
-    width: 280px; 
-    height: 280px;
-    border-radius: 50%;
+    .gauge-arc::before {
+        top: -15px; /* Коригуємо відповідно до нової товщини рамки */
+        left: -15px;
+        width: 250px;
+        height: 250px;
+        /* Коригуємо маску відповідно до нової товщини кільця */
+        mask: radial-gradient(transparent 105px, black 105px, black 125px, transparent 125px);
+        -webkit-mask: radial-gradient(transparent 105px, black 105px, black 125px, transparent 125px);
+    }
+
+    .gauge-needle {
+        height: 125px; /* Коригуємо висоту стрілки */
+    }
+
+    #acwr-value {
+        font-size: 2.8em; /* Трохи менший шрифт */
+    }
+
     
     /* КОЛЬОРОВИЙ ГРАДІЄНТ */
     background: conic-gradient(
