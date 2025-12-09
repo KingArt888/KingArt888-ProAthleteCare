@@ -14,7 +14,6 @@
 }
 
 .form-container {
-    /* ЗМЕНШЕНА ШИРИНА ДЛЯ КРАЩОЇ АДАПТИВНОСТІ */
     width: 40%; 
     min-width: 320px; 
 }
@@ -70,7 +69,7 @@ input[type="date"]:focus, input[type="number"]:focus {
 }
 
 /* =========================================================================
-    3. СТИЛІ RPE GROUP
+    3. СТИЛІ RPE GROUP 
     ========================================================================= */
 
 .rpe-group {
@@ -102,7 +101,6 @@ input[type="date"]:focus, input[type="number"]:focus {
     display: block; 
 }
 
-/* --- СТИЛЬ ЦИФР ЗВЕРХУ --- */
 .rpe-group label::after {
     content: attr(data-rpe); 
     position: absolute;
@@ -117,7 +115,6 @@ input[type="date"]:focus, input[type="number"]:focus {
 }
 .rpe-group label::before { content: '⚡'; padding: 0 1px; display: block; }
 
-/* ... (КОЛЬОРОВА ЛОГІКА RPE) ... */
 .rpe-group input[value="1"]:checked ~ label,
 .rpe-group input[value="2"]:checked ~ label,
 .rpe-group input[value="3"]:checked ~ label,
@@ -259,25 +256,6 @@ input[type="date"]:focus, input[type="number"]:focus {
 .status-danger { color: #d9534f; font-weight: bold; }
 
 /* =========================================================================
-    5. СТИЛІ ГРАФІКІВ (Без змін)
-    ========================================================================= */
-
-.chart-card {
-    margin-top: 20px;
-    padding: 20px;
-    background-color: #1E1E1E;
-    border-radius: 10px;
-    width: 100%; 
-}
-
-.chart-card h4 {
-    color: #4CAF50; 
-    margin-top: 0;
-    border-bottom: 1px solid #333;
-    padding-bottom: 10px;
-}
-
-/* =========================================================================
     6. ВИПРАВЛЕННЯ СТРИБКІВ КНОПКИ (СТАБІЛІЗАЦІЯ)
     ========================================================================= */
 
@@ -295,12 +273,11 @@ input[type="date"]:focus, input[type="number"]:focus {
     
     background-color: transparent;
     border: 1px solid transparent;
-    color: transparent; /* Ховаємо текст, коли повідомлення немає */
+    color: transparent; 
     padding: 0; 
     transition: all 0.3s;
 }
 
-/* Коли повідомлення з'являється */
 .status-box.status-safe, .status-box.status-danger {
     padding: 10px;
     color: inherit; 
@@ -325,7 +302,7 @@ input[type="date"]:focus, input[type="number"]:focus {
 /* БРЕЙКПОЙНТ ДЛЯ КОНСОЛІ (Усунення миготіння) */
 @media (max-width: 900px) {
     .dashboard-container {
-        flex-direction: column; /* Колонки одна під одною */
+        flex-direction: column;
     }
 
     .form-container, .stats-container {
@@ -336,19 +313,90 @@ input[type="date"]:focus, input[type="number"]:focus {
 
 /* МОБІЛЬНИЙ ВИГЛЯД (Менше 768px) */
 @media (max-width: 768px) {
-    /* ОСНОВНА СТРУКТУРА */
-    .sidebar {
-        display: none !important; 
+    /* ФІКСОВАНА ШАПКА */
+    header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 1000;
+        background-color: #000;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+        
+        /* ГНУЧКЕ РОЗТАШУВАННЯ З КНОПКОЮ СПРАВА */
+        display: flex;
+        align-items: center;
+        justify-content: space-between; 
+        padding: 10px 15px 5px 10px;
     }
+
+    header .logo { 
+        width: 40px; 
+        height: 40px;
+    }
+    
+    header .project-title {
+        font-size: 1.1em; 
+        margin-left: 10px;
+        flex-grow: 1; 
+        flex-shrink: 1;
+    }
+    
+    header .tagline {
+        display: none;
+    }
+    
+    /* СТИЛЬНА КНОПКА МЕНЮ (БУРГЕР) */
+    .menu-toggle {
+        display: block !important;
+        background: #FFD700;
+        color: #000;
+        border: none;
+        padding: 5px 10px;
+        font-size: 1.5em;
+        cursor: pointer;
+        border-radius: 6px; 
+        line-height: 1; 
+        margin-left: 10px;
+    }
+    
+    /* ЗСУВАЄМО ОСНОВНИЙ КОНТЕНТ */
     .content-wrapper {
+        padding-top: 65px; /* Висота фіксованого header */
         flex-direction: column;
         width: 100%;
     }
+    
     .main-content {
         padding: 15px;
         width: 100%;
         margin-left: 0;
     }
+
+    /* ФІКСОВАНЕ МЕНЮ-ОВЕРЛЕЙ */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 80%; 
+        max-width: 300px;
+        height: 100%;
+        padding-top: 60px; /* Відступ під шапкою */
+        transform: translateX(-100%); 
+        transition: transform 0.3s ease-in-out;
+        z-index: 999;
+        background-color: #111; 
+        display: flex; 
+        flex-direction: column;
+        box-shadow: 4px 0 10px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Клас для відображення меню */
+    .sidebar.active {
+        transform: translateX(0); 
+    }
+
+    /* ... (Інші стилі мобільної версії) ... */
     .form-card, .stats-card, .chart-card {
         padding: 15px;
     }
