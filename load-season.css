@@ -1,130 +1,130 @@
 .dashboard-container {
-    display: flex;
-    gap: 30px;
-    flex-wrap: wrap; 
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap; 
 }
 
 /* Стиль карток */
 .form-card, .stats-card, .chart-card {
-    background-color: #1E1E1E; 
-    padding: 25px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
-    margin-bottom: 20px;
+    background-color: #1E1E1E; 
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    margin-bottom: 20px;
 }
 
 .form-container {
-    width: 45%; 
-    min-width: 350px;
+    width: 45%; 
+    min-width: 350px;
 }
 
 .stats-container {
-    flex: 1; 
-    min-width: 400px;
+    flex: 1; 
+    min-width: 400px;
 }
 
 /* Стилі для елементів форми */
 label {
-    display: block;
-    margin-bottom: 8px;
-    color: #AAAAAA;
-    font-weight: 500;
+    display: block;
+    margin-bottom: 8px;
+    color: #AAAAAA;
+    font-weight: 500;
 }
 
 input[type="date"], input[type="number"] {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 20px;
-    background-color: #1a1a1a; 
-    border: 1px solid #333;
-    color: #CCCCCC;
-    border-radius: 5px;
-    box-sizing: border-box;
-    transition: border-color 0.3s;
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    background-color: #1a1a1a; 
+    border: 1px solid #333;
+    color: #CCCCCC;
+    border-radius: 5px;
+    box-sizing: border-box;
+    transition: border-color 0.3s;
 }
 
 input[type="date"]:focus, input[type="number"]:focus {
-    border-color: #FFD700; 
-    outline: none;
+    border-color: #FFD700; 
+    outline: none;
 }
 
 /* --- ЗОЛОТА КНОПКА ЗБЕРЕГТИ --- */
 .submit-button {
-    background-color: #FFD700; 
-    color: #121212; 
-    padding: 12px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1.1em;
-    font-weight: bold; 
-    width: 100%;
-    transition: background-color 0.3s, box-shadow 0.3s;
-    margin-top: 10px;
+    background-color: #FFD700; 
+    color: #121212; 
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.1em;
+    font-weight: bold; 
+    width: 100%;
+    transition: background-color 0.3s, box-shadow 0.3s;
+    margin-top: 10px;
 }
 
 .submit-button:hover {
-    background-color: #E6B800; 
-    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); 
+    background-color: #E6B800; 
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); 
 }
 
 /* =========================================================================
-   3. СТИЛІ RPE GROUP (1-10 - ВОГНИКИ З ЦИФРАМИ)
-   ========================================================================= */
+    3. СТИЛІ RPE GROUP (1-10 - ВОГНИКИ З ЦИФРАМИ)
+    ========================================================================= */
 
 .rpe-group {
-    display: flex;
-    flex-direction: row-reverse; 
-    justify-content: flex-end; 
-    align-items: flex-start;
-    margin-bottom: 20px;
-    background-color: #1a1a1a;
-    padding: 5px;
-    border-radius: 5px;
-    flex-wrap: wrap; 
+    display: flex;
+    flex-direction: row-reverse; 
+    justify-content: flex-end; 
+    align-items: flex-start;
+    margin-bottom: 20px;
+    background-color: #1a1a1a;
+    padding: 5px;
+    border-radius: 5px;
+    flex-wrap: wrap; 
 }
 
 .rpe-group input[type="radio"] {
-    display: none;
+    display: none;
 }
 
 .rpe-group label {
-    cursor: pointer;
-    font-size: 1.5em; 
-    
-    /* ВИПРАВЛЕННЯ РУХУ: Фіксуємо ширину та висоту в пікселях */
-    width: 30px;
-    height: 40px; 
-    flex-shrink: 0; 
-    
-    padding: 5px 0 0 0; 
-    margin: 0; 
-    text-align: center;
-    transition: color 0.3s, transform 0.2s;
-    color: #456545; 
-    position: relative; 
-    display: block; 
+    cursor: pointer;
+    font-size: 1.5em; 
+    
+    /* ВИПРАВЛЕННЯ РУХУ: Фіксуємо ширину та висоту в пікселях */
+    width: 30px;
+    height: 40px; 
+    flex-shrink: 0; 
+    
+    padding: 5px 0 0 0; 
+    margin: 0; 
+    text-align: center;
+    transition: color 0.3s, transform 0.2s;
+    color: #456545; 
+    position: relative; 
+    display: block; 
 }
 
 /* --- СТИЛЬ ЦИФР ЗВЕРХУ --- */
 .rpe-group label::after {
-    content: attr(data-rpe); /* ПОВЕРНЕННЯ ЦИФР */
-    position: absolute;
-    top: -15px; 
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 0.6em; 
-    font-weight: bold;
-    color: #888888; 
-    transition: color 0.3s;
-    z-index: 5; 
+    content: attr(data-rpe); /* ПОВЕРНЕННЯ ЦИФР */
+    position: absolute;
+    top: -15px; 
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.6em; 
+    font-weight: bold;
+    color: #888888; 
+    transition: color 0.3s;
+    z-index: 5; 
 }
 
 /* Стиль самої іконки */
 .rpe-group label::before {
-    content: '⚡'; 
-    padding: 0 1px;
-    display: block;
+    content: '⚡'; 
+    padding: 0 1px;
+    display: block;
 }
 
 /* --- КОЛЬОРОВА ЛОГІКА RPE (АКТИВНИЙ СТАН) --- */
@@ -134,7 +134,7 @@ input[type="date"]:focus, input[type="number"]:focus {
 .rpe-group input[value="2"]:checked ~ label,
 .rpe-group input[value="3"]:checked ~ label,
 .rpe-group input[value="4"]:checked ~ label {
-    color: #5cb85c; 
+    color: #5cb85c; 
 }
 
 /* Підсвічуємо цифри відповідним кольором */
@@ -142,7 +142,7 @@ input[type="date"]:focus, input[type="number"]:focus {
 .rpe-group input[value="2"]:checked ~ label::after,
 .rpe-group input[value="3"]:checked ~ label::after,
 .rpe-group input[value="4"]:checked ~ label::after {
-    color: #5cb85c; 
+    color: #5cb85c; 
 }
 
 
@@ -150,239 +150,261 @@ input[type="date"]:focus, input[type="number"]:focus {
 .rpe-group input[value="5"]:checked ~ label,
 .rpe-group input[value="6"]:checked ~ label,
 .rpe-group input[value="7"]:checked ~ label{
-    color: #f0ad4e; 
+    color: #f0ad4e; 
 }
 .rpe-group input[value="5"]:checked ~ label::after,
 .rpe-group input[value="6"]:checked ~ label::after,
 .rpe-group input[value="7"]:checked ~ label::after {
-    color: #f0ad4e; 
+    color: #f0ad4e; 
 }
 
 /* 3. ПІДСВІЧУВАННЯ 9-10 (ЧЕРВОНИЙ) */
-.rpe-group input[value="8"]:checked ~ label, 
+.rpe-group input[value="8"]:checked ~ label, 
 .rpe-group input[value="9"]:checked ~ label,
 .rpe-group input[value="10"]:checked ~ label {
-    color: #d9534f; 
+    color: #d9534f; 
 }
-.rpe-group input[value="8"]:checked ~ label::after, 
+.rpe-group input[value="8"]:checked ~ label::after, 
 .rpe-group input[value="9"]:checked ~ label::after,
 .rpe-group input[value="10"]:checked ~ label::after {
-    color: #d9534f; 
+    color: #d9534f; 
 }
 
 /* 4. ЕФЕКТНИЙ ВІЗУАЛ (Застосовуємо до вибраної мітки) */
 .rpe-group input:checked + label {
-    /* ЗАЛИШАЄМО transform: none; та додаємо тінь */
-    transform: none; 
-    text-shadow: 0 0 10px currentColor, 0 0 20px rgba(255, 255, 255, 0.5); 
+    /* ЗАЛИШАЄМО transform: none; та додаємо тінь */
+    transform: none; 
+    text-shadow: 0 0 10px currentColor, 0 0 20px rgba(255, 255, 255, 0.5); 
 }
 
 /* При наведенні (Hover) робимо світло-зеленою */
 .rpe-group label:hover {
-    color: #5cb85c; 
+    color: #5cb85c; 
 }
 .rpe-group label:hover::after {
-    color: #5cb85c;
+    color: #5cb85c;
 }
 
 /* Запобігаємо конфлікту ховера з вибраним елементом */
 .rpe-group input:checked ~ label:hover {
-    color: inherit; 
+    color: inherit; 
 }
 .rpe-group input:checked ~ label:hover::after {
-    color: inherit; 
+    color: inherit; 
 }
 /* =========================================================================
-   4. СТИЛІ СПІДОМЕТРА ACWR 
-   ========================================================================= */
+    4. СТИЛІ СПІДОМЕТРА ACWR 
+    ========================================================================= */
 
 .speedometer-widget {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-bottom: 30px;
-    padding: 20px;
-    border: 1px solid #333;
-    border-radius: 10px;
-    background-color: #1a1a1a; 
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    border: 1px solid #333;
+    border-radius: 10px;
+    background-color: #1a1a1a; 
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
 }
 
 .gauge-display {
-    position: relative;
-    width: 280px; 
-    height: 140px; 
-    overflow: hidden;
-    margin-bottom: 20px;
+    position: relative;
+    width: 280px; 
+    height: 140px; 
+    overflow: hidden;
+    margin-bottom: 20px;
 }
 
 /* Контейнер для кольорової дуги (Gauge Arc) */
 .gauge-arc {
-    position: absolute;
-    width: 280px; 
-    height: 280px;
-    border-radius: 50%;
-    top: 0;
-    left: 0;
-    
-    background: transparent;
-    border: 20px solid #333; 
-    
-    z-index: 5;
-    clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%);
-    transform: rotate(270deg); 
+    position: absolute;
+    width: 280px; 
+    height: 280px;
+    border-radius: 50%;
+    top: 0;
+    left: 0;
+    
+    background: transparent;
+    border: 20px solid #333; 
+    
+    z-index: 5;
+    clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%);
+    transform: rotate(270deg); 
 }
 
 /* Накладений елемент для відображення кольорових зон */
 .gauge-arc::before {
-    content: '';
-    position: absolute;
-    top: -20px; 
-    left: -20px;
-    width: 280px; 
-    height: 280px;
-    border-radius: 50%;
-    
-    /* КОЛЬОРОВИЙ ГРАДІЄНТ */
-    background: conic-gradient(
-        #d9534f 0% 15%, 
-        #f0ad4e 15% 30%, 
-        #5cb85c 30% 65%, 
-        #f0ad4e 65% 85%, 
-        #d9534f 85% 100% 
-    );
-    
-    /* Маскуємо, залишаючи лише товщину кільця */
-    mask: radial-gradient(transparent 120px, black 120px, black 140px, transparent 140px);
-    -webkit-mask: radial-gradient(transparent 120px, black 120px, black 140px, transparent 140px);
-    
-    z-index: 6;
-    clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%);
-    transform: rotate(0deg); 
+    content: '';
+    position: absolute;
+    top: -20px; 
+    left: -20px;
+    width: 280px; 
+    height: 280px;
+    border-radius: 50%;
+    
+    /* КОЛЬОРОВИЙ ГРАДІЄНТ */
+    background: conic-gradient(
+        #d9534f 0% 15%, 
+        #f0ad4e 15% 30%, 
+        #5cb85c 30% 65%, 
+        #f0ad4e 65% 85%, 
+        #d9534f 85% 100% 
+    );
+    
+    /* Маскуємо, залишаючи лише товщину кільця */
+    mask: radial-gradient(transparent 120px, black 120px, black 140px, transparent 140px);
+    -webkit-mask: radial-gradient(transparent 120px, black 120px, black 140px, transparent 140px);
+    
+    z-index: 6;
+    clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%);
+    transform: rotate(0deg); 
 }
 
 
 /* Стрілка та Pivot - Чіткіші Золоті Елементи */
 .gauge-needle-pivot {
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 18px; 
-    height: 18px;
-    background-color: #FFD700; 
-    border-radius: 50%;
-    z-index: 10;
-    box-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
-    border: 3px solid #1a1a1a; 
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 18px; 
+    height: 18px;
+    background-color: #FFD700; 
+    border-radius: 50%;
+    z-index: 10;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+    border: 3px solid #1a1a1a; 
 }
 
 .gauge-needle {
-    position: absolute;
-    bottom: 9px; 
-    left: 50%;
-    width: 3px; 
-    height: 140px; 
-    background-color: #FFD700; 
-    transform-origin: bottom center;
-    transition: transform 1.5s ease-out; 
-    border-radius: 3px;
-    z-index: 9;
-    transform: translateX(-50%) rotate(0deg); 
+    position: absolute;
+    bottom: 9px; 
+    left: 50%;
+    width: 3px; 
+    height: 140px; 
+    background-color: #FFD700; 
+    transform-origin: bottom center;
+    transition: transform 1.5s ease-out; 
+    border-radius: 3px;
+    z-index: 9;
+    transform: translateX(-50%) rotate(0deg); 
 }
 
 /* Текст в центрі спідометра */
 .gauge-value-text {
-    position: absolute;
-    bottom: -5px; 
-    left: 50%;
-    transform: translateX(-50%);
-    text-align: center;
-    z-index: 11;
+    position: absolute;
+    bottom: -5px; 
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    z-index: 11;
 }
 
 #acwr-value {
-    font-size: 3.2em; 
-    font-weight: 700;
-    color: #FFD700;
-    display: block;
-    text-shadow: 0 0 5px rgba(255, 215, 0, 0.4); 
+    font-size: 3.2em; 
+    font-weight: 700;
+    color: #FFD700;
+    display: block;
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.4); 
 }
 
 .acwr-label {
-    margin-top: -10px;
-    font-size: 0.9em;
-    color: #AAAAAA;
+    margin-top: -10px;
+    font-size: 0.9em;
+    color: #AAAAAA;
 }
 
 /* Статус під спідометром */
 .gauge-status-box {
-    text-align: center;
-    margin-top: 15px;
-    font-size: 1.1em;
+    text-align: center;
+    margin-top: 15px;
+    font-size: 1.1em;
 }
 
 .status-safe {
-    color: #5cb85c; 
-    font-weight: bold;
+    color: #5cb85c; 
+    font-weight: bold;
 }
 
 .status-warning {
-    color: #f0ad4e; 
-    font-weight: bold;
+    color: #f0ad4e; 
+    font-weight: bold;
 }
 
 .status-danger {
-    color: #d9534f; 
-    font-weight: bold;
+    color: #d9534f; 
+    font-weight: bold;
 }
 
 /* =========================================================================
-   5. СТИЛІ ГРАФІКІВ
-   ========================================================================= */
+    5. СТИЛІ ГРАФІКІВ
+    ========================================================================= */
 
 .chart-card {
-    margin-top: 20px;
-    padding: 20px;
-    background-color: #1E1E1E;
-    border-radius: 10px;
-    width: 100%; 
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #1E1E1E;
+    border-radius: 10px;
+    width: 100%; 
 }
 
 .chart-card h4 {
-    color: #4CAF50; 
-    margin-top: 0;
-    border-bottom: 1px solid #333;
-    padding-bottom: 10px;
+    color: #4CAF50; 
+    margin-top: 0;
+    border-bottom: 1px solid #333;
+    padding-bottom: 10px;
 }
 
 /* =========================================================================
-   6. АДАПТИВНІСТЬ
-   ========================================================================= */
+    6. АДАПТИВНІСТЬ
+    ========================================================================= */
 
 @media (max-width: 1000px) {
-    .dashboard-container {
-        flex-direction: column;
-    }
+    .dashboard-container {
+        flex-direction: column;
+    }
 
-    .form-container, .stats-container {
-        width: 100%;
-        min-width: unset;
-    }
+    .form-container, .stats-container {
+        width: 100%;
+        min-width: unset;
+    }
 }
 
 @media (max-width: 600px) {
-    .main-content {
-        padding: 15px;
-    }
+    .main-content {
+        padding: 15px;
+    }
 }
 /* НОВИЙ СТИЛЬ: ДЛЯ ПОВІДОМЛЕННЯ ПРО ЗБЕРЕЖЕННЯ ДАНИХ (УСУВАЄ СТРИБКИ) */
 .status-box {
-    margin-top: 15px;
-    padding: 10px;
-    border-radius: 5px;
-    text-align: center;
-    font-weight: bold;
-    min-height: 44px; /* Фіксуємо висоту, щоб кнопка не тікала */
-    box-sizing: border-box; 
+    margin-top: 15px;
+    padding: 0 10px; /* Видаляємо вертикальний паддінг, коли повідомлення немає */
+    border-radius: 5px;
+    text-align: center;
+    font-weight: bold;
+    min-height: 54px; /* ЗБІЛЬШЕНО ВИСОТУ: Фіксуємо висоту, щоб кнопка не тікала */
+    box-sizing: border-box; 
+    transition: all 0.3s;
+    /* Мінусовий відступ для компенсації вертикального простору, коли повідомлення немає */
+    margin-bottom: -15px; 
+}
+
+/* Коли повідомлення з'являється, воно отримує колір і pad-dіng */
+.status-box.status-safe, .status-box.status-danger {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    margin-bottom: 15px; /* Повертаємо нормальний відступ, коли повідомлення видно */
+}
+/* Встановлюємо колір фону для візуалізації */
+.status-box.status-safe {
+    background-color: rgba(76, 175, 80, 0.1); 
+    color: #5cb85c;
+    border: 1px solid #5cb85c;
+}
+
+.status-box.status-danger {
+    background-color: rgba(217, 83, 79, 0.1); 
+    color: #d9534f;
+    border: 1px solid #d9534f;
 }
