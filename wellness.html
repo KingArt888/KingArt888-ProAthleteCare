@@ -3,56 +3,39 @@
 <html lang="uk">
 
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>ProAthleteCare | Wellness Control</title>
-
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="wellness.css">
-
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
-
-</head>
+    
+    <link rel="stylesheet" href="navigation-mobile.css"> 
+    </head>
 
 <body>
 
     <header>
-
-        <a href="index.html" class="logo-link">
-
-            <img src="AK_logo.png" alt="ProAthleteCare Logo" class="logo">
-
-        </a>
-
-        <h1 class="project-title">ProAthleteCare</h1>
-
-        <p class="tagline">Онлайн-тренінг та професійний супровід атлетів</p>
-
-    </header>
-
+    <a href="index.html" class="logo-link">
+        <img src="AK_logo.png" alt="ProAthleteCare Logo" class="logo">
+    </a>
+    <h1 class="project-title">ProAthleteCare</h1>
+    <p class="tagline">Онлайн-тренінг та професійний супровід атлетів</p>
+    
+    <button class="menu-toggle" id="menu-toggle-button" aria-label="Toggle Navigation">
+        ☰
+    </button>
+</header>
     
 
     <div class="content-wrapper">
 
-        <nav class="sidebar">
-    <a href="wellness.html">Wellness Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a> 
+       <div class="content-wrapper">
     
-    <a href="injury.html">Injury Story <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+    <nav class="sidebar" id="main-sidebar">
+        <a href="wellness.html">Wellness Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a> 
+        </nav>
     
-    <a href="load-season.html">Load Season <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-    
-    <a href="daily-individual.html">Daily Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-    
-    <a href="weekly-individual.html">Weekly Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-    
-    <a href="weight-control.html">Weight Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-    
-    <a href="velocity-control.html">Velocity Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-</nav>
-
         
 
         <main class="main-content">
@@ -310,6 +293,7 @@
     </footer>
 
     <script src="wellness.js"></script>
+    <script src="navigation-common.js"></script>
 
 </body>
 
