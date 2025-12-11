@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Load Season | ProAthleteCare</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css"> 
     <link rel="stylesheet" href="load-season.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
-    </head>
+</head>
 <body>
 
     <header>
@@ -16,10 +16,14 @@
         </a>
         <h1 class="project-title">ProAthleteCare</h1>
         <p class="tagline">Онлайн-тренінг та професійний супровід атлетів</p>
+        
+        <button class="menu-toggle" id="menu-toggle-button" aria-label="Toggle Navigation">
+            ☰
+        </button>
     </header>
     
     <div class="content-wrapper">
-        <nav class="sidebar">
+        <nav class="sidebar" id="main-sidebar"> 
             <a href="wellness.html">Wellness Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
             <a href="injury.html">Injury Story <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
             
@@ -32,7 +36,7 @@
         </nav>
         
         <main class="main-content">
-            <h2>📈 Load Season: Контроль тренувального навантаження</h2>
+            <h2 style="color: #FFD700;"> Load Season: Контроль тренувального навантаження</h2>
             
             <div class="dashboard-container">
                 
@@ -50,27 +54,23 @@
                         <input type="number" id="load-distance" name="distance" min="0" step="0.1" value="0.0" required>
 
                         <label>Суб'єктивне навантаження (RPE, 1-10):</label>
-                        <div class="rating-group rpe-group" id="rpe-rating-group">
-                            <input type="radio" id="rpe1" name="rpe" value="1" required><label for="rpe1" title="1 (Дуже легко)"></label>
-                            <input type="radio" id="rpe5" name="rpe" value="5"><label for="rpe5" title="5 (Помірно)"></label>
-                            <input type="radio" id="rpe10" name="rpe" value="10"><label for="rpe10" title="10 (Максимально важко)"></label>
-                            <span class="rpe-value-display"></span>
-                        </div><div class="rpe-group">
-    <input type="radio" id="rpe10" name="rpe" value="10"><label for="rpe10" data-rpe="10"></label>
-    <input type="radio" id="rpe9" name="rpe" value="9"><label for="rpe9" data-rpe="9"></label>
-    <input type="radio" id="rpe8" name="rpe" value="8"><label for="rpe8" data-rpe="8"></label>
-    <input type="radio" id="rpe7" name="rpe" value="7"><label for="rpe7" data-rpe="7"></label>
-    <input type="radio" id="rpe6" name="rpe" value="6"><label for="rpe6" data-rpe="6"></label>
-    <input type="radio" id="rpe5" name="rpe" value="5"><label for="rpe5" data-rpe="5"></label>
-    <input type="radio" id="rpe4" name="rpe" value="4"><label for="rpe4" data-rpe="4"></label>
-    <input type="radio" id="rpe3" name="rpe" value="3"><label for="rpe3" data-rpe="3"></label>
-    <input type="radio" id="rpe2" name="rpe" value="2"><label for="rpe2" data-rpe="2"></label>
-    <input type="radio" id="rpe1" name="rpe" value="1"><label for="rpe1" data-rpe="1"></label>
-</div>
+                        <div class="rpe-group">
+                            <input type="radio" id="rpe10" name="rpe" value="10"><label for="rpe10" data-rpe="10"></label>
+                            <input type="radio" id="rpe9" name="rpe" value="9"><label for="rpe9" data-rpe="9"></label>
+                            <input type="radio" id="rpe8" name="rpe" value="8"><label for="rpe8" data-rpe="8"></label>
+                            <input type="radio" id="rpe7" name="rpe" value="7"><label for="rpe7" data-rpe="7"></label>
+                            <input type="radio" id="rpe6" name="rpe" value="6"><label for="rpe6" data-rpe="6"></label>
+                            <input type="radio" id="rpe5" name="rpe" value="5"><label for="rpe5" data-rpe="5"></label>
+                            <input type="radio" id="rpe4" name="rpe" value="4"><label for="rpe4" data-rpe="4"></label>
+                            <input type="radio" id="rpe3" name="rpe" value="3"><label for="rpe3" data-rpe="3"></label>
+                            <input type="radio" id="rpe2" name="rpe" value="2"><label for="rpe2" data-rpe="2"></label>
+                            <input type="radio" id="rpe1" name="rpe" value="1"><label for="rpe1" data-rpe="1"></label>
+                        </div>
+
+                        <div id="form-status" class="status-box"></div>
                         
                         <button type="submit" class="submit-button">Зберегти навантаження</button>
                     </form>
-                    <div id="form-status" class="status-message"></div>
                 </div>
 
                 <div class="stats-card stats-container">
