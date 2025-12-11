@@ -350,22 +350,4 @@ input[type="date"]:focus, input[type="number"]:focus {
 }
 
 /* =========================================================================
-   6. АДАПТИВНІСТЬ
-   ========================================================================= */
 
-@media (max-width: 1000px) {
-    .dashboard-container {
-        flex-direction: column;
-    }
-
-    .form-container, .stats-container {
-        width: 100%;
-        min-width: unset;
-    }
-}
-
-@media (max-width: 600px) {
-    .main-content {
-        padding: 15px;
-    }
-}
