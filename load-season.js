@@ -1,3 +1,5 @@
+// load-season.js - ЛОГІКА ДЛЯ СТОРІНКИ "LOAD SEASON"
+
 // Тимчасові дані (заглушки) для демонстрації
 let dailyLoadData = [
     { date: '2025-11-24', duration: 60, rpe: 7, distance: 8.5 },
@@ -79,33 +81,41 @@ function updateACWRGauge(acwrValue) {
     let statusClass = 'status-warning';
 
     if (acwrValue >= 0.8 && acwrValue <= 1.3) {
-        degree = (acwrValue - 1.05) * 120;
+        // Оптимальна зона: від -30 до 30 градусів
+        // Центр 1.05 = 0deg. 0.8 = -40deg. 1.3 = +40deg (приблизно)
+        degree = (acwrValue - 1.05) * 160; 
         status = 'Безпечна зона (Оптимально)';
         statusClass = 'status-safe';
     } else if (acwrValue < 0.8 && acwrValue >= 0.5) {
-        degree = -50 + (acwrValue - 0.5) * 100;
+        // Недотренованість: від -90 до -30 градусів
+        degree = -90 + (acwrValue - 0.5) * (60 / 0.3); // 60 deg over range 0.3
         status = 'Ризик недотренованості (Низьке навантаження)';
         statusClass = 'status-warning';
     } else if (acwrValue > 1.3 && acwrValue <= 1.5) {
-        degree = 30 + (acwrValue - 1.3) * 100; 
+        // Підвищений ризик: від 30 до 60 градусів
+        degree = 40 + (acwrValue - 1.3) * (20 / 0.2); // 20 deg over range 0.2
         status = 'Підвищений ризик травм (Зростання навантаження)';
         statusClass = 'status-warning';
     } else if (acwrValue > 1.5) {
-        degree = 50 + (acwrValue - 1.5) * 50;
+        // Високий ризик: від 60 до 90 градусів
+        degree = 60 + (acwrValue - 1.5) * 20; // 30 deg over 1.5+
         status = 'Високий ризик травм (Критичне навантаження)';
         statusClass = 'status-danger';
     } else {
+        // < 0.5
         degree = -90; 
         status = 'Критично низьке навантаження (Детренування)';
         statusClass = 'status-danger';
     }
     
-    degree = Math.min(90, Math.max(-90, degree));
+    // Обмеження стрілки в діапазоні -90 до 90
+    degree = Math.min(90, Math.max(-90, degree)); 
 
     needle.style.transform = `translateX(-50%) rotate(${degree}deg)`;
     acwrValueDisplay.textContent = acwrValue.toFixed(2);
     statusText.textContent = status;
-    statusText.className = statusClass;
+    // Оновлення класу для кольорового відображення статусу
+    statusText.className = 'status-box ' + statusClass;
 }
 
 function formatDistanceDataForChart() {
@@ -119,6 +129,7 @@ function formatDistanceDataForChart() {
         weeklyDistance[week] += item.distance;
     });
 
+    // Генеруємо мітки "Тиждень 1", "Тиждень 2" і т.д.
     const labels = Object.keys(weeklyDistance).map((weekNum, index) => `Тиждень ${index + 1}`);
     const data = Object.values(weeklyDistance);
     
@@ -157,169 +168,4 @@ function renderDistanceChart() {
                 legend: { labels: { color: '#CCCCCC' } },
             },
             scales: {
-                x: { ticks: { color: '#AAAAAA' }, grid: { color: '#333333' } },
-                y: { beginAtZero: true, ticks: { color: '#AAAAAA' }, grid: { color: '#333333' } }
-            }
-        }
-    });
-}
-
-let loadChart;
-function renderLoadChart(acuteLoad, chronicLoad) {
-    const ctx = document.getElementById('loadChart')?.getContext('2d');
-    if (!ctx) return;
-    
-    const demoLabels = ['4 тижні тому', '3 тижні тому', '2 тижні тому', 'Поточний'];
-    const demoAcute = [500, 650, 800, acuteLoad];
-    const demoChronic = [600, 620, 700, chronicLoad];
-
-    if (loadChart) {
-        loadChart.destroy();
-    }
-    
-    loadChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: demoLabels,
-            datasets: [
-                {
-                    label: 'Acute Load (7 днів)',
-                    data: demoAcute,
-                    borderColor: '#D9534F',
-                    backgroundColor: 'rgba(217, 83, 79, 0.3)',
-                    borderWidth: 2,
-                    tension: 0.3,
-                    fill: false
-                },
-                {
-                    label: 'Chronic Load (28 днів)',
-                    data: demoChronic,
-                    borderColor: '#4CAF50',
-                    backgroundColor: 'rgba(76, 175, 80, 0.3)',
-                    borderWidth: 2,
-                    tension: 0.3,
-                    fill: false
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: { labels: { color: '#CCCCCC' } },
-            },
-            scales: {
-                x: { ticks: { color: '#AAAAAA' }, grid: { color: '#333333' } },
-                y: { beginAtZero: true, ticks: { color: '#AAAAAA' }, grid: { color: '#333333' } }
-            }
-        }
-    });
-}
-
-function initializeLoadSeason() {
-    const { acuteLoad, chronicLoad, acwr } = calculateACWR();
-
-    updateACWRGauge(acwr);
-
-    renderDistanceChart();
-    renderLoadChart(acuteLoad, chronicLoad);
-
-    document.getElementById('load-form')?.addEventListener('submit', handleLoadFormSubmit);
-    
-    // Встановлення поточної дати (КРИТИЧНА ПЕРЕВІРКА НА NULL ДЛЯ УНИКНЕННЯ ПОМИЛКИ)
-    const dateInput = document.getElementById('load-date');
-    if (dateInput) {
-        dateInput.valueAsDate = new Date();
-    }
-}
-
-function handleLoadFormSubmit(event) {
-    event.preventDefault();
-    
-    const form = event.target;
-    const date = form.elements['date'].value;
-    const duration = parseInt(form.elements['duration'].value);
-    const distance = parseFloat(form.elements['distance'].value);
-    const rpe = parseInt(document.querySelector('input[name="rpe"]:checked')?.value);
-
-    const statusMessage = document.getElementById('form-status');
-
-    if (!date || isNaN(duration) || isNaN(distance) || isNaN(rpe)) {
-        if (statusMessage) { 
-            statusMessage.textContent = 'Будь ласка, заповніть всі поля коректно.';
-            statusMessage.className = 'status-box status-danger';
-        }
-        return;
-    }
-
-    const newEntry = { date, duration, rpe, distance };
-
-    const existingIndex = dailyLoadData.findIndex(item => item.date === date);
-    if (existingIndex > -1) {
-        dailyLoadData[existingIndex] = newEntry;
-        if (statusMessage) {
-             statusMessage.textContent = `Дані за ${date} оновлено! Load: ${calculateSessionRPE(duration, rpe)}`;
-        }
-    } else {
-        dailyLoadData.push(newEntry);
-        if (statusMessage) {
-            statusMessage.textContent = `Тренування збережено! Load: ${calculateSessionRPE(duration, rpe)}`;
-        }
-    }
-    
-    if (statusMessage) {
-        statusMessage.className = 'status-box status-safe';
-    }
-    
-    dailyLoadData.sort((a, b) => new Date(a.date) - new Date(b.date));
-    initializeLoadSeason(); 
-}
-
-
-/**
- * Логіка для перемикання бічної панелі на мобільних пристроях
- */
-function setupMenuToggle() {
-    const toggleButton = document.getElementById('menu-toggle-button');
-    const sidebar = document.getElementById('main-sidebar'); 
-
-    // КРИТИЧНА ПЕРЕВІРКА НА NULL
-    if (toggleButton && sidebar) {
-        toggleButton.addEventListener('click', () => {
-            sidebar.classList.toggle('active');
-            
-            // Зміна іконки 
-            if (sidebar.classList.contains('active')) {
-                toggleButton.textContent = '✕';
-            } else {
-                toggleButton.textContent = '☰';
-            }
-        });
-        
-        // Закриття меню при кліку на пункт меню або за межами
-        sidebar.addEventListener('click', (event) => {
-            if (event.target.tagName === 'A') {
-                 sidebar.classList.remove('active');
-                 toggleButton.textContent = '☰';
-            }
-        });
-        
-        // Додаємо обробку кліку поза меню
-        document.addEventListener('click', (event) => {
-            const isClickInsideSidebar = sidebar.contains(event.target);
-            const isClickOnToggle = toggleButton.contains(event.target);
-            
-            if (!isClickInsideSidebar && !isClickOnToggle && sidebar.classList.contains('active')) {
-                sidebar.classList.remove('active');
-                toggleButton.textContent = '☰';
-            }
-        });
-    }
-}
-
-
-// Запуск при завантаженні сторінки
-document.addEventListener('DOMContentLoaded', () => {
-    initializeLoadSeason();
-   
-});
+                x: { ticks: { color: '#AAAA
