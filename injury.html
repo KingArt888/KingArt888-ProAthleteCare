@@ -6,7 +6,9 @@
     <title>Injury Story | ProAthleteCare</title>
     <link rel="stylesheet" href="style.css">
      <link rel="stylesheet" href="injury.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <link rel="stylesheet" href="navigation-mobile.css">
 </head>
 <body>
 
@@ -16,10 +18,14 @@
         </a>
         <h1 class="project-title">ProAthleteCare</h1>
         <p class="tagline">Онлайн-тренінг та професійний супровід атлетів</p>
+
+        <button class="menu-toggle" id="menu-toggle-button" aria-label="Toggle Navigation">
+        ☰
+    </button>
     </header>
     
     <div class="content-wrapper">
-       <nav class="sidebar">
+       <nav class="sidebar" id="main-sidebar">
     <a href="wellness.html">Wellness Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a> 
     
     <a href="injury.html">Injury Story <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
@@ -102,6 +108,7 @@
         &copy; 2025 ProAthleteCare. 
     </footer>
 
-    <script src="injury.js"></script> 
+    <script src="injury.js"></script>
+    <script src="navigation-common.js"></script>
 </body>
 </html>
