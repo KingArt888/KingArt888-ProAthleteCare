@@ -52,7 +52,7 @@
     .menu-toggle {
         display: block !important; /* ГАРАНТОВАНО показуємо кнопку */
         position: fixed; 
-        top: 20px;
+        top: 23px;
         right: 20px;
         z-index: 1001; 
         
