@@ -30,7 +30,7 @@
 
 .stats-container {
     flex: 1; 
-    min-width: 400px;
+    min-width: 300px;
 }
 
 /* Стилі для елементів форми */
@@ -246,7 +246,7 @@ input[type="date"]:focus, input[type="number"]:focus {
     position: absolute;
     top: -20px; 
     left: -20px;
-    width: 250px; 
+    width: 280px; 
     height: 250px;
     border-radius: 50%;
     
