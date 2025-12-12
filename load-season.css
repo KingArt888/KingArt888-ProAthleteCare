@@ -137,8 +137,7 @@ input[type="date"]:focus, input[type="number"]:focus {
 .rpe-group input[value="1"]:checked ~ label,
 .rpe-group input[value="2"]:checked ~ label,
 .rpe-group input[value="3"]:checked ~ label,
-.rpe-group input[value="4"]:checked ~ label,
-.rpe-group input[value="5"]:checked ~ label {
+.rpe-group input[value="4"]:checked ~ label {
     color: #5cb85c; /* Green - блискавка */
 }
 
@@ -146,29 +145,33 @@ input[type="date"]:focus, input[type="number"]:focus {
 .rpe-group input[value="1"]:checked ~ label::after,
 .rpe-group input[value="2"]:checked ~ label::after,
 .rpe-group input[value="3"]:checked ~ label::after,
-.rpe-group input[value="4"]:checked ~ label::after,
-.rpe-group input[value="5"]:checked ~ label::after {
+.rpe-group input[value="4"]:checked ~ label::after {
     color: #5cb85c; 
 }
 
 
 /* 2. ПІДСВІЧУВАННЯ 6-8 (ОРАНЖЕВИЙ) */
+
+.rpe-group input[value="5"]:checked ~ label,
 .rpe-group input[value="6"]:checked ~ label,
 .rpe-group input[value="7"]:checked ~ label,
 .rpe-group input[value="8"]:checked ~ label {
     color: #f0ad4e; /* Orange - блискавка */
 }
+
+.rpe-group input[value="5"]:checked ~ label::after,
 .rpe-group input[value="6"]:checked ~ label::after,
-.rpe-group input[value="7"]:checked ~ label::after,
-.rpe-group input[value="8"]:checked ~ label::after {
+.rpe-group input[value="7"]:checked ~ label::after {
     color: #f0ad4e; 
 }
 
 /* 3. ПІДСВІЧУВАННЯ 9-10 (ЧЕРВОНИЙ) */
+.rpe-group input[value="8"]:checked ~ label,
 .rpe-group input[value="9"]:checked ~ label,
 .rpe-group input[value="10"]:checked ~ label {
     color: #d9534f; /* Red - блискавка */
 }
+.rpe-group input[value="8"]:checked ~ label::after,
 .rpe-group input[value="9"]:checked ~ label::after,
 .rpe-group input[value="10"]:checked ~ label::after {
     color: #d9534f; 
@@ -243,8 +246,8 @@ input[type="date"]:focus, input[type="number"]:focus {
     position: absolute;
     top: -20px; 
     left: -20px;
-    width: 280px; 
-    height: 280px;
+    width: 250px; 
+    height: 250px;
     border-radius: 50%;
     
     /* КОЛЬОРОВИЙ ГРАДІЄНТ */
