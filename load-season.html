@@ -35,91 +35,87 @@
             <a href="velocity-control.html">Velocity Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
         </nav>
         
-       <main class="main-content">
-    <h2 style="color: #FFD700;"> Load Season: Контроль тренувального навантаження</h2>
-    
-    <div class="dashboard-container">
-        
-        <div class="form-card form-container">
-            <h3>Щоденне тренування (Session-RPE)</h3>
-            <form id="load-form">
+        <main class="main-content">
+            <h2 style="color: #FFD700;"> Load Season: Контроль тренувального навантаження</h2>
+            
+            <div class="dashboard-container">
                 
-                <label for="load-date">Дата тренування:</label>
-                <input type="date" id="load-date" name="date" required>
-                
-                <label for="load-duration">Тривалість (хвилин):</label>
-                <input type="number" id="load-duration" name="duration" min="1" value="60" required>
-                
-                <label for="load-distance">Кілометраж (км):</label>
-                <input type="number" id="load-distance" name="distance" min="0" step="0.1" value="0.0" required>
+                <div class="form-card form-container">
+                    <h3>Щоденне тренування (Session-RPE)</h3>
+                    <form id="load-form">
+                        
+                        <label for="load-date">Дата тренування:</label>
+                        <input type="date" id="load-date" name="date" required>
+                        
+                        <label for="load-duration">Тривалість (хвилин):</label>
+                        <input type="number" id="load-duration" name="duration" min="1" value="60" required>
+                        
+                        <label for="load-distance">Кілометраж (км):</label>
+                        <input type="number" id="load-distance" name="distance" min="0" step="0.1" value="0.0" required>
 
-                <label>Суб'єктивне навантаження (RPE, 1-10):</label>
-                <div class="rpe-group">
-                    <input type="radio" id="rpe10" name="rpe" value="10"><label for="rpe10" data-rpe="10"></label>
-                    <input type="radio" id="rpe9" name="rpe" value="9"><label for="rpe9" data-rpe="9"></label>
-                    <input type="radio" id="rpe8" name="rpe" value="8"><label for="rpe8" data-rpe="8"></label>
-                    <input type="radio" id="rpe7" name="rpe" value="7"><label for="rpe7" data-rpe="7"></label>
-                    <input type="radio" id="rpe6" name="rpe" value="6"><label for="rpe6" data-rpe="6"></label>
-                    <input type="radio" id="rpe5" name="rpe" value="5"><label for="rpe5" data-rpe="5"></label>
-                    <input type="radio" id="rpe4" name="rpe" value="4"><label for="rpe4" data-rpe="4"></label>
-                    <input type="radio" id="rpe3" name="rpe" value="3"><label for="rpe3" data-rpe="3"></label>
-                    <input type="radio" id="rpe2" name="rpe" value="2"><label for="rpe2" data-rpe="2"></label>
-                    <input type="radio" id="rpe1" name="rpe" value="1"><label for="rpe1" data-rpe="1"></label>
+                        <label>Суб'єктивне навантаження (RPE, 1-10):</label>
+                        <div class="rpe-group">
+                            <input type="radio" id="rpe10" name="rpe" value="10"><label for="rpe10" data-rpe="10"></label>
+                            <input type="radio" id="rpe9" name="rpe" value="9"><label for="rpe9" data-rpe="9"></label>
+                            <input type="radio" id="rpe8" name="rpe" value="8"><label for="rpe8" data-rpe="8"></label>
+                            <input type="radio" id="rpe7" name="rpe" value="7"><label for="rpe7" data-rpe="7"></label>
+                            <input type="radio" id="rpe6" name="rpe" value="6"><label for="rpe6" data-rpe="6"></label>
+                            <input type="radio" id="rpe5" name="rpe" value="5"><label for="rpe5" data-rpe="5"></label>
+                            <input type="radio" id="rpe4" name="rpe" value="4"><label for="rpe4" data-rpe="4"></label>
+                            <input type="radio" id="rpe3" name="rpe" value="3"><label for="rpe3" data-rpe="3"></label>
+                            <input type="radio" id="rpe2" name="rpe" value="2"><label for="rpe2" data-rpe="2"></label>
+                            <input type="radio" id="rpe1" name="rpe" value="1"><label for="rpe1" data-rpe="1"></label>
+                        </div>
+
+                        <div id="form-status" class="status-box"></div>
+                        
+                        <button type="submit" class="submit-button">Зберегти навантаження</button>
+                    </form>
                 </div>
 
-                <div id="form-status" class="status-box"></div>
-                
-                <button type="submit" class="submit-button">Зберегти навантаження</button>
-            </form>
-        </div>
-
-        <div class="stats-card stats-container">
-            <h3>Контроль ризику травм (ACWR)</h3>
-            
-            <div class="speedometer-widget">
-                <div class="gauge-display" id="acwr-gauge-display">
-                    <div class="gauge-arc">
-                        <div class="arc green-arc"></div>
-                        <div class="arc yellow-arc"></div>
-                        <div class="arc red-arc"></div>
-                        <div class="gauge-needle-pivot">
-                            <div class="gauge-needle" id="gauge-needle"></div>
+                <div class="stats-card stats-container">
+                    <h3>Контроль ризику травм (ACWR)</h3>
+                    
+                    <div class="speedometer-widget">
+                        <div class="gauge-display" id="acwr-gauge-display">
+                            <div class="gauge-arc">
+                                </div>
+                            <div class="gauge-needle-pivot">
+                                <div class="gauge-needle" id="gauge-needle"></div>
+                            </div>
+                            <div class="gauge-value-text">
+                                <span id="acwr-value">1.00</span>
+                                <p class="acwr-label">ACWR</p>
+                            </div>
                         </div>
                     </div>
-                    <div class="gauge-value-text">
-                        <span id="acwr-value">1.00</span>
-                        <p class="acwr-label">ACWR</p>
+
+                    <div class="gauge-status-box">
+                        <p>Статус: <span id="acwr-status" class="status-safe">Безпечна зона</span></p>
                     </div>
                 </div>
+                
+                <div class="charts-section">
+                    <div class="chart-card">
+                        <h4>Навантаження (Acute vs Chronic)</h4>
+                        <canvas id="loadChart"></canvas>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <h4>Дистанція (км) по тижнях</h4>
+                        <canvas id="distanceChart"></canvas>
+                    </div>
                 </div>
 
-            <div class="gauge-status-box">
-                <p>Статус: <span id="acwr-status" class="status-safe">Безпечна зона</span></p>
             </div>
-        </div> 
-        
-        <div class="charts-section"> 
-            
-            <div class="chart-card">
-                <h4>Навантаження (Acute vs Chronic)</h4>
-                <canvas id="loadChart"></canvas>
-            </div>
-            
-            <div class="chart-card">
-                <h4>Дистанція (км) по тижнях</h4>
-                <canvas id="distanceChart"></canvas>
-            </div>
-            
-        </div>
-
-    </div>
-</main>
+        </main>
     </div>
 
     <footer>
         &copy; 2025 ProAthleteCare. 
     </footer>
     
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="load-season.js"></script>
     <script src="navigation-common.js"></script>
 </body>
