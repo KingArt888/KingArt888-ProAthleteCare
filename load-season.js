@@ -25,7 +25,7 @@ let dailyLoadData = [
     { date: '2025-12-13', duration: 80, rpe: 8, distance: 10.0 },
 ];
 
-const FORM_DAYS_TO_DISPLAY = 21; // Кількість днів, що беруться для розрахунку acute load (7) та chronic load (28). Візьмемо останні 21 день для прикладу.
+const FORM_DAYS_TO_DISPLAY = 21; 
 
 // === ДОПОМІЖНІ ФУНКЦІЇ ДЛЯ ОБЧИСЛЕНЬ ===
 
@@ -115,38 +115,32 @@ function updateACWRGauge(acwrValue) {
 
     // Налаштування кутів для спідометра:
     // Безпечна зона (Green): 0.8 - 1.3. Приймаємо 1.00 як 0 градусів від центру.
-    // 0.5 (мінімум) = -45 deg
-    // 1.0 = 0 deg
-    // 1.3 = +27 deg (Центр зеленої зони - 1.05)
-    // 1.5 = +45 deg (Верхня межа безпечної зони)
-    // 2.0 (максимум) = +90 deg
-
     let degree = 0;
     let status = 'Недостатньо даних';
     let statusClass = 'status-warning';
 
     if (acwrValue >= 0.8 && acwrValue <= 1.3) {
-        // Зелена зона: 0.8 - 1.3
-        degree = (acwrValue - 1.0) * 100; // Просте лінійне відображення, 1.0 = 0 deg
+        // Зелена зона: 0.8 - 1.3. Range: 50 * 2 = 100 degrees total
+        degree = -50 + ((acwrValue - 0.8) / 0.5) * 100; // -50 deg (at 0.8) to 50 deg (at 1.3)
         status = 'Безпечна зона (Оптимально)';
         statusClass = 'status-safe';
     } else if (acwrValue < 0.8 && acwrValue >= 0.5) {
-        // Жовта зона (Недовантаження): 0.5 - 0.8
-        degree = -45 + (acwrValue - 0.5) * 100; // -45deg до 0deg
+        // Жовта зона (Недовантаження): 0.5 - 0.8. Range: 30 degrees
+        degree = -80 + ((acwrValue - 0.5) / 0.3) * 30; // -80 deg (at 0.5) to -50 deg (at 0.8)
         status = 'Ризик недотренованості (Низьке навантаження)';
         statusClass = 'status-warning';
     } else if (acwrValue > 1.3 && acwrValue <= 1.5) {
-        // Жовта зона (Небезпека): 1.3 - 1.5
-        degree = 30 + (acwrValue - 1.3) * 75; 
+        // Жовта зона (Небезпека): 1.3 - 1.5. Range: 20 degrees
+        degree = 50 + ((acwrValue - 1.3) / 0.2) * 20; // 50 deg (at 1.3) to 70 deg (at 1.5)
         status = 'Підвищений ризик травм (Зростання навантаження)';
         statusClass = 'status-warning';
     } else if (acwrValue > 1.5) {
-        // Червона зона (Небезпека): > 1.5
-        degree = 45 + (acwrValue - 1.5) * 50;
+        // Червона зона (Небезпека): > 1.5. Range: 20 degrees
+        degree = 70 + ((acwrValue - 1.5) / 0.5) * 20; 
         status = 'Високий ризик травм (Критичне навантаження)';
         statusClass = 'status-danger';
     } else {
-        // Менше 0.5 (дуже низьке)
+        // Менше 0.5 
         degree = -90; 
         status = 'Критично низьке навантаження (Детренування)';
         statusClass = 'status-danger';
@@ -175,8 +169,10 @@ function formatDistanceDataForChart() {
         weeklyDistance[week] += item.distance;
     });
 
-    const labels = Object.keys(weeklyDistance).map((weekNum, index) => `Тиждень ${index + 1}`);
-    const data = Object.values(weeklyDistance);
+    // Форматуємо мітки (labels)
+    const sortedWeeks = Object.keys(weeklyDistance).sort();
+    const labels = sortedWeeks.map((weekNum, index) => `Тиждень ${index + 1}`);
+    const data = sortedWeeks.map(weekNum => weeklyDistance[weekNum]);
     
     return { labels, data };
 }
@@ -186,7 +182,9 @@ function formatDistanceDataForChart() {
  */
 let distanceChart;
 function renderDistanceChart() {
-    const ctx = document.getElementById('distanceChart').getContext('2d');
+    const ctx = document.getElementById('distanceChart');
+    if (!ctx) return;
+    
     const { labels, data } = formatDistanceDataForChart();
 
     if (distanceChart) {
@@ -209,7 +207,7 @@ function renderDistanceChart() {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: true,
+            maintainAspectRatio: false, // Дозволяємо контейнеру контролювати розмір
             plugins: {
                 legend: { labels: { color: '#CCCCCC' } },
             },
@@ -226,10 +224,10 @@ function renderDistanceChart() {
  */
 let loadChart;
 function renderLoadChart(acuteLoad, chronicLoad) {
-    const ctx = document.getElementById('loadChart').getContext('2d');
-    
+    const ctx = document.getElementById('loadChart');
+    if (!ctx) return;
+
     // Створення тимчасових даних для графіка (за останні 4 тижні)
-    // Для демонстрації візьмемо 4 точки даних
     const demoLabels = ['4 тижні тому', '3 тижні тому', '2 тижні тому', 'Поточний'];
     const demoAcute = [500, 650, 800, acuteLoad];
     const demoChronic = [600, 620, 700, chronicLoad];
@@ -265,7 +263,7 @@ function renderLoadChart(acuteLoad, chronicLoad) {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: true,
+            maintainAspectRatio: false, // Дозволяємо контейнеру контролювати розмір
             plugins: {
                 legend: { labels: { color: '#CCCCCC' } },
             },
@@ -291,26 +289,15 @@ function initializeLoadSeason() {
     renderLoadChart(acuteLoad, chronicLoad);
 
     // 4. Обробка форми
-    // ПЕРЕВІРТЕ, ЩО ВАША ФОРМА МАЄ ID 'load-form'
     const loadForm = document.getElementById('load-form');
     if (loadForm) {
         loadForm.addEventListener('submit', handleLoadFormSubmit);
     }
     
-    // Обробка відображення вибраного RPE
-    document.querySelectorAll('.rpe-group input[name="rpe"]').forEach(radio => {
-        radio.addEventListener('change', (event) => {
-            const display = document.querySelector('.rpe-value-display');
-            // ВИПРАВЛЕННЯ ПОМИЛКИ: Додаємо перевірку на null, щоб уникнути TypeError
-            if (display) { 
-                display.textContent = event.target.value; 
-            }
-        });
-    });
-    
     // Встановлення поточної дати як значення за замовчуванням
     const dateInput = document.getElementById('load-date');
     if (dateInput) {
+        // Використовуємо valueAsDate для коректного формату
         dateInput.valueAsDate = new Date();
     }
 }
@@ -338,7 +325,6 @@ function handleLoadFormSubmit(event) {
     const newEntry = { date, duration, rpe, distance };
 
     // 1. Додаємо нове тренування
-    // Перевіряємо, чи вже є запис на цю дату, і оновлюємо його (якщо одне тренування в день)
     const existingIndex = dailyLoadData.findIndex(item => item.date === date);
     if (existingIndex > -1) {
         dailyLoadData[existingIndex] = newEntry;
