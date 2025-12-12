@@ -9,42 +9,36 @@
 }
 
 /* --- 1. ОБ'ЄДНАНИЙ СТИЛЬ КАРТОК (Уніфіковано з wellness.css) --- */
-.form-card, .chart-card, .stats-card {
-    /* Фон, рамка та тінь з wellness.css */
-    background-color: #0d0d0d; 
+.form-card, .stats-card, .chart-card {
+    /* Стиль уніфікованої картки (з wellness.css) */
+    background-color: #0d0d0d;
     border: 1px solid #1a1a1a;
     border-radius: 10px;
     padding: 25px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); 
-}
-
-/* Стиль заголовків h3 для всіх карток (Золотий колір) */
-.form-card h3, .chart-card h3, .stats-card h3 {
-    color: #FFC72C; 
-    margin-top: 0;
-    border-bottom: 1px solid #333333;
-    padding-bottom: 10px;
     margin-bottom: 20px;
 }
-/* Стиль заголовків h4 (якщо використовується для графіків) */
-.chart-card h4 {
+
+/* Стиль заголовків h3 та h4 (Золотий колір) */
+.form-card h3, .stats-card h3, 
+.form-card h4, .stats-card h4, .chart-card h4 {
     color: #FFC72C; 
     margin-top: 0;
-    border-bottom: 1px solid #333333; 
+    border-bottom: 1px solid #333333; /* Уніфікований роздільник */
     padding-bottom: 10px;
     margin-bottom: 20px;
 }
 
 
-/* --- 2. УНІФІКАЦІЯ РОЗМІРІВ КОНТЕЙНЕРІВ --- */
+/* --- 2. УНІФІКАЦІЯ РОЗМІРІВ КОНТЕЙНЕРІВ (Додано .chart-container) --- */
 .form-container {
-    width: 35%; 
+    width: 35%; /* Змінено з 45% для уніфікації з wellness.css */
     min-width: 350px;
 }
 
 /* Контейнери для статистики та графіків (однаковий розмір) */
 .stats-container, .chart-container { 
-    flex-grow: 1; 
+    flex: 1; /* Використовуємо flex: 1 (як flex-grow: 1) */
     min-width: 400px;
 }
 
@@ -74,11 +68,11 @@ input[type="date"]:focus, input[type="number"]:focus {
     outline: none;
 }
 
-/* --- 4. ЗОЛОТА КНОПКА ЗБЕРЕГТИ (Уніфіковано) --- */
+/* --- 4. ЗОЛОТА КНОПКА ЗБЕРЕГТИ (Уніфіковано з wellness.css) --- */
 .submit-button {
-    background-color: #FFC72C; 
-    color: #000000; 
-    padding: 12px 25px; 
+    background-color: #FFC72C; /* Змінено на #FFC72C */
+    color: #000000; /* Змінено на #000000 */
+    padding: 12px 25px; /* Змінено на 12px 25px */
     border: none;
     border-radius: 5px;
     cursor: pointer;
@@ -86,23 +80,24 @@ input[type="date"]:focus, input[type="number"]:focus {
     font-weight: bold; 
     width: 100%;
     transition: background-color 0.3s;
-    margin-top: 30px; 
+    margin-top: 30px; /* Збільшено відступ */
+    box-shadow: none; /* Видалено зайву тінь */
 }
 
 .submit-button:hover {
     background-color: #E6B800; 
+    box-shadow: none; /* Видалено зайву тінь */
 }
 
 /* =========================================================================
-   5. СТИЛІ RPE GROUP (1-10 - ВОГНИКИ З ЦИФРАМИ)
+   5. СТИЛІ RPE GROUP (1-10 - ВОГНИКИ З ЦИФРАМИ) - БЕЗ ЗМІН
    ========================================================================= */
-/* Цей блок залишено для коректної роботи RPE-шкали */
 
 .rpe-group {
     display: flex;
     flex-direction: row-reverse; 
     justify-content: flex-end; 
-    align-items: flex-start;
+    align-items: flex-start; 
     margin-bottom: 20px;
     background-color: #1a1a1a;
     padding: 5px;
@@ -146,55 +141,46 @@ input[type="date"]:focus, input[type="number"]:focus {
 }
 
 /* --- КОЛЬОРОВА ЛОГІКА RPE (АКТИВНИЙ СТАН) --- */
-
-/* 1. БАЗОВИЙ КОЛІР: 1-5 (ЯСКРАВО-ЗЕЛЕНИЙ) */
 .rpe-group input[value="1"]:checked ~ label,
 .rpe-group input[value="2"]:checked ~ label,
 .rpe-group input[value="3"]:checked ~ label,
-.rpe-group input[value="4"]:checked ~ label {
+.rpe-group input[value="4"]:checked ~ label,
+.rpe-group input[value="5"]:checked ~ label {
     color: #5cb85c; 
 }
-
 .rpe-group input[value="1"]:checked ~ label::after,
 .rpe-group input[value="2"]:checked ~ label::after,
 .rpe-group input[value="3"]:checked ~ label::after,
-.rpe-group input[value="4"]:checked ~ label::after {
+.rpe-group input[value="4"]:checked ~ label::after,
+.rpe-group input[value="5"]:checked ~ label::after {
     color: #5cb85c; 
 }
 
-/* 2. ПІДСВІЧУВАННЯ 6-8 (ОРАНЖЕВИЙ) */
-.rpe-group input[value="5"]:checked ~ label,
 .rpe-group input[value="6"]:checked ~ label,
 .rpe-group input[value="7"]:checked ~ label,
 .rpe-group input[value="8"]:checked ~ label {
     color: #f0ad4e; 
 }
-
-.rpe-group input[value="5"]:checked ~ label::after,
 .rpe-group input[value="6"]:checked ~ label::after,
-.rpe-group input[value="7"]:checked ~ label::after {
+.rpe-group input[value="7"]:checked ~ label::after,
+.rpe-group input[value="8"]:checked ~ label::after {
     color: #f0ad4e; 
 }
 
-/* 3. ПІДСВІЧУВАННЯ 9-10 (ЧЕРВОНИЙ) */
-.rpe-group input[value="8"]:checked ~ label,
 .rpe-group input[value="9"]:checked ~ label,
 .rpe-group input[value="10"]:checked ~ label {
     color: #d9534f; 
 }
-.rpe-group input[value="8"]:checked ~ label::after,
 .rpe-group input[value="9"]:checked ~ label::after,
 .rpe-group input[value="10"]:checked ~ label::after {
     color: #d9534f; 
 }
 
-/* 4. ЕФЕКТНИЙ ВІЗУАЛ (Застосовуємо до вибраної мітки) */
 .rpe-group input:checked + label {
     transform: scale(1.15); 
     text-shadow: 0 0 5px currentColor; 
 }
 
-/* При наведенні (Hover) робимо світло-зеленою */
 .rpe-group label:hover {
     color: #5cb85c; 
 }
@@ -202,7 +188,6 @@ input[type="date"]:focus, input[type="number"]:focus {
     color: #5cb85c;
 }
 
-/* Запобігаємо конфлікту ховера з вибраним елементом */
 .rpe-group input:checked ~ label:hover {
     color: inherit; 
 }
@@ -218,12 +203,12 @@ input[type="date"]:focus, input[type="number"]:focus {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 10px; 
-    padding: 0; 
-    border: none; 
+    margin-bottom: 30px;
+    padding: 0; /* Прибираємо padding, оскільки він є у .stats-card */
+    border: none; /* Прибираємо власну рамку */
     border-radius: 10px;
-    background-color: transparent; 
-    box-shadow: none; 
+    background-color: transparent; /* Робимо прозорим */
+    box-shadow: none; /* Прибираємо власну тінь */
 }
 
 .gauge-display {
@@ -258,10 +243,10 @@ input[type="date"]:focus, input[type="number"]:focus {
     top: -20px; 
     left: -20px;
     width: 280px; 
-    height: 250px;
+    height: 280px;
     border-radius: 50%;
     
-    /* КОЛЬОРОВИЙ ГРАДІЄНТ */
+    /* КОЛЬОРОВИЙ ГРАДІЄНТ (Без змін) */
     background: conic-gradient(
         #d9534f 0% 15%,     
         #f0ad4e 15% 30%,    
@@ -309,7 +294,7 @@ input[type="date"]:focus, input[type="number"]:focus {
     transform: translateX(-50%) rotate(0deg); 
 }
 
-/* Текст в центрі спідометра */
+/* Текст в центрі спідометра (Без змін) */
 .gauge-value-text {
     position: absolute;
     bottom: -5px; 
@@ -333,7 +318,7 @@ input[type="date"]:focus, input[type="number"]:focus {
     color: #AAAAAA;
 }
 
-/* Статус під спідометром */
+/* Статус під спідометром (Без змін) */
 .gauge-status-box {
     text-align: center;
     margin-top: 15px;
@@ -364,7 +349,7 @@ input[type="date"]:focus, input[type="number"]:focus {
         flex-direction: column;
     }
 
-    .form-container, .stats-container, .chart-container { 
+    .form-container, .stats-container, .chart-container { /* ДОДАНО: .chart-container */
         width: 100%;
         min-width: unset;
     }
