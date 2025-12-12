@@ -1,5 +1,5 @@
 /* =========================================================================
-   PROATLETCARE: LOAD-SEASON.CSS - ФІНАЛЬНА УНІФІКАЦІЯ ТА ВИПРАВЛЕННЯ
+   PROATLETCARE: LOAD-SEASON.CSS - ФІНАЛЬНА ВЕРСІЯ: ЗБАЛАНСОВАНИЙ ДИЗАЙН
    ========================================================================= */
 
 /* ГЛОБАЛЬНЕ ВИПРАВЛЕННЯ: box-sizing, щоб padding не викликав переповнення */
@@ -36,18 +36,33 @@
 }
 
 
-/* --- 2. УНІФІКАЦІЯ РОЗМІРІВ КОНТЕЙНЕРІВ (Додано max-width) --- */
+/* --- 2. УНІФІКАЦІЯ РОЗМІРІВ КОНТЕЙНЕРІВ --- */
 .form-container {
     width: 35%; 
     min-width: 350px;
 }
 
-/* Контейнери для статистики та графіків */
-.stats-container, .chart-container { 
+/* Контейнер для статистики (ACWR) - займає решту першого рядка */
+.stats-container { 
     flex: 1; 
     min-width: 400px;
-    /* ВИПРАВЛЕННЯ КРАСИ: Обмежуємо розтягування на великих екранах */
-    max-width: 600px; 
+}
+
+/* НОВИЙ СТИЛЬ: Контейнер для графіків (charts-section) на другому рядку */
+.charts-section {
+    width: 100%; /* Займає всю ширину dashboard-container, переходить на новий рядок */
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap; 
+    /* Додаємо невеликий верхній відступ, щоб відокремити від першого рядка */
+    margin-top: 10px; 
+}
+
+
+/* Стиль для карток графіків, щоб вони ділили 100% ширини навпіл */
+.charts-section .chart-card {
+    flex: 1;
+    min-width: 350px; 
 }
 
 
@@ -98,7 +113,7 @@ input[type="date"]:focus, input[type="number"]:focus {
 }
 
 /* =========================================================================
-   5. СТИЛІ RPE GROUP (Зі стабільним розміром 10% для кожного елемента)
+   5. СТИЛІ RPE GROUP 
    ========================================================================= */
 
 .rpe-group {
@@ -353,21 +368,14 @@ input[type="date"]:focus, input[type="number"]:focus {
    ========================================================================= */
 
 @media (max-width: 1000px) {
-    .dashboard-container {
-        flex-direction: column;
+    .dashboard-container, .charts-section {
+        flex-direction: column; /* Все йде в один стовпець */
+        gap: 20px;
     }
 
-    .form-container, .stats-container, .chart-container { 
+    .form-container, .stats-container, .charts-section, .charts-section .chart-card { 
         width: 100%;
-        /* Знімаємо обмеження max-width: 600px та min-width: 400px, 
-           щоб елементи заповнювали 100% доступної ширини */
         min-width: unset; 
         max-width: 100%; 
-    }
-}
-
-@media (max-width: 600px) {
-    .main-content {
-        padding: 15px;
     }
 }
