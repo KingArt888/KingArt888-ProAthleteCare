@@ -208,12 +208,12 @@ input[type="date"]:focus, input[type="number"]:focus {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 30px;
-    padding: 20px;
-    border: 1px solid #333;
+    margin-bottom: 10px; /* Трохи менший відступ знизу */
+    padding: 0; /* Прибираємо внутрішній padding, якщо він дублює .stats-card */
+    border: none; /* ПРИБРАТИ РАМКУ */
     border-radius: 10px;
-    background-color: #1a1a1a; 
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
+    background-color: transparent; /* ПРОЗОРИЙ ФОН */
+    box-shadow: none; /* ПРИБРАТИ ВЛАСНУ ТІНЬ */
 }
 
 .gauge-display {
