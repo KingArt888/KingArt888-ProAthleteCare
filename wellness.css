@@ -46,7 +46,7 @@
 
 /* Стилі для форми */
 #wellness-form {
-    text-align: center; /* Центруємо весь контент форми */
+    text-align: center; /* Центруємо ВЕСЬ контент форми */
 }
 #wellness-form label {
     display: block;
@@ -54,7 +54,7 @@
     margin-top: 15px;
     margin-bottom: 5px;
     font-weight: bold;
-    text-align: left; /* **ВАЖЛИВО:** Мітки над рейтингами залишаємо зліва для читабельності */
+    text-align: left; /* Мітки над рейтингами залишаємо зліва для читабельності */
 }
 .gold-button {
     background-color: #FFC72C;
@@ -67,10 +67,9 @@
     font-size: 1.1em;
     font-weight: bold;
     transition: background-color 0.3s;
-    /* Центрування кнопки за допомогою display: block та margin: auto */
     display: block;
     margin-left: auto;
-    margin-right: auto;
+    margin-right: auto; /* Центруємо кнопку */
 }
 .gold-button:hover {
     background-color: #E6B800;
@@ -107,14 +106,13 @@
     background-color: #000000;
     border-radius: 5px;
 }
-
-/* 🌟 ВИПРАВЛЕННЯ СТИЛЮ: Оцінка (0/10) */
+/* Оцінка (0/10) */
 .wellness-stat {
     text-align: center; 
     margin: 5px 0 10px 0;
-    font-size: 0.9em; /* Зменшено */
-    font-weight: normal; /* Нейтральний */
-    color: #888888; /* Нейтральний колір */
+    font-size: 0.9em; 
+    font-weight: normal; 
+    color: #888888; 
     min-height: 20px; 
     transition: color 0.3s ease; 
 }
@@ -122,13 +120,13 @@
 /* 2. СТИЛІ РЕЙТИНГІВ: ЗЛІВА НАПРАВО */
 .rating-group {
     display: flex;
-    flex-direction: row; /* Змінено: Тепер зліва направо 1...10 */
-    justify-content: flex-start; /* Вирівнювання по лівому краю */
-    direction: ltr; /* Забезпечуємо читання 1-10 */
+    flex-direction: row; /* Зліва направо 1...10 */
+    justify-content: flex-start; 
+    direction: ltr; 
     font-size: 1.5em; 
-    margin: 10px auto 20px auto; /* Центруємо групу рейтингів */
+    margin: 10px auto 20px auto; /* Центруємо групу */
     flex-wrap: nowrap;
-    width: fit-content; /* Фіксуємо ширину для центрування */
+    width: fit-content; 
 }
 .rating-group input {
     display: none; 
@@ -140,31 +138,41 @@
 }
 
 /* ІКОНКИ ТА КОЛЬОРИ (ЗАГАЛЬНІ) */
+
+/* Уніфікований відступ між іконками */
 .rating-group label:before {
-    margin-right: 5px; /* Зменшуємо загальний відступ */
+    margin-right: 5px; 
 }
-/* Зірки (Сон) */
-.star-group label:before { content: '★'; }
+
+/* 1. Зірки (Сон) - ВИПРАВЛЕНО РОЗМІР */
+.star-group label:before { 
+    content: '★'; 
+    font-size: 1.25em; /* ЗБІЛЬШЕНО, щоб відповідати візуальному розміру емодзі */
+}
 .star-group input:checked ~ label:before, .star-group label:hover:before, .star-group label:hover ~ label:before { color: #FFC72C; }
 
-/* 🔴 ВИПРАВЛЕННЯ: Червоний Кружок (Біль/Втома) */
-.pain-group label:before { content: '🔴'; }
-.pain-group input:checked ~ label:before, .pain-group label:hover:before, .pain-group label:hover ~ label:before { color: #DA3E52; filter: brightness(1.5); }
-.pain-group label:hover ~ label:before { filter: brightness(1.5); } /* Застосовуємо ефект до всіх обраних/наведених */
+/* 2. Червоний Кружок (Біль/Втома) - ВИПРАВЛЕНО ПОЧАТКОВИЙ СТАН */
+.pain-group label:before { 
+    content: '🔴'; 
+    filter: grayscale(100%); /* КЛЮЧОВЕ: Робить його сірим/темним спочатку */
+}
+.pain-group input:checked ~ label:before, .pain-group label:hover:before, .pain-group label:hover ~ label:before { 
+    filter: none; /* Активний стан повертає колір */
+}
 
-/* Блискавки (Енергія/Настрій) */
+/* 3. Блискавки (Енергія/Настрій) */
 .energy-group label:before { content: '⚡'; filter: grayscale(100%); }
 .energy-group input:checked ~ label:before, .energy-group label:hover:before, .energy-group label:hover ~ label:before { filter: none; }
 
-/* Краплі (Гідратація) */
+/* 4. Краплі (Гідратація) */
 .hydration-group label:before { content: '💧'; filter: grayscale(100%); }
 .hydration-group input:checked ~ label:before, .hydration-group label:hover:before, .hydration-group label:hover ~ label:before { filter: none; }
 
-/* Вогник (Стрес) */
+/* 5. Вогник (Стрес) */
 .stress-group label:before { content: '🔥'; filter: grayscale(100%); }
 .stress-group input:checked ~ label:before, .stress-group label:hover:before, .stress-group label:hover ~ label:before { filter: none; }
 
-/* Галочка (Готовність) */
+/* 6. Галочка (Готовність) */
 .ready-group label:before { content: '✅'; filter: grayscale(100%); }
 .ready-group input:checked ~ label:before, .ready-group label:hover:before, .ready-group label:hover ~ label:before { filter: none; }
 
@@ -225,8 +233,8 @@ footer {
     /* Стиснення іконок на мобільному для розміщення в один рядок */
     .rating-group {
         font-size: 1.3em; 
-        width: 100%; /* Дозволяємо займати повну ширину */
-        justify-content: space-between; /* Рівномірний розподіл */
+        width: 100%; 
+        justify-content: space-between; 
         margin: 10px 0 20px 0;
     }
     .rating-group label:before {
