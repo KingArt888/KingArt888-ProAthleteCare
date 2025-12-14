@@ -1,5 +1,5 @@
 /* =========================================================================
-   PROATLETCARE: LOAD-SEASON.CSS - ФІНАЛЬНА ВЕРСІЯ ДВОХ КОЛОНОК (СТАБІЛЬНИЙ)
+   PROATLETCARE: LOAD-SEASON.CSS - ФІНАЛЬНА ВЕРСІЯ (СТАБІЛЬНИЙ КОД)
    ========================================================================= */
 
 * {
@@ -10,12 +10,12 @@
 .dashboard-container {
     display: flex;
     gap: 30px;
-    flex-wrap: wrap; /* Дозволяє переносити на мобільних пристроях */
+    flex-wrap: wrap; 
     max-width: 100%;
     align-items: stretch; 
 }
 
-/* --- 1. СТИЛІ КАРТОК (БЕЗ ЗМІН) --- */
+/* --- 1. СТИЛІ КАРТОК --- */
 .form-card, .stats-card, .chart-card {
     background-color: #0d0d0d;
     border: 1px solid #1a1a1a;
@@ -35,21 +35,21 @@
 }
 
 
-/* --- 2. РОЗМІРИ КОЛОНОК (ДЕСКТОП: НОВА ЛОГІКА) --- */
+/* --- 2. РОЗМІРИ КОЛОНОК (ДЕСКТОП) --- */
 
-/* 2.1. ЛІВА КОЛОНКА: ФОРМА - ФІКСОВАНА ШИРИНА */
+/* 2.1. ЛІВА КОЛОНКА: ФОРМА */
 .form-container {
-    width: 350px; /* Фіксуємо ширину */
-    flex-shrink: 0; /* Не дозволяємо стискатися, поки не спрацює media query */
+    width: 350px; /* Фіксована ширина для форми */
+    flex-shrink: 0; /* Не стискається */
     min-width: 350px;
 }
 
 /* 2.2. ПРАВА КОЛОНКА: СТАТИСТИКА + ГРАФІКИ */
 .info-column {
-    flex-grow: 1; /* Займає ВЕСЬ залишок простору */
+    flex-grow: 1; /* Займає весь залишок */
     flex-shrink: 1;
-    flex-basis: auto; /* Автоматично обчислюється */
-    min-width: 400px; /* Мінімальна ширина для правого блоку, перш ніж відбудеться перенос */
+    flex-basis: auto; 
+    min-width: 400px; 
     display: flex;
     flex-direction: column; 
     gap: 30px; 
@@ -78,19 +78,122 @@
 }
 
 
-/* --- 3, 4, 5. СТИЛІ ФОРМИ, RPE, СПІДОМЕТРА (Вставте сюди весь ваш попередній код) --- */
-/* ... (весь код для label, input, .submit-button, .rpe-group, .speedometer-widget і т.д.) ... */
-
+/* --- 3. СТИЛІ ЕЛЕМЕНТІВ ФОРМИ (Без змін) --- */
 label { display: block; margin-bottom: 8px; color: #AAAAAA; font-weight: 500; }
-input[type="date"], input[type="number"] { width: 100%; padding: 10px; margin-bottom: 20px; background-color: #1a1a1a; border: 1px solid #333; color: #CCCCCC; border-radius: 5px; box-sizing: border-box; transition: border-color 0.3s; }
-/* ... (інші стилі для форми) ... */
+input[type="date"], input[type="number"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    background-color: #1a1a1a; 
+    border: 1px solid #333;
+    color: #CCCCCC;
+    border-radius: 5px;
+    box-sizing: border-box;
+    transition: border-color 0.3s;
+}
+input[type="date"]:focus, input[type="number"]:focus {
+    border-color: #FFD700; 
+    outline: none;
+}
+.submit-button {
+    background-color: #FFC72C; 
+    color: #000000; 
+    padding: 12px 25px; 
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.1em;
+    font-weight: bold; 
+    width: 100%;
+    transition: background-color 0.3s;
+    margin-top: 30px; 
+    box-shadow: none;
+}
+.submit-button:hover {
+    background-color: #E6B800; 
+    box-shadow: none;
+}
+
+/* --- 4. СТИЛІ RPE GROUP (Без змін) --- */
+.rpe-group {
+    display: flex; flex-direction: row-reverse; justify-content: flex-end; align-items: flex-start; 
+    margin-bottom: 20px; background-color: #1a1a1a; padding: 5px; border-radius: 5px; flex-wrap: wrap; 
+}
+.rpe-group input[type="radio"] { display: none; }
+.rpe-group label {
+    cursor: pointer; font-size: 1.5em; width: 10%; padding: 5px 0 0 0; margin: 0; text-align: center;
+    transition: color 0.3s, transform 0.2s; color: #456545; position: relative; display: block; 
+}
+.rpe-group label::after {
+    content: attr(data-rpe); position: absolute; top: -15px; left: 50%; transform: translateX(-50%);
+    font-size: 0.6em; font-weight: bold; color: #888888; transition: color 0.3s;
+}
+.rpe-group label::before { content: '⚡'; padding: 0 1px; display: block; }
+
+/* --- КОЛЬОРОВА ЛОГІКА RPE (Без змін) --- */
+.rpe-group input[value="1"]:checked ~ label, .rpe-group input[value="2"]:checked ~ label, .rpe-group input[value="3"]:checked ~ label, .rpe-group input[value="4"]:checked ~ label, .rpe-group input[value="5"]:checked ~ label { color: #5cb85c; }
+.rpe-group input[value="1"]:checked ~ label::after, .rpe-group input[value="2"]:checked ~ label::after, .rpe-group input[value="3"]:checked ~ label::after, .rpe-group input[value="4"]:checked ~ label::after, .rpe-group input[value="5"]:checked ~ label::after { color: #5cb85c; }
+.rpe-group input[value="6"]:checked ~ label, .rpe-group input[value="7"]:checked ~ label, .rpe-group input[value="8"]:checked ~ label { color: #f0ad4e; }
+.rpe-group input[value="6"]:checked ~ label::after, .rpe-group input[value="7"]:checked ~ label::after, .rpe-group input[value="8"]:checked ~ label::after { color: #f0ad4e; }
+.rpe-group input[value="9"]:checked ~ label, .rpe-group input[value="10"]:checked ~ label { color: #d9534f; }
+.rpe-group input[value="9"]:checked ~ label::after, .rpe-group input[value="10"]:checked ~ label::after { color: #d9534f; }
+.rpe-group input:checked + label { transform: scale(1.15); text-shadow: 0 0 5px currentColor; }
+.rpe-group label:hover { color: #5cb85c; }
+.rpe-group label:hover::after { color: #5cb85c;}
+.rpe-group input:checked ~ label:hover { color: inherit; }
+.rpe-group input:checked ~ label:hover::after { color: inherit; }
+
+
+/* --- 5. СТИЛІ СПІДОМЕТРА ACWR (ПОВЕРНУТО) --- */
+.speedometer-widget {
+    display: flex; flex-direction: column; align-items: center; margin-bottom: 30px; padding: 0; 
+    border: none; border-radius: 10px; background-color: transparent; box-shadow: none; 
+}
+.gauge-display {
+    position: relative; width: 280px; height: 140px; overflow: hidden; margin-bottom: 20px;
+}
+.gauge-arc {
+    position: absolute; width: 280px; height: 280px; border-radius: 50%; top: 0; left: 0;
+    background: transparent; border: 20px solid #333; z-index: 5;
+    clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%); transform: rotate(270deg); 
+}
+.gauge-arc::before {
+    content: ''; position: absolute; top: -20px; left: -20px; width: 280px; height: 280px; border-radius: 50%;
+    background: conic-gradient( #d9534f 0% 15%, #f0ad4e 15% 30%, #5cb85c 30% 65%, #f0ad4e 65% 85%, #d9534f 85% 100% );
+    mask: radial-gradient(transparent 120px, black 120px, black 140px, transparent 140px);
+    -webkit-mask: radial-gradient(transparent 120px, black 120px, black 140px, transparent 140px);
+    z-index: 6; clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%); transform: rotate(0deg); 
+}
+.gauge-needle-pivot {
+    position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 18px; 
+    height: 18px; background-color: #FFD700; border-radius: 50%; z-index: 10;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.8); border: 3px solid #1a1a1a; 
+}
+.gauge-needle {
+    position: absolute; bottom: 9px; left: 50%; width: 3px; height: 140px; 
+    background-color: #FFD700; transform-origin: bottom center; transition: transform 1.5s ease-out; 
+    border-radius: 3px; z-index: 9; transform: translateX(-50%) rotate(0deg); 
+}
+.gauge-value-text {
+    position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%); text-align: center; z-index: 11;
+}
+#acwr-value {
+    font-size: 3.2em; font-weight: 700; color: #FFD700; display: block;
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.4); 
+}
+.acwr-label { margin-top: -10px; font-size: 0.9em; color: #AAAAAA; }
+.gauge-status-box { text-align: center; margin-top: 15px; font-size: 1.1em; }
+.status-safe { color: #5cb85c; font-weight: bold; }
+.status-warning { color: #f0ad4e; font-weight: bold; }
+.status-danger { color: #d9534f; font-weight: bold; }
+
 
 /* --- 6. АДАПТИВНІСТЬ --- */
 
-/* АКТИВАЦІЯ МОБІЛЬНОГО РЕЖИМУ (100% ШИРИНА) - коли загальний простір менше ~780px */
-@media (max-width: 800px) { /* Змінив брейкпоінт на 800px для безпеки */
+/* АКТИВАЦІЯ МОБІЛЬНОГО РЕЖИМУ (100% ШИРИНА) - коли загальний простір менше ~800px */
+@media (max-width: 800px) { 
     
-    /* Все розташовуємо у стовпець */
+    /* На невеликих екранах все розташовуємо у стовпець */
     .dashboard-container, .info-column {
         flex-direction: column; 
         gap: 20px;
@@ -98,11 +201,11 @@ input[type="date"], input[type="number"] { width: 100%; padding: 10px; margin-bo
 
     /* Примусово 100% для всіх колонок */
     .form-container, .info-column, .stats-card, .chart-card { 
+        /* Знімаємо мінімальну ширину і примусово ставимо 100% */
+        flex: 1 1 100%; 
         width: 100% !important; 
-        flex-basis: 100%; 
-        min-width: unset !important; 
-        flex-shrink: 1;
-        flex-grow: 1;
+        min-width: unset !important; /* Навіть min-width з десктопу ігноруємо */
+        max-width: 100%; 
     }
     
     /* Графіки */
@@ -117,7 +220,24 @@ input[type="date"], input[type="number"] { width: 100%; padding: 10px; margin-bo
     .gauge-display {
         width: 250px; 
         height: 125px;
-        /* ... (Інші стилі спідометра) ... */
+        margin-bottom: 10px;
     }
-    /* ... (решта стилів для спідометра) ... */
+    .gauge-arc {
+        width: 250px;
+        height: 250px;
+    }
+    .gauge-arc::before {
+        width: 250px;
+        height: 250px;
+        mask: radial-gradient(transparent 105px, black 105px, black 125px, transparent 125px);
+        -webkit-mask: radial-gradient(transparent 105px, black 105px, black 125px, transparent 125px);
+    }
+    .gauge-needle {
+        height: 125px;
+        bottom: 8px;
+    }
+    #acwr-value {
+        font-size: 2.5em; 
+    }
+    
 }
