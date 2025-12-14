@@ -56,10 +56,9 @@
     border: none;
     padding: 12px 25px;
     border-radius: 5px;
-    /* ЗМІНА: Центрування кнопки */
+    /* Центрування кнопки */
     display: block;
     margin: 30px auto 0 auto; 
-    /* ------------------------ */
     cursor: pointer;
     font-size: 1.1em;
     font-weight: bold;
@@ -103,7 +102,7 @@
     border-radius: 5px;
 }
 
-/* --- Стилі для ВСІХ РЕЙТИНГІВ ІКОНОК (КОМПАКТНІ ТА УНІФІКОВАНІ) --- */
+/* --- Стилі для ВСІХ РЕЙТИНГІВ ІКОНОК (З поверненням оригінального вигляду іконки) --- */
 .rating-group {
     display: flex;
     flex-direction: row-reverse; 
@@ -117,86 +116,149 @@
 }
 .rating-group label {
     /* *** УНІФІКАЦІЯ ШИРИНИ ТА РОЗМІРУ КОНТЕЙНЕРІВ ІКОНОК *** */
-    display: inline-block; /* Дозволяє встановлювати ширину та висоту */
+    display: inline-block; 
     width: 28px;           /* Фіксована ширина для всіх іконок */
     height: 28px;          /* Фіксована висота для всіх іконок */
     line-height: 1.7;      /* Центрування по вертикалі (1.7 * 1.5em ≈ 28px) */
     text-align: center;    /* Центрування по горизонталі */
-    padding: 0;            /* Видаляємо внутрішній відступ */
+    padding: 0;            
+    position: relative;    /* ДОДАНО: Для позиціонування номера (::after) */
     /* ********************************************************* */
     color: #888; 
     cursor: pointer;
     transition: color 0.2s;
 }
-.energy-group label, .hydration-group label, .stress-group label, .ready-group label {
-    color: inherit;
+
+/* Загальні стилі для номера (::after) */
+.rating-group label::after {
+    display: block;
+    position: absolute;
+    top: -15px; /* Розташовуємо над іконкою */
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.7em; 
+    color: #555; /* Сірий колір для неактивного номера */
+    font-weight: normal;
+    transition: color 0.2s;
 }
 
+/* --- КОНТЕНТ НОМЕРІВ (1-10) --- */
+.rating-group input[value="1"] + label::after { content: '1'; }
+.rating-group input[value="2"] + label::after { content: '2'; }
+.rating-group input[value="3"] + label::after { content: '3'; }
+.rating-group input[value="4"] + label::after { content: '4'; }
+.rating-group input[value="5"] + label::after { content: '5'; }
+.rating-group input[value="6"] + label::after { content: '6'; }
+.rating-group input[value="7"] + label::after { content: '7'; }
+.rating-group input[value="8"] + label::after { content: '8'; }
+.rating-group input[value="9"] + label::after { content: '9'; }
+.rating-group input[value="10"] + label::after { content: '10'; }
+/* Номер також активується */
+.rating-group input:checked ~ label::after,
+.rating-group label:hover::after,
+.rating-group label:hover ~ label::after { 
+    /* КОЛІР буде перевизначено нижче для кожної групи */
+}
 
 /* 1. Зірки (Сон) */
-.star-group label:before {
+.star-group label::before {
     content: '★'; 
 }
-.star-group input:checked ~ label:before,
-.star-group label:hover:before,
-.star-group label:hover ~ label:before {
+.star-group input:checked ~ label::before,
+.star-group label:hover::before,
+.star-group label:hover ~ label::before {
     color: #FFC72C; 
 }
+/* Активація номера */
+.star-group input:checked ~ label::after,
+.star-group label:hover::after,
+.star-group label:hover ~ label::after { color: #FFC72C; }
+
 
 /* 2. М'ячі (Біль/Втома) */
-.pain-group label:before {
+.pain-group label::before {
     content: '●'; 
     font-size: 1.3em; /* Корекція розміру, щоб візуально відповідати іншим символам */
 }
-.pain-group input:checked ~ label:before,
-.pain-group label:hover:before,
-.pain-group label:hover ~ label:before {
+.pain-group input:checked ~ label::before,
+.pain-group label:hover::before,
+.pain-group label:hover ~ label::before {
     color: #DA3E52; 
 }
+/* Активація номера */
+.pain-group input:checked ~ label::after,
+.pain-group label:hover::after,
+.pain-group label:hover ~ label::after { color: #DA3E52; }
+
 
 /* 3. Блискавки (Енергія/Настрій) */
-.energy-group label:before {
+/* Тут ми видаляємо color: inherit, оскільки ::before використовує фільтр */
+.energy-group label { color: inherit; } 
+.energy-group label::before {
     content: '⚡'; 
     filter: grayscale(100%); 
 }
-.energy-group input:checked ~ label:before,
-.energy-group label:hover:before,
-.energy-group label:hover ~ label:before {
+.energy-group input:checked ~ label::before,
+.energy-group label:hover::before,
+.energy-group label:hover ~ label::before {
     filter: none; 
 }
+/* Активація номера */
+.energy-group input:checked ~ label::after,
+.energy-group label:hover::after,
+.energy-group label:hover ~ label::after { color: #FFC72C; }
+
 
 /* 4. Краплі (Гідратація) */
-.hydration-group label:before {
+.hydration-group label { color: inherit; } 
+.hydration-group label::before {
     content: '💧'; 
     filter: grayscale(100%); 
 }
-.hydration-group input:checked ~ label:before,
-.hydration-group label:hover:before,
-.hydration-group label:hover ~ label:before {
+.hydration-group input:checked ~ label::before,
+.hydration-group label:hover::before,
+.hydration-group label:hover ~ label::before {
     filter: none; 
 }
+/* Активація номера */
+.hydration-group input:checked ~ label::after,
+.hydration-group label:hover::after,
+.hydration-group label:hover ~ label::after { color: #5B92E5; } /* Синій */
+
 
 /* 5. Вогник (Стрес) */
-.stress-group label:before {
+.stress-group label { color: inherit; } 
+.stress-group label::before {
     content: '🔥'; 
     filter: grayscale(100%); 
 }
-.stress-group input:checked ~ label:before,
-.stress-group label:hover:before,
-.stress-group label:hover ~ label:before {
+.stress-group input:checked ~ label::before,
+.stress-group label:hover::before,
+.stress-group label:hover ~ label::before {
     filter: none; 
 }
+/* Активація номера */
+.stress-group input:checked ~ label::after,
+.stress-group label:hover::after,
+.stress-group label:hover ~ label::after { color: #FF6700; } /* Помаранчевий */
+
 
 /* 6. Галочка (Готовність) */
-.ready-group label:before {
+.ready-group label { color: inherit; } 
+.ready-group label::before {
     content: '✅'; 
     filter: grayscale(100%); 
 }
-.ready-group input:checked ~ label:before,
-.ready-group label:hover:before,
-.ready-group label:hover ~ label:before {
+.ready-group input:checked ~ label::before,
+.ready-group label:hover::before,
+.ready-group label:hover ~ label::before {
     filter: none; 
 }
+/* Активація номера */
+.ready-group input:checked ~ label::after,
+.ready-group label:hover::after,
+.ready-group label:hover ~ label::after { color: #4CAF50; } /* Зелений */
+
 
 /* Футер */
 footer {
@@ -210,15 +272,12 @@ footer {
 
 /* --- СТИЛІ МЕНЮ ТА ШАПКИ НА МОБІЛЬНИХ (ДО 768px) --- */
 @media (max-width: 768px) {
-    /* *** ФІКС: Забезпечення повної ширини для карток форми та графіка *** */
+    /* ... (медіа-запити залишилися без змін) ... */
     .form-card, .chart-card {
         width: 100%;       
         max-width: 100%;   
         min-width: 0;      
     }
-    /* *************************************************************** */
-
-    /* ФІКСОВАНА ШАПКА */
     header {
         position: fixed;
         top: 0;
@@ -227,37 +286,27 @@ footer {
         z-index: 1000; 
         background-color: #000; 
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5); 
-        
-        /* КОМПАКТНЕ РОЗТАШУВАННЯ ЕЛЕМЕНТІВ */
         display: flex;
         align-items: center; 
         justify-content: flex-start;
         padding: 10px 60px 5px 10px; 
     }
-
-    /* ОБМЕЖЕННЯ РОЗМІРУ ОСНОВНОГО ЛОГОТИПУ У ШАПЦІ */
     header .logo { 
         width: 40px; 
         height: 40px;
     }
-    
     header .project-title {
         font-size: 1.1em; 
         margin-left: 10px;
         flex-shrink: 1;
     }
-    
     header .tagline {
-        display: none; /* Приховуємо слоган */
+        display: none; 
     }
-    
-    /* ЗСУВАЄМО ОСНОВНИЙ КОНТЕНТ */
     .content-wrapper {
-        padding-top: 100px; /* Відступ під фіксований header */
+        padding-top: 100px; 
         flex-direction: column; 
     }
-    
-    /* СТИЛЬНА КНОПКА МЕНЮ (БУРГЕР): ВІДОБРАЖАЄМО ТА ФІКСУЄМО */
     .menu-toggle {
         display: block !important; 
         position: fixed; 
@@ -273,8 +322,6 @@ footer {
         border-radius: 6px; 
         line-height: 1; 
     }
-    
-    /* Фіксоване меню-оверлей */
     .sidebar {
         position: fixed;
         top: 0;
@@ -289,8 +336,6 @@ footer {
         display: flex; 
         flex-direction: column;
     }
-
-    /* Клас для відображення меню */
     .sidebar.active {
         transform: translateX(0); 
     }
