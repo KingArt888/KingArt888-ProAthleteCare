@@ -15,7 +15,7 @@
     display: flex;
     gap: 30px;
     margin-top: 20px;
-    flex-wrap: wrap; /* Дозволяє перенесення карток на малий екран */
+    flex-wrap: wrap; 
 }
 
 .form-card, .chart-card {
@@ -25,13 +25,12 @@
     padding: 25px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
     /* Забезпечуємо гнучкість на десктопі */
-    flex: 1 1 350px; /* Мінімальна ширина 350px, зростають рівномірно */
+    flex: 1 1 350px; 
 }
 .chart-card {
-    flex-grow: 1.5; /* Графік трохи ширший за форму на десктопі */
+    flex-grow: 1.5; 
     max-width: 500px; 
 }
-/* Форма завжди повинна бути трохи вужчою, щоб залишити місце для графіка */
 .form-card {
      max-width: 450px; 
 }
@@ -99,8 +98,6 @@
     background-color: #000000;
     border-radius: 5px;
 }
-
-/* 🌟 СТИЛЬ: Відображення поточної статистики */
 .wellness-stat {
     text-align: center; 
     margin: 5px 0 10px 0;
@@ -118,7 +115,7 @@
     direction: ltr; /* Забезпечуємо читання 1-10 */
     font-size: 1.5em; 
     margin: 10px 0 20px 0;
-    flex-wrap: nowrap; /* Важливо: не дозволяємо ламатися на десктопі */
+    flex-wrap: nowrap;
 }
 .rating-group input {
     display: none; 
@@ -127,18 +124,17 @@
     color: #333; 
     cursor: pointer;
     transition: color 0.2s;
+    /* Знято всі стилі, які створювали "ячейки" на десктопі */
 }
 
 /* ІКОНКИ ТА КОЛЬОРИ (ЗАГАЛЬНІ) */
-.rating-group label:before {
-    margin-right: 19px; 
-}
+
 /* Зірки (Сон) */
-.star-group label:before { content: '★'; }
+.star-group label:before { content: '★'; margin-right: 19px; }
 .star-group input:checked ~ label:before, .star-group label:hover:before, .star-group label:hover ~ label:before { color: #FFC72C; }
 
-/* Хрестики (Біль/Втома) */
-.pain-group label:before { content: '✖'; }
+/* Хрестики (Біль/Втома) - ПОВЕРНУТО І ВИПРАВЛЕНО */
+.pain-group label:before { content: '✖'; margin-right: 19px; }
 .pain-group input:checked ~ label:before, .pain-group label:hover:before, .pain-group label:hover ~ label:before { color: #DA3E52; }
 
 /* Блискавки (Енергія/Настрій) */
@@ -172,7 +168,7 @@ footer {
 
 /* СТИЛІ МЕНЮ ТА ШАПКИ НА ПЛАНШЕТАХ/МОБІЛЬНИХ (ДО 768px) */
 @media (max-width: 768px) {
-    /* ФІКСОВАНА ШАПКА ТА МЕНЮ (як ви вже налаштували) */
+    /* ФІКСОВАНА ШАПКА ТА МЕНЮ (не змінюємо) */
     header {
         position: fixed; top: 0; left: 0; width: 100%; z-index: 1000; background-color: #000; 
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5); display: flex; align-items: center; 
@@ -194,13 +190,13 @@ footer {
     }
     .sidebar.active { transform: translateX(0); }
     
-    /* Змушуємо картки займати повну ширину на малих екранах */
+    /* Змушуємо картки займати повну ширину */
     .dashboard-container {
         flex-direction: column; 
     }
     .form-card, .chart-card {
         width: 100%;
-        max-width: none; /* Знімаємо обмеження max-width */
+        max-width: none; 
         min-width: unset;
     }
     .form-card {
@@ -211,54 +207,46 @@ footer {
 
 /* АДАПТАЦІЯ РЕЙТИНГІВ НА НАЙМЕНШИХ ЕКРАНАХ (ДО 480px) */
 @media (max-width: 480px) {
-    /* ЗМІНА: ПЕРЕКЛЮЧЕННЯ РЕЙТИНГІВ НА ГНУЧКИЙ РЯДОК З РІВНИМИ КНОПКАМИ */
+    /* ВИПРАВЛЕННЯ: ЗАБЕЗПЕЧУЄМО СТИСНЕННЯ ІКОНОК БЕЗ "ЯЧЕЙОК" */
     .rating-group {
         display: flex;
-        flex-direction: row; /* Тепер зліва направо: 1, 2, 3... 10 */
+        flex-direction: row; /* 1, 2, 3... 10 */
         justify-content: space-between; 
         padding: 0 5px;
-        font-size: 1.1em; 
+        font-size: 1.3em; /* Трохи менший шрифт, ніж на десктопі */
         margin: 10px 0 20px 0;
         flex-wrap: nowrap;
     }
 
-    /* Стилізація кнопок */
     .rating-group label {
         display: flex; 
-        flex-grow: 1; /* Змушуємо займати рівний простір */
+        flex-grow: 1; /* Змушуємо їх рівномірно стискатися */
         justify-content: center;
         align-items: center;
-        min-width: 15px; /* Мінімальна ширина */
-        padding: 5px 0;
-        margin: 0 1px; 
+        padding: 0; /* Прибираємо внутрішні відступи */
+        margin: 0 1px; /* Дуже маленький простір між іконками */
         
-        border: 1px solid #FFC72C;
-        border-radius: 5px;
-        background-color: #333;
-        color: #FFF;
+        /* КЛЮЧОВЕ: ПРИБИРАЄМО СТИЛІ "ЯЧЕЙОК" */
+        border: none !important;
+        background-color: transparent !important;
+        border-radius: 0 !important;
+        
         position: relative;
         line-height: 1; 
     }
     
-    /* Зменшуємо розмір іконок */
+    /* Зменшуємо розмір іконок і відступи */
     .rating-group label:before {
         font-size: 1em !important;
-        margin-right: 0 !important; 
-        padding: 0;
+        /* КЛЮЧОВЕ: Зменшуємо відступ між іконками, щоб вони помістилися */
+        margin-right: 0px !important; 
     }
+    
+    /* ВИПРАВЛЕННЯ ДЛЯ ХРЕСТИКА: Він тепер використовуватиме загальні стилі, але ми уніфікуємо його відступи */
+    .pain-group label:before { margin-right: 0px !important; }
 
-    /* Додаємо числове значення для зрозумілості */
+    /* Прибираємо числове значення, яке виглядало як частина "ячейки" */
     .rating-group label:after {
-        content: attr(title); 
-        position: absolute;
-        font-size: 8px; 
-        bottom: 1px;
-        right: 1px;
-        color: #FFD700;
-        opacity: 0.5;
-        transition: opacity 0.2s ease;
-    }
-    .rating-group label:not(:hover):after {
-        opacity: 0;
+        display: none !important;
     }
 }
