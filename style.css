@@ -40,7 +40,7 @@ header {
 /* Бічне меню (Sidebar) */
 .sidebar {
     width: 250px;
-    flex-shrink: 0; /* <--- Забороняє стискатися */
+    flex-shrink: 0; 
     background-color: #0d0d0d;
     padding: 20px;
     box-shadow: 2px 0 10px rgba(255, 199, 44, 0.2);
@@ -73,7 +73,7 @@ header {
     background-color: #1f1f1f;
     border-left: 2px solid #FFC72C;
     color: #FFC72C;
-} /* <--- ВИПРАВЛЕНО: Додана відсутня закриваюча дужка */
+} /* <-- СИНТАКСИЧНА ПОМИЛКА ВИПРАВЛЕНА ТУТ */
 
 /* Основний вміст */
 .main-content {
@@ -81,10 +81,10 @@ header {
     padding: 30px; 
     background-color: #000000;
     
-    /* === ВИПРАВЛЕННЯ МЕНЮ/СКРОЛУ (ТЕПЕР БУДЕ ПРАЦЮВАТИ) === */
+    /* === ВИПРАВЛЕННЯ ДЛЯ МЕНЮ/СКРОЛУ === */
     min-width: 0; /* Дозволяє контенту стискатися */
     overflow-x: hidden; /* Забороняє горизонтальну прокрутку */
-    /* ======================================================= */
+    /* ================================= */
 }
 
 /* Стиль для заголовків основного контенту */
@@ -92,8 +92,7 @@ header {
     color: #FFC72C;
     margin-bottom: 20px;
 }
-
-/* --- HERO SECTION: КАРТИНКА + ТЕКСТ ЗВЕРХУ --- */
+/* --- HERO SECTION (Залишок коду) --- */
 .hero {
     position: relative; 
     max-width: 80%; 
@@ -110,8 +109,6 @@ header {
     object-fit: cover; 
     filter: brightness(60%);
 }
-
-/* Оверлей з текстом поверх картинки */
 .hero-overlay {
     position: absolute; 
     bottom: 0; 
