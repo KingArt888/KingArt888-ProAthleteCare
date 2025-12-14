@@ -68,18 +68,19 @@ const colorsMap = {
 
 
 // ==============================================
-// 2. ФУНКЦІЯ ДЛЯ ОНОВЛЕННЯ СТАТИСТИКИ
+// 2. ФУНКЦІЯ ДЛЯ ОНОВЛЕННЯ СТАТИСТИКИ (ПІД ГРАФІКАМИ)
 // ==============================================
 
 /**
  * Відображає останній бал під кожним міні-графіком.
- * Для роботи вимагає, щоб в HTML під кожним графіком був елемент з ID="stat-[назва_поля]".
+ * Потрібні елементи з ID="stat-[назва_поля]" в HTML.
  */
 function updateWellnessStats(latestData) {
     WELLNESS_FIELDS.forEach(field => {
+        // Використовуємо ID, які ми додамо в HTML: stat-sleep, stat-soreness і т.д.
         const statElement = document.getElementById(`stat-${field}`);
         if (statElement) {
-            // Беремо останній бал
+            // Беремо останній бал, або 0, якщо даних немає
             const score = latestData[field] || 0;
             statElement.textContent = `Оцінка: ${score} / 10`;
             
@@ -101,15 +102,16 @@ function initCharts() {
     const sortedDates = Object.keys(history).sort(); 
 
     // -----------------------------------------------------------------
-    // --- ЗНИЩЕННЯ ІСНУЮЧИХ ГРАФІКІВ (ВАЖЛИВО ДЛЯ УНИКНЕННЯ ПОМИЛОК) ---
+    // --- ЗНИЩЕННЯ ІСНУЮЧИХ ГРАФІКІВ (ВИПРАВЛЕННЯ Type Error) ---
     // -----------------------------------------------------------------
+    // Виправлення Uncaught TypeError: destroy is not a function
     WELLNESS_FIELDS.forEach(field => {
-        // Коректний виклик destroy
         if (window[`chart_${field}`] && typeof window[`chart_${field}`].destroy === 'function') {
             window[`chart_${field}`].destroy();
             window[`chart_${field}`] = null;
         }
     });
+    
     const mainCtx = document.getElementById('wellnessChart');
     if (window.wellnessChart && typeof window.wellnessChart.destroy === 'function') {
         window.wellnessChart.destroy();
@@ -121,20 +123,29 @@ function initCharts() {
     if (sortedDates.length === 0) {
         const chartArea = document.querySelector('.chart-area');
         if (chartArea) {
-            chartArea.innerHTML = '<p class="placeholder-text">Жодного запису ще не збережено. Заповніть форму, щоб почати бачити графіки!</p>';
+             // Створюємо порожній canvas для подальшого заповнення
+            chartArea.innerHTML = '<canvas id="wellnessChart"></canvas>'; 
         }
-        updateWellnessStats({}); // Очищаємо статистику
+        
+        // Очищаємо статистику і показуємо повідомлення
+        updateWellnessStats({});
+        const formCard = document.querySelector('.form-card');
+        const existingMessage = document.getElementById('no-data-message');
+
+        if (!existingMessage && formCard) {
+             const message = document.createElement('p');
+             message.id = 'no-data-message';
+             // Використовуємо ваш стиль .placeholder-text
+             message.className = 'placeholder-text'; 
+             message.textContent = 'Жодного запису ще не збережено. Заповніть форму, щоб почати бачити графіки!';
+             formCard.append(message);
+        }
         return; 
     }
     
-    // Видаляємо заглушку, якщо вона існує 
-    const chartArea = document.querySelector('.chart-area');
-    if (chartArea) {
-        const placeholder = chartArea.querySelector('.placeholder-text');
-        if (placeholder) {
-            placeholder.remove();
-        }
-    }
+    // Видаляємо повідомлення, якщо дані є
+    const noDataMessage = document.getElementById('no-data-message');
+    if (noDataMessage) noDataMessage.remove();
 
 
     // Створюємо загальні масиви міток та точок
@@ -160,7 +171,7 @@ function initCharts() {
         options: {
              responsive: true,
              maintainAspectRatio: false,
-             // Анімація увімкнена за замовчуванням (для "поступового" заповнення)
+             animation: true, // Залишаємо анімацію "поступового" заповнення
              scales: {
                 y: {
                     min: 1,
@@ -196,7 +207,7 @@ function initCharts() {
                     data: chartData[field],
                     borderColor: colorsMap[field].color,
                     backgroundColor: colorsMap[field].area,
-                    tension: 0.3, // Використовуємо натяг 0.3 (як у вашому старому коді)
+                    tension: 0.3,
                     fill: true,
                     pointRadius: 3, 
                     pointHoverRadius: 5,
@@ -346,7 +357,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 const submissionData = {};
                 form.querySelectorAll('input[type="radio"]:checked').forEach(input => {
-                    // Парсимо значення в число для коректного відображення на графіку
+                    // !!! ВАЖЛИВО: Перетворюємо значення на число
                     submissionData[input.name] = parseInt(input.value, 10);
                 });
                 
