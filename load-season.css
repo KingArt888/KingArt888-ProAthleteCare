@@ -14,6 +14,10 @@
    PROATLETCARE: LOAD-SEASON.CSS - ФІНАЛЬНА ВЕРСІЯ ДВОХ КОЛОНОК
    ========================================================================= */
 
+/* =========================================================================
+   PROATLETCARE: LOAD-SEASON.CSS - ФІНАЛЬНА ВЕРСІЯ (ГНУЧКА ФОРМА)
+   ========================================================================= */
+
 * {
     box-sizing: border-box; 
 }
@@ -24,7 +28,7 @@
     gap: 30px;
     flex-wrap: wrap; 
     max-width: 100%;
-    align-items: stretch; /* Щоб ліва та права колонка були однакової висоти */
+    align-items: flex-start; /* Встановлюємо вирівнювання на початок */
 }
 
 /* --- 1. СТИЛІ КАРТОК --- */
@@ -34,7 +38,7 @@
     border-radius: 10px;
     padding: 25px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); 
-    margin-bottom: 0; /* Видаляємо марджини, бо використовуємо gap */
+    margin-bottom: 0; 
     max-width: 100%; 
 }
 
@@ -47,42 +51,51 @@
 }
 
 
-/* --- 2. РОЗМІРИ КОЛОНОК --- */
+/* --- 2. РОЗМІРИ КОЛОНОК (ДЕСКТОП: ГНУЧКА ШИРИНА) --- */
 
-/* 2.1. ЛІВА КОЛОНКА: ФОРМА */
+/* 2.1. ЛІВА КОЛОНКА: ФОРМА - ГНУЧКА ШИРИНА */
 .form-container {
-    width: 35%; /* Форма займає ~35% ширини */
-    min-width: 350px;
+    width: 35%; /* Змінено: займає 35% доступного простору */
+    min-width: 350px; /* Але не стискається менше 350px */
+    flex-shrink: 0; /* Не дозволяємо стискатися, поки не досягне min-width */
 }
 
 /* 2.2. ПРАВА КОЛОНКА: СТАТИСТИКА + ГРАФІКИ */
 .info-column {
-    flex: 1; /* Займає всю решту ширини */
+    width: 65%; /* Змінено: займає 65% доступного простору */
+    flex-grow: 1; /* КРИТИЧНО: Займає всю решту ширини */
     display: flex;
-    flex-direction: column; /* КРИТИЧНО: Вирівнює вміст у стовпець */
-    gap: 30px; /* Відступи між спідометром і графіками */
-    min-width: 450px;
+    flex-direction: column; 
+    gap: 30px; 
+    min-width: 450px; /* Мінімум для графіків */
 }
 
 /* 2.3. СТИЛІ ЕЛЕМЕНТІВ У ПРАВІЙ КОЛОНЦІ */
-.stats-container, .chart-card {
-    width: 100%; /* Займе 100% ширини правої колонки */
+.stats-container {
+    width: 100%; 
     margin-bottom: 0; 
+    display: flex;
+    flex-direction: column; 
+    align-items: center; 
 }
 
 .chart-card {
-    /* КРИТИЧНО: Фіксуємо висоту для стабільності Chart.js на десктопі */
-    height: 400px; 
+    width: 100%;
+    /* ФІКСАЦІЯ ГРАФІКІВ: забезпечуємо стабільну висоту */
+    height: 380px; 
+    display: flex;
+    flex-direction: column; 
 }
 
-/* Гарантуємо, що canvas займає повну висоту картки */
 .chart-card canvas {
+    flex-grow: 1;
     max-height: 100%; 
     height: 100%;
 }
 
 
-/* --- 3. СТИЛІ ЕЛЕМЕНТІВ ФОРМИ --- */
+/* --- 3. СТИЛІ ЕЛЕМЕНТІВ ФОРМИ (Без змін) --- */
+
 label {
     display: block;
     margin-bottom: 8px;
@@ -365,27 +378,28 @@ input[type="date"]:focus, input[type="number"]:focus {
     font-weight: bold;
 }
 
-/* --- 6. АДАПТИВНІСТЬ --- */
+/* --- 6. АДАПТИВНІСТЬ (ВИПРАВЛЕНО) --- */
 
-@media (max-width: 1200px) { /* ЗМІНА: Порогове значення збільшено до 1200px для десктопу */
+@media (max-width: 1000px) { /* ПОВЕРТАЄМО ПОРОГ НА 1000px */
     
-    /* На невеликих екранах все розташовуємо у стовпець */
+    /* Дозволяємо контейнерам вмісту переноситися у стовпець */
     .dashboard-container, .info-column {
         flex-direction: column; 
         gap: 20px;
     }
 
-    /* Всі основні контейнери займають 100% ширини */
-    .form-container, .info-column, .stats-card, .chart-card { /* ДОДАНО: .stats-card для повноти */
-        width: 100%;
+    /* Всі основні контейнери займають 100% ширини, знімаємо фіксовані min/max */
+    .form-container, .info-column, .stats-card, .chart-card { 
+        width: 100% !important; /* Примусово ставимо 100% */
         min-width: unset; 
         max-width: 100%; 
+        flex-shrink: 1;
     }
     
-    /* ФІКСАЦІЯ ГРАФІКІВ: Знімаємо фіксовану висоту для адаптації */
+    /* ФІКСАЦІЯ ГРАФІКІВ: забезпечуємо мінімальну висоту на мобільному */
     .chart-card {
-        height: auto; /* Знімаємо жорстку висоту */
-        min-height: 300px; /* Забезпечуємо мінімальну висоту */
+        height: auto; 
+        min-height: 300px; 
     }
 }
 
@@ -407,13 +421,8 @@ input[type="date"]:focus, input[type="number"]:focus {
     .gauge-arc::before {
         width: 250px;
         height: 250px;
-        /* Регулюємо маску для зменшеного розміру */
         mask: radial-gradient(transparent 105px, black 105px, black 125px, transparent 125px);
         -webkit-mask: radial-gradient(transparent 105px, black 105px, black 125px, transparent 125px);
-    }
-    .gauge-needle-pivot {
-        width: 16px; 
-        height: 16px;
     }
     .gauge-needle {
         height: 125px;
