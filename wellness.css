@@ -175,11 +175,11 @@
 /* 2. М'ячі (Біль/Втома) */
 .pain-group label::before {
     content: '●'; 
-    font-size: 1.9em; 
+    font-size: 1.7em; 
 }
 /* ФІКС ВІДСТУПУ ДЛЯ НОМЕРА М'ЯЧИКІВ: Максимальне наближення */
 .pain-group label::after { 
-    top: -30px; 
+    top: -2px; 
 }
 /* ---------------------------------- */
 .pain-group input:checked ~ label::before,
