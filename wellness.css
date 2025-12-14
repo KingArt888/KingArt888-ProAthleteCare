@@ -177,9 +177,9 @@
     content: '●'; 
     font-size: 1.3em; 
 }
-/* ФІКС ВІДСТУПУ ДЛЯ НОМЕРА М'ЯЧИКІВ: Остаточне збільшення від'ємного відступу */
+/* ФІКС ВІДСТУПУ ДЛЯ НОМЕРА М'ЯЧИКІВ: Максимальне наближення */
 .pain-group label::after { 
-    top: -16px; /* Було -14px, тепер -16px */
+    top: -20px; 
 }
 /* ---------------------------------- */
 .pain-group input:checked ~ label::before,
@@ -293,7 +293,8 @@ footer {
         display: flex;
         align-items: center; 
         justify-content: flex-start;
-        padding: 10px 60px 5px 10px; 
+        /* ЗМІНА: Зменшення верхнього відступу з 10px до 5px */
+        padding: 5px 60px 5px 10px; 
     }
     header .logo { 
         width: 40px; 
