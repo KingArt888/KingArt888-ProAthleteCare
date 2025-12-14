@@ -20,7 +20,6 @@ function getTodayDateString() {
 
 /**
  * Завантажує всю історію оцінок Wellness з LocalStorage.
- * @returns {Object<string, Object>} Об'єкт, де ключ — дата (YYYY-MM-DD), а значення — оцінки.
  */
 function loadWellnessHistory() {
     const data = localStorage.getItem('wellnessHistory');
@@ -30,7 +29,7 @@ function loadWellnessHistory() {
 /**
  * Зберігає щоденні оцінки у LocalStorage.
  * @param {string} date - Поточна дата (YYYY-MM-DD).
- * @param {Object} scores - Об'єкт з оцінками (напр., {sleep: 7, soreness: 4, ...}).
+ * @param {Object} scores - Об'єкт з оцінками.
  */
 function saveWellnessHistory(date, scores) {
     const history = loadWellnessHistory();
@@ -81,19 +80,35 @@ function initCharts() {
     // Сортуємо дати, щоб графік завжди був хронологічним
     const sortedDates = Object.keys(history).sort(); 
 
-    // Якщо даних немає, виходимо і показуємо заглушку
+    // Видаляємо всі існуючі графіки перед перемальовуванням, щоб уникнути помилок
+    WELLNESS_FIELDS.forEach(field => {
+        if (window[`chart_${field}`] && typeof window[`chart_${field}`].destroy === 'function') {
+            window[`chart_${field}`].destroy();
+            window[`chart_${field}`] = null;
+        }
+    });
+    const mainCtx = document.getElementById('wellnessChart');
+    if (window.wellnessChart && typeof window.wellnessChart.destroy === 'function') {
+        window.wellnessChart.destroy();
+        window.wellnessChart = null;
+    }
+
+
+    // Якщо даних немає, показуємо заглушку
     if (sortedDates.length === 0) {
         const chartArea = document.querySelector('.chart-area');
         if (chartArea) {
             chartArea.innerHTML = '<p class="placeholder-text">Жодного запису ще не збережено. Заповніть форму, щоб почати бачити графіки!</p>';
         }
-        // Очищаємо всі міні-графіки, якщо вони існують
-        WELLNESS_FIELDS.forEach(field => {
-            if (window[`chart_${field}`]) window[`chart_${field}`].destroy();
-        });
-        if (window.wellnessChart) window.wellnessChart.destroy();
         return; 
     }
+    
+    // Якщо дані є, перевіряємо, чи потрібно видалити заглушку
+    const chartArea = document.querySelector('.chart-area');
+    if (chartArea && chartArea.querySelector('.placeholder-text')) {
+        // Оскільки у нас більше немає статичного HTML у цьому блоці, просто продовжуємо
+    }
+
 
     // Створюємо загальні масиви міток та точок
     const chartLabels = sortedDates.map(date => {
@@ -124,12 +139,12 @@ function initCharts() {
                     min: 1,
                     max: 10,
                     title: { display: false },
-                    ticks: { stepSize: 1, color: 'white' }, 
-                    grid: { color: 'rgba(255, 255, 255, 0.1)' } 
+                    ticks: { stepSize: 1, color: 'white', display: false }, // Приховуємо числа 1-10
+                    grid: { color: 'rgba(255, 255, 255, 0.1)', display: false } // Приховуємо сітку Y
                 },
                 x: {
-                    grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                    ticks: { color: 'rgba(255, 255, 255, 0.5)' }
+                    grid: { color: 'rgba(255, 255, 255, 0.1)', display: false }, // Приховуємо сітку X
+                    ticks: { color: 'rgba(255, 255, 255, 0.5)', display: false } // Приховуємо підписи X
                 }
              },
             plugins: {
@@ -144,11 +159,6 @@ function initCharts() {
     WELLNESS_FIELDS.forEach(field => {
         const ctx = document.getElementById(`chart-${field}`);
         
-        // Видаляємо старий графік, якщо існує, щоб уникнути конфліктів
-        if (window[`chart_${field}`]) {
-            window[`chart_${field}`].destroy();
-        }
-        
         if (ctx) {
             const chartDataConfig = {
                 labels: chartLabels,
@@ -157,7 +167,7 @@ function initCharts() {
                     data: chartData[field],
                     borderColor: colorsMap[field].color,
                     backgroundColor: colorsMap[field].area,
-                    tension: 0.3,
+                    tension: 0.4, // Збільшуємо натяг для більш плавних ліній
                     fill: true,
                     pointRadius: 3, 
                     pointHoverRadius: 5,
@@ -174,27 +184,20 @@ function initCharts() {
             };
 
             const miniConfig = JSON.parse(JSON.stringify(config));
-            // Приховуємо підписи осі X для компактності
-            miniConfig.options.scales.x.ticks.display = false; 
-            miniConfig.options.scales.x.grid.display = false; 
-            miniConfig.options.scales.y.ticks.display = false; // Приховуємо числа 1-10
-            miniConfig.options.scales.y.grid.display = false; // Приховуємо сітку Y
+            // Тут ми можемо додати індивідуальні налаштування, якщо знадобиться
 
+            // Створюємо новий графік і зберігаємо його посилання в window
             window[`chart_${field}`] = new Chart(ctx, { ...miniConfig, data: chartDataConfig });
         }
     });
 
     // Створення великого зведеного графіку (Radar Chart)
-    const mainCtx = document.getElementById('wellnessChart');
     if (mainCtx) {
         // Беремо останній запис для відображення поточного стану
         const latestData = history[sortedDates[sortedDates.length - 1]];
         const radarData = WELLNESS_FIELDS.map(field => latestData[field]);
         
-        if (window.wellnessChart) {
-            window.wellnessChart.destroy();
-        }
-
+        // Створюємо новий графік
         window.wellnessChart = new Chart(mainCtx, {
             type: 'radar',
             data: {
@@ -317,7 +320,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // --- ЛОГІКА ЗБЕРЕЖЕННЯ ---
                 
                 const submissionData = {};
-                form.querySelectorAll('input[type="radio"]:checked').forEach(input => {
+                form.querySelectorAll('input[type="radio']:checked').forEach(input => {
                     submissionData[input.name] = parseInt(input.value, 10);
                 });
                 
