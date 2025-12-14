@@ -1,22 +1,17 @@
 // ==============================================
-// --- ФУНКЦІЯ ДЛЯ КОНТРОЛЮ ДАТИ ---
+// --- ФУНКЦІЇ ДЛЯ РОБОТИ З ДАНИМИ ---
 // ==============================================
+
+/**
+ * Повертає поточну дату у форматі YYYY-MM-DD.
+ */
 function getTodayDateString() {
     const today = new Date();
     const year = today.getFullYear();
-    // Місяць: додаємо 1, тому що getMonth() повертає 0-11
     const month = String(today.getMonth() + 1).padStart(2, '0');
-    // День:
     const day = String(today.getDate()).padStart(2, '0');
-    
-    // Формат YYYY-MM-DD
     return `${year}-${month}-${day}`;
 }
-
-
-// ==============================================
-// --- ФУНКЦІЇ ДЛЯ ЗБЕРЕЖЕННЯ ІСТОРІЇ WELLNESS ---
-// ==============================================
 
 /**
  * Завантажує всю історію оцінок Wellness з LocalStorage.
@@ -39,45 +34,77 @@ function saveWellnessHistory(date, scores) {
 
 
 // ==============================================
-// 1. КОД ДЛЯ ГРАФІКІВ (ТІЛЬКИ ДЛЯ wellness.html)
+// 1. КОНСТАНТИ
+// ==============================================
+// Золото-чорна стилістика
+const GOLD_COLOR = 'rgb(255, 215, 0)';
+const GOLD_AREA = 'rgba(255, 215, 0, 0.4)';
+const RED_COLOR = 'rgb(255, 99, 132)'; 
+const RED_AREA = 'rgba(255, 99, 132, 0.4)';
+const ORANGE_COLOR = 'rgb(255, 159, 64)'; 
+const ORANGE_AREA = 'rgba(255, 159, 64, 0.4)';
+const BLUE_COLOR = 'rgb(0, 191, 255)'; 
+const BLUE_AREA = 'rgba(0, 191, 255, 0.4)';
+const PURPLE_COLOR = 'rgb(147, 112, 219)'; 
+const PURPLE_AREA = 'rgba(147, 112, 219, 0.4)';
+const LIME_COLOR = 'rgb(50, 205, 50)'; 
+const LIME_AREA = 'rgba(50, 205, 50, 0.4)';
+const GREY_GRID = '#CCCCCC';
+
+const WELLNESS_FIELDS = ['sleep', 'soreness', 'mood', 'water', 'stress', 'ready'];
+const FIELD_LABELS = {
+    sleep: 'Сон', soreness: 'Біль', mood: 'Настрій', 
+    water: 'Гідратація', stress: 'Стрес', ready: 'Готовність'
+};
+
+const colorsMap = {
+    sleep: { color: GOLD_COLOR, area: GOLD_AREA },
+    soreness: { color: RED_COLOR, area: RED_AREA },
+    mood: { color: PURPLE_COLOR, area: PURPLE_AREA },
+    water: { color: BLUE_COLOR, area: BLUE_AREA },
+    stress: { color: ORANGE_COLOR, area: ORANGE_AREA },
+    ready: { color: LIME_COLOR, area: LIME_AREA },
+};
+
+
+// ==============================================
+// 2. ФУНКЦІЯ ДЛЯ ОНОВЛЕННЯ СТАТИСТИКИ
+// ==============================================
+
+/**
+ * Відображає останній бал під кожним міні-графіком.
+ * Для роботи вимагає, щоб в HTML під кожним графіком був елемент з ID="stat-[назва_поля]".
+ */
+function updateWellnessStats(latestData) {
+    WELLNESS_FIELDS.forEach(field => {
+        const statElement = document.getElementById(`stat-${field}`);
+        if (statElement) {
+            // Беремо останній бал
+            const score = latestData[field] || 0;
+            statElement.textContent = `Оцінка: ${score} / 10`;
+            
+            // Задаємо колір відповідно до балу
+            statElement.style.color = score >= 7 ? LIME_COLOR : (score >= 4 ? ORANGE_COLOR : RED_COLOR);
+        }
+    });
+}
+
+
+// ==============================================
+// 3. КОД ДЛЯ ГРАФІКІВ (ТІЛЬКИ ДЛЯ wellness.html)
 // ==============================================
 function initCharts() {
-    // --- КОЛЬОРОВІ КОНСТАНТИ ДЛЯ ГРАФІКІВ ---
-    const GOLD_COLOR = 'rgb(255, 215, 0)';
-    const GOLD_AREA = 'rgba(255, 215, 0, 0.4)';
-    const RED_COLOR = 'rgb(255, 99, 132)'; 
-    const RED_AREA = 'rgba(255, 99, 132, 0.4)';
-    const ORANGE_COLOR = 'rgb(255, 159, 64)'; 
-    const ORANGE_AREA = 'rgba(255, 159, 64, 0.4)';
-    const BLUE_COLOR = 'rgb(0, 191, 255)'; 
-    const BLUE_AREA = 'rgba(0, 191, 255, 0.4)';
-    const PURPLE_COLOR = 'rgb(147, 112, 219)'; 
-    const PURPLE_AREA = 'rgba(147, 112, 219, 0.4)';
-    const LIME_COLOR = 'rgb(50, 205, 50)'; 
-    const LIME_AREA = 'rgba(50, 205, 50, 0.4)';
-
-    const GREY_GRID = '#CCCCCC';
-    const WELLNESS_FIELDS = ['sleep', 'soreness', 'mood', 'water', 'stress', 'ready'];
-    const FIELD_LABELS = {
-        sleep: 'Сон', soreness: 'Біль', mood: 'Настрій', 
-        water: 'Гідратація', stress: 'Стрес', ready: 'Готовність'
-    };
     
-    const colorsMap = {
-        sleep: { color: GOLD_COLOR, area: GOLD_AREA },
-        soreness: { color: RED_COLOR, area: RED_AREA },
-        mood: { color: PURPLE_COLOR, area: PURPLE_AREA },
-        water: { color: BLUE_COLOR, area: BLUE_AREA },
-        stress: { color: ORANGE_COLOR, area: ORANGE_AREA },
-        ready: { color: LIME_COLOR, area: LIME_AREA },
-    };
-
+    // --- ДИНАМІЧНЕ ЗАВАНТАЖЕННЯ ТА ПІДГОТОВКА ДАНИХ ---
+    const history = loadWellnessHistory();
+    // Сортуємо дати для коректного відображення на осі X
+    const sortedDates = Object.keys(history).sort(); 
 
     // -----------------------------------------------------------------
     // --- ЗНИЩЕННЯ ІСНУЮЧИХ ГРАФІКІВ (ВАЖЛИВО ДЛЯ УНИКНЕННЯ ПОМИЛОК) ---
     // -----------------------------------------------------------------
     WELLNESS_FIELDS.forEach(field => {
-        // Перевіряємо, чи існує об'єкт Chart і чи є він функцією
+        // Коректний виклик destroy
         if (window[`chart_${field}`] && typeof window[`chart_${field}`].destroy === 'function') {
             window[`chart_${field}`].destroy();
             window[`chart_${field}`] = null;
@@ -90,22 +117,17 @@ function initCharts() {
     }
 
 
-    // ----------------------------------------------------
-    // --- ДИНАМІЧНЕ ЗАВАНТАЖЕННЯ ТА ПІДГОТОВКА ДАНИХ ---
-    // ----------------------------------------------------
-    const history = loadWellnessHistory();
-    const sortedDates = Object.keys(history).sort(); 
-
     // Якщо даних немає, показуємо заглушку
     if (sortedDates.length === 0) {
         const chartArea = document.querySelector('.chart-area');
         if (chartArea) {
             chartArea.innerHTML = '<p class="placeholder-text">Жодного запису ще не збережено. Заповніть форму, щоб почати бачити графіки!</p>';
         }
+        updateWellnessStats({}); // Очищаємо статистику
         return; 
     }
     
-    // Видаляємо заглушку, якщо вона існує (на випадок, якщо це було перше відправлення)
+    // Видаляємо заглушку, якщо вона існує 
     const chartArea = document.querySelector('.chart-area');
     if (chartArea) {
         const placeholder = chartArea.querySelector('.placeholder-text');
@@ -138,16 +160,18 @@ function initCharts() {
         options: {
              responsive: true,
              maintainAspectRatio: false,
-             animation: false, // Вимикаємо загальну анімацію
+             // Анімація увімкнена за замовчуванням (для "поступового" заповнення)
              scales: {
                 y: {
                     min: 1,
                     max: 10,
                     title: { display: false },
+                    // Приховуємо числа та сітку на осі Y для мінімалістичного вигляду
                     ticks: { stepSize: 1, color: 'white', display: false }, 
                     grid: { color: 'rgba(255, 255, 255, 0.1)', display: false } 
                 },
                 x: {
+                    // Приховуємо підписи дат та сітку на осі X
                     grid: { color: 'rgba(255, 255, 255, 0.1)', display: false }, 
                     ticks: { color: 'rgba(255, 255, 255, 0.5)', display: false } 
                 }
@@ -160,7 +184,7 @@ function initCharts() {
         }
     };
 
-    // Створення маленьких графіків з індивідуальними кольорами
+    // Створення маленьких графіків
     WELLNESS_FIELDS.forEach(field => {
         const ctx = document.getElementById(`chart-${field}`);
         
@@ -172,19 +196,10 @@ function initCharts() {
                     data: chartData[field],
                     borderColor: colorsMap[field].color,
                     backgroundColor: colorsMap[field].area,
-                    tension: 0.4, 
+                    tension: 0.3, // Використовуємо натяг 0.3 (як у вашому старому коді)
                     fill: true,
                     pointRadius: 3, 
                     pointHoverRadius: 5,
-                    // Ефект "Заповнення"
-                    transition: {
-                         show: {
-                             animations: {
-                                 x: { from: 0 },
-                                 y: { from: 0 }
-                             }
-                         }
-                    }
                 }]
             };
 
@@ -195,10 +210,16 @@ function initCharts() {
         }
     });
 
-    // Створення великого зведеного графіку (Radar Chart)
+    // ----------------------------------------------------
+    // --- РАДАР ГРАФІК ТА СТАТИСТИКА ---
+    // ----------------------------------------------------
+    
+    const latestData = history[sortedDates[sortedDates.length - 1]];
+
+    // Оновлюємо статистику під питаннями
+    updateWellnessStats(latestData);
+
     if (mainCtx) {
-        // Беремо останній запис для відображення поточного стану
-        const latestData = history[sortedDates[sortedDates.length - 1]];
         const radarData = WELLNESS_FIELDS.map(field => latestData[field]);
         
         // Створюємо новий графік
@@ -283,7 +304,7 @@ function checkDailyRestriction() {
 
 
 // ==============================================
-// 2. АКТИВАЦІЯ ФУНКЦІОНАЛУ Wellness (Тільки на сторінці wellness.html)
+// 4. АКТИВАЦІЯ ФУНКЦІОНАЛУ Wellness 
 // ==============================================
 document.addEventListener('DOMContentLoaded', function() {
     // currentPath використовується для перевірки, чи ми на правильній сторінці
@@ -325,6 +346,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 const submissionData = {};
                 form.querySelectorAll('input[type="radio"]:checked').forEach(input => {
+                    // Парсимо значення в число для коректного відображення на графіку
                     submissionData[input.name] = parseInt(input.value, 10);
                 });
                 
