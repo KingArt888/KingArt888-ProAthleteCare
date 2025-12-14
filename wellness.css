@@ -179,7 +179,7 @@
 }
 /* ФІКС ВІДСТУПУ ДЛЯ НОМЕРА М'ЯЧИКІВ: Максимальне наближення */
 .pain-group label::after { 
-    top: -2px; 
+    top: 2px; 
 }
 /* ---------------------------------- */
 .pain-group input:checked ~ label::before,
