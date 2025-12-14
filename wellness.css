@@ -68,7 +68,7 @@
 
 /* Стиль для ВИМКНЕНОЇ (disabled) кнопки після щоденного подання */
 .disabled-button {
-    background-color: #6c757d !important; /* Сірий, як у вашому JS */
+    background-color: #6c757d !important; 
     color: #999999 !important;
     cursor: not-allowed !important;
 }
@@ -100,7 +100,7 @@
     border-radius: 5px;
 }
 
-/* --- Стилі для ВСІХ РЕЙТИНГІВ ІКОНОК (КОМПАКТНІ) --- */
+/* --- Стилі для ВСІХ РЕЙТИНГІВ ІКОНОК (КОМПАКТНІ ТА УНІФІКОВАНІ) --- */
 .rating-group {
     display: flex;
     flex-direction: row-reverse; 
@@ -113,76 +113,92 @@
     display: none; 
 }
 .rating-group label {
-    color: #333; 
+    /* ЗАГАЛЬНИЙ СІРИЙ КОЛІР для символів '★' і '●' */
+    color: #888; /* Уніфікований сірий колір для неактивних символів */
     cursor: pointer;
     transition: color 0.2s;
     padding: 0 2px; 
 }
+/* Скидаємо колір для емодзі-груп, які використовують фільтри */
+.energy-group label, .hydration-group label, .stress-group label, .ready-group label {
+    color: inherit;
+}
 
-/* Зірки (Сон) */
+
+/* 1. Зірки (Сон) */
 .star-group label:before {
     content: '★'; 
-    margin-right: 5px; 
+    margin-right: 3px; /* Уніфікація відступу */
 }
+/* Активні: застосовуємо золотий колір */
 .star-group input:checked ~ label:before,
 .star-group label:hover:before,
 .star-group label:hover ~ label:before {
     color: #FFC72C; 
 }
 
-/* Хрестики (Біль/Втома) */
+/* 2. М'ячі (Біль/Втома) */
 .pain-group label:before {
-    content: '✖'; 
-    margin-right: 5px; 
+    content: '●'; /* ЗМІНА: Використано символ "м'яча" */
+    margin-right: 3px; /* Уніфікація відступу */
 }
+/* Активні: застосовуємо червоний колір */
 .pain-group input:checked ~ label:before,
 .pain-group label:hover:before,
 .pain-group label:hover ~ label:before {
     color: #DA3E52; 
 }
 
-/* Блискавки (Енергія/Настрій) */
+/* 3. Блискавки (Енергія/Настрій) */
 .energy-group label:before {
     content: '⚡'; 
     margin-right: 3px; 
+    /* Неактивні: робимо сірими через фільтр */
     filter: grayscale(100%); 
 }
+/* Активні: прибираємо фільтр */
 .energy-group input:checked ~ label:before,
 .energy-group label:hover:before,
 .energy-group label:hover ~ label:before {
     filter: none; 
 }
 
-/* Краплі (Гідратація) */
+/* 4. Краплі (Гідратація) */
 .hydration-group label:before {
     content: '💧'; 
     margin-right: 3px; 
+    /* Неактивні: робимо сірими через фільтр */
     filter: grayscale(100%); 
 }
+/* Активні: прибираємо фільтр */
 .hydration-group input:checked ~ label:before,
 .hydration-group label:hover:before,
 .hydration-group label:hover ~ label:before {
     filter: none; 
 }
 
-/* Вогник (Стрес) */
+/* 5. Вогник (Стрес) */
 .stress-group label:before {
     content: '🔥'; 
     margin-right: 3px; 
+    /* Неактивні: робимо сірими через фільтр */
     filter: grayscale(100%); 
 }
+/* Активні: прибираємо фільтр */
 .stress-group input:checked ~ label:before,
 .stress-group label:hover:before,
 .stress-group label:hover ~ label:before {
     filter: none; 
 }
 
-/* Галочка (Готовність) */
+/* 6. Галочка (Готовність) */
 .ready-group label:before {
     content: '✅'; 
     margin-right: 3px; 
+    /* Неактивні: робимо сірими через фільтр */
     filter: grayscale(100%); 
 }
+/* Активні: прибираємо фільтр */
 .ready-group input:checked ~ label:before,
 .ready-group label:hover:before,
 .ready-group label:hover ~ label:before {
@@ -205,7 +221,7 @@ footer {
     .form-card, .chart-card {
         width: 100%;       /* Картки займають 100% ширини, коли стоять одна під одною */
         max-width: 100%;   /* Перекриваємо будь-які обмеження max-width */
-        min-width: 0;      /* Дозволяємо їм стискатися на вузьких екранах */
+        min-width: 0;      
     }
     /* *************************************************************** */
 
