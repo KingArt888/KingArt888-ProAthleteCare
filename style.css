@@ -52,10 +52,17 @@
     background-color: #1f1f1f;
     border-left: 2px solid #FFC72C;
     color: #FFC72C;
-}/* Основний вміст */.main-content {
+/* Основний вміст */
+.main-content {
     flex-grow: 1;
     padding: 30px; 
     background-color: #000000;
+    
+    /* === ВИПРАВЛЕННЯ ДЛЯ МЕНЮ/СКРОЛУ (БЕЗПЕЧНО) === */
+    min-width: 0; 
+    overflow-x: hidden; 
+    /* ============================================== */
+}
 }/* Стиль для заголовків основного контенту */.main-content h2 {
     color: #FFC72C;
     margin-bottom: 20px;
