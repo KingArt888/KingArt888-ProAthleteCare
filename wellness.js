@@ -73,15 +73,11 @@ function initCharts() {
     };
 
 
-    // ----------------------------------------------------
-    // --- ДИНАМІЧНЕ ЗАВАНТАЖЕННЯ ТА ПІДГОТОВКА ДАНИХ ---
-    // ----------------------------------------------------
-    const history = loadWellnessHistory();
-    // Сортуємо дати, щоб графік завжди був хронологічним
-    const sortedDates = Object.keys(history).sort(); 
-
-    // Видаляємо всі існуючі графіки перед перемальовуванням, щоб уникнути помилок
+    // -----------------------------------------------------------------
+    // --- ЗНИЩЕННЯ ІСНУЮЧИХ ГРАФІКІВ (ВАЖЛИВО ДЛЯ УНИКНЕННЯ ПОМИЛОК) ---
+    // -----------------------------------------------------------------
     WELLNESS_FIELDS.forEach(field => {
+        // Перевіряємо, чи існує об'єкт Chart і чи є він функцією
         if (window[`chart_${field}`] && typeof window[`chart_${field}`].destroy === 'function') {
             window[`chart_${field}`].destroy();
             window[`chart_${field}`] = null;
@@ -94,6 +90,12 @@ function initCharts() {
     }
 
 
+    // ----------------------------------------------------
+    // --- ДИНАМІЧНЕ ЗАВАНТАЖЕННЯ ТА ПІДГОТОВКА ДАНИХ ---
+    // ----------------------------------------------------
+    const history = loadWellnessHistory();
+    const sortedDates = Object.keys(history).sort(); 
+
     // Якщо даних немає, показуємо заглушку
     if (sortedDates.length === 0) {
         const chartArea = document.querySelector('.chart-area');
@@ -103,10 +105,13 @@ function initCharts() {
         return; 
     }
     
-    // Якщо дані є, перевіряємо, чи потрібно видалити заглушку
+    // Видаляємо заглушку, якщо вона існує (на випадок, якщо це було перше відправлення)
     const chartArea = document.querySelector('.chart-area');
-    if (chartArea && chartArea.querySelector('.placeholder-text')) {
-        // Оскільки у нас більше немає статичного HTML у цьому блоці, просто продовжуємо
+    if (chartArea) {
+        const placeholder = chartArea.querySelector('.placeholder-text');
+        if (placeholder) {
+            placeholder.remove();
+        }
     }
 
 
@@ -139,12 +144,12 @@ function initCharts() {
                     min: 1,
                     max: 10,
                     title: { display: false },
-                    ticks: { stepSize: 1, color: 'white', display: false }, // Приховуємо числа 1-10
-                    grid: { color: 'rgba(255, 255, 255, 0.1)', display: false } // Приховуємо сітку Y
+                    ticks: { stepSize: 1, color: 'white', display: false }, 
+                    grid: { color: 'rgba(255, 255, 255, 0.1)', display: false } 
                 },
                 x: {
-                    grid: { color: 'rgba(255, 255, 255, 0.1)', display: false }, // Приховуємо сітку X
-                    ticks: { color: 'rgba(255, 255, 255, 0.5)', display: false } // Приховуємо підписи X
+                    grid: { color: 'rgba(255, 255, 255, 0.1)', display: false }, 
+                    ticks: { color: 'rgba(255, 255, 255, 0.5)', display: false } 
                 }
              },
             plugins: {
@@ -167,7 +172,7 @@ function initCharts() {
                     data: chartData[field],
                     borderColor: colorsMap[field].color,
                     backgroundColor: colorsMap[field].area,
-                    tension: 0.4, // Збільшуємо натяг для більш плавних ліній
+                    tension: 0.4, 
                     fill: true,
                     pointRadius: 3, 
                     pointHoverRadius: 5,
@@ -184,8 +189,7 @@ function initCharts() {
             };
 
             const miniConfig = JSON.parse(JSON.stringify(config));
-            // Тут ми можемо додати індивідуальні налаштування, якщо знадобиться
-
+            
             // Створюємо новий графік і зберігаємо його посилання в window
             window[`chart_${field}`] = new Chart(ctx, { ...miniConfig, data: chartDataConfig });
         }
@@ -320,7 +324,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // --- ЛОГІКА ЗБЕРЕЖЕННЯ ---
                 
                 const submissionData = {};
-                form.querySelectorAll('input[type="radio']:checked').forEach(input => {
+                form.querySelectorAll('input[type="radio"]:checked').forEach(input => {
                     submissionData[input.name] = parseInt(input.value, 10);
                 });
                 
