@@ -1,87 +1,257 @@
 /* --- СТИЛІ ДЛЯ ФАЙЛУ WELLNESS.HTML (DASHBOARD) --- */
-/* ... ваш поточний код до @media (max-width: 768px) ... */
 
+/* Активний пункт меню */
+.sidebar a.active {
+    background-color: #FFC72C; 
+    color: #000000; 
+    border-left: 2px solid #000000;
+}
+.sidebar a.active img {
+    filter: none; 
+}
 
-/* 1. Стиль для відображення статистики (ОЦІНКА: X/10) */
+/* 1. КОНТЕЙНЕРИ І КАРТКИ */
+.dashboard-container {
+    display: flex;
+    gap: 30px;
+    margin-top: 20px;
+    flex-wrap: wrap; /* Дозволяє перенесення карток на малий екран */
+}
+
+.form-card, .chart-card {
+    background-color: #0d0d0d;
+    border: 1px solid #1a1a1a;
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    /* Забезпечуємо гнучкість на десктопі */
+    flex: 1 1 350px; /* Мінімальна ширина 350px, зростають рівномірно */
+}
+.chart-card {
+    flex-grow: 1.5; /* Графік трохи ширший за форму на десктопі */
+    max-width: 500px; 
+}
+/* Форма завжди повинна бути трохи вужчою, щоб залишити місце для графіка */
+.form-card {
+     max-width: 450px; 
+}
+
+.form-card h3, .chart-card h3 {
+    color: #FFC72C;
+    margin-top: 0;
+    border-bottom: 1px solid #333333;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+/* Стилі для форми */
+#wellness-form label {
+    display: block;
+    color: #CCCCCC;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+.gold-button {
+    background-color: #FFC72C;
+    color: #000000;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 5px;
+    margin-top: 30px;
+    cursor: pointer;
+    font-size: 1.1em;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+.gold-button:hover {
+    background-color: #E6B800;
+}
+.disabled-button {
+    background-color: #333333 !important;
+    color: #999999 !important;
+    cursor: not-allowed !important;
+}
+
+/* Місце для графіка */
+.chart-area {
+    min-height: 350px; 
+    background-color: #000000;
+    border: 1px solid #333333;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.placeholder-text {
+    color: #888888;
+    font-style: italic;
+    font-size: 1.2em;
+}
+
+/* --- СТИЛІ СТАТИСТИКИ ТА МАЛИХ ГРАФІКІВ --- */
+.small-chart-container {
+    height: 80px; 
+    width: 100%;
+    margin-top: -10px; 
+    margin-bottom: 20px;
+    padding: 5px;
+    background-color: #000000;
+    border-radius: 5px;
+}
+
+/* 🌟 СТИЛЬ: Відображення поточної статистики */
 .wellness-stat {
     text-align: center; 
     margin: 5px 0 10px 0;
     font-size: 1.1em;
     font-weight: bold;
     min-height: 20px; 
-    transition: color 0.3s ease; /* Додаємо перехід для кольору */
+    transition: color 0.3s ease; 
 }
 
-/* 2. ВИПРАВЛЕННЯ: Скидаємо реверсивний напрямок на ltr для всіх груп */
-/* Це потрібно, оскільки ви використовуєте flex-direction: row-reverse у загальному rating-group */
+/* 2. СТИЛІ РЕЙТИНГІВ (ЗАГАЛЬНІ ДЛЯ ДЕСКТОПА) */
 .rating-group {
-    /* Цей блок має бути в CSS за замовчуванням, якщо він був у попередньому блоці, це просто повтор для ясності */
-    direction: ltr; /* Забезпечуємо читання зліва направо: 1...10 */
+    display: flex;
+    flex-direction: row-reverse; /* Зберігаємо реверс для десктопа */
+    justify-content: flex-end; 
+    direction: ltr; /* Забезпечуємо читання 1-10 */
+    font-size: 1.5em; 
+    margin: 10px 0 20px 0;
+    flex-wrap: nowrap; /* Важливо: не дозволяємо ламатися на десктопі */
 }
-/* Прибираємо надлишкові праві відступи біля іконок, якщо вони є через font-size */
+.rating-group input {
+    display: none; 
+}
+.rating-group label {
+    color: #333; 
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+/* ІКОНКИ ТА КОЛЬОРИ (ЗАГАЛЬНІ) */
 .rating-group label:before {
-    margin-right: 0px !important; 
+    margin-right: 19px; 
+}
+/* Зірки (Сон) */
+.star-group label:before { content: '★'; }
+.star-group input:checked ~ label:before, .star-group label:hover:before, .star-group label:hover ~ label:before { color: #FFC72C; }
+
+/* Хрестики (Біль/Втома) */
+.pain-group label:before { content: '✖'; }
+.pain-group input:checked ~ label:before, .pain-group label:hover:before, .pain-group label:hover ~ label:before { color: #DA3E52; }
+
+/* Блискавки (Енергія/Настрій) */
+.energy-group label:before { content: '⚡'; filter: grayscale(100%); margin-right: 5px; }
+.energy-group input:checked ~ label:before, .energy-group label:hover:before, .energy-group label:hover ~ label:before { filter: none; }
+
+/* Краплі (Гідратація) */
+.hydration-group label:before { content: '💧'; filter: grayscale(100%); margin-right: 5px; }
+.hydration-group input:checked ~ label:before, .hydration-group label:hover:before, .hydration-group label:hover ~ label:before { filter: none; }
+
+/* Вогник (Стрес) */
+.stress-group label:before { content: '🔥'; filter: grayscale(100%); margin-right: 5px; }
+.stress-group input:checked ~ label:before, .stress-group label:hover:before, .stress-group label:hover ~ label:before { filter: none; }
+
+/* Галочка (Готовність) */
+.ready-group label:before { content: '✅'; filter: grayscale(100%); margin-right: 5px; }
+.ready-group input:checked ~ label:before, .ready-group label:hover:before, .ready-group label:hover ~ label:before { filter: none; }
+
+/* Футер */
+footer {
+    text-align: center;
+    padding: 10px;
+    background-color: #0d0d0d;
+    font-size: 0.8em;
+    color: #888888;
+    border-top: 1px solid #1a1a1a;
 }
 
 
-/* --- СТИЛІ МЕНЮ ТА ШАПКИ НА МОБІЛЬНИХ (ДО 768px) --- */
+/* 3. МЕДІА-ЗАПИТИ ДЛЯ АДАПТИВНОСТІ */
+
+/* СТИЛІ МЕНЮ ТА ШАПКИ НА ПЛАНШЕТАХ/МОБІЛЬНИХ (ДО 768px) */
 @media (max-width: 768px) {
-    /* ... ваш поточний код адаптивності меню ... */
+    /* ФІКСОВАНА ШАПКА ТА МЕНЮ (як ви вже налаштували) */
+    header {
+        position: fixed; top: 0; left: 0; width: 100%; z-index: 1000; background-color: #000; 
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5); display: flex; align-items: center; 
+        justify-content: flex-start; padding: 10px 60px 5px 10px; 
+    }
+    header .logo { width: 40px; height: 40px; }
+    header .project-title { font-size: 1.1em; margin-left: 10px; flex-shrink: 1; }
+    header .tagline { display: none; }
     
-    /* ЗСУВАЄМО ОСНОВНИЙ КОНТЕНТ */
-    .content-wrapper {
-        padding-top: 100px; /* Відступ під фіксований header */
+    .content-wrapper { padding-top: 100px; flex-direction: column; }
+    
+    .menu-toggle { display: block !important; position: fixed; top: 15px; right: 15px; z-index: 1010; 
+        background: #FFD700; color: #000; border: none; padding: 5px 10px; font-size: 1.5em; 
+        cursor: pointer; border-radius: 6px; line-height: 1; 
+    }
+    .sidebar { position: fixed; top: 0; left: 0; width: 80%; height: 100%; padding-top: 80px; 
+        transform: translateX(-100%); transition: transform 0.3s ease-in-out; z-index: 999; 
+        background-color: #111; display: flex; flex-direction: column; 
+    }
+    .sidebar.active { transform: translateX(0); }
+    
+    /* Змушуємо картки займати повну ширину на малих екранах */
+    .dashboard-container {
         flex-direction: column; 
     }
-    
-    /* СТИЛЬНА КНОПКА МЕНЮ (БУРГЕР): ВІДОБРАЖАЄМО ТА ФІКСУЄМО */
-    /* ... ваш поточний код для .menu-toggle та .sidebar ... */
+    .form-card, .chart-card {
+        width: 100%;
+        max-width: none; /* Знімаємо обмеження max-width */
+        min-width: unset;
+    }
+    .form-card {
+        max-width: none;
+    }
 }
 
 
-/* --- КЛЮЧОВЕ ВИПРАВЛЕННЯ ДЛЯ КНОПОК РЕЙТИНГУ (ДО 600px) --- */
-@media (max-width: 600px) {
-    /* 1. Перетворюємо рейтинг у Flex-контейнер */
+/* АДАПТАЦІЯ РЕЙТИНГІВ НА НАЙМЕНШИХ ЕКРАНАХ (ДО 480px) */
+@media (max-width: 480px) {
+    /* ЗМІНА: ПЕРЕКЛЮЧЕННЯ РЕЙТИНГІВ НА ГНУЧКИЙ РЯДОК З РІВНИМИ КНОПКАМИ */
     .rating-group {
         display: flex;
-        flex-wrap: nowrap; /* Не дозволяємо переносити кнопки */
+        flex-direction: row; /* Тепер зліва направо: 1, 2, 3... 10 */
         justify-content: space-between; 
         padding: 0 5px;
-        font-size: 1.1em; /* Трохи менший шрифт */
-        direction: ltr; /* Забезпечуємо читання 1..10 */
+        font-size: 1.1em; 
+        margin: 10px 0 20px 0;
+        flex-wrap: nowrap;
     }
 
-    /* 2. Задаємо кнопкам рівну ширину, щоб вони стискалися */
+    /* Стилізація кнопок */
     .rating-group label {
         display: flex; 
         flex-grow: 1; /* Змушуємо займати рівний простір */
         justify-content: center;
         align-items: center;
-        min-width: 18px; /* Мінімальна ширина для запобігання надмірному стисканню */
+        min-width: 15px; /* Мінімальна ширина */
         padding: 5px 0;
-        margin: 0 1px; /* Дуже маленький горизонтальний відступ */
+        margin: 0 1px; 
         
-        /* Стилі оформлення */
         border: 1px solid #FFC72C;
         border-radius: 5px;
         background-color: #333;
         color: #FFF;
         position: relative;
-        line-height: 1; /* Запобігаємо зайвій висоті */
+        line-height: 1; 
     }
     
-    /* 3. Зменшуємо розмір іконок на мобільному */
+    /* Зменшуємо розмір іконок */
     .rating-group label:before {
         font-size: 1em !important;
-        margin-right: 0 !important; /* Усі відступи скинуто */
+        margin-right: 0 !important; 
         padding: 0;
     }
 
-    /* Додаємо числове значення для кращої зрозумілості (опціонально, але корисно) */
+    /* Додаємо числове значення для зрозумілості */
     .rating-group label:after {
         content: attr(title); 
         position: absolute;
-        font-size: 8px; /* Дуже маленький шрифт для цифри */
+        font-size: 8px; 
         bottom: 1px;
         right: 1px;
         color: #FFD700;
@@ -91,22 +261,4 @@
     .rating-group label:not(:hover):after {
         opacity: 0;
     }
-    
-    /* ВИПРАВЛЕННЯ: Забезпечуємо, щоб форма та графіки розміщувалися коректно на мобільному */
-    .dashboard-container {
-        flex-direction: column; 
-    }
-    .form-card, .chart-card {
-        width: 100%;
-        min-width: unset;
-        max-width: unset;
-    }
-
-    /* Уніфікуємо відображення іконок на мобільному, щоб прибрати "хрестики" */
-    .pain-group label:before { content: '😫' !important; }
-    .star-group label:before { content: '★' !important; }
-    .energy-group label:before { content: '⚡' !important; }
-    .hydration-group label:before { content: '💧' !important; }
-    .stress-group label:before { content: '🔥' !important; }
-    .ready-group label:before { content: '✅' !important; }
 }
