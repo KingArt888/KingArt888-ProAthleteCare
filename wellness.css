@@ -102,7 +102,7 @@
     border-radius: 5px;
 }
 
-/* --- Стилі для ВСІХ РЕЙТИНГІВ ІКОНОК (З поверненням оригінального вигляду іконки) --- */
+/* --- Стилі для ВСІХ РЕЙТИНГІВ ІКОНОК (З номерами зверху) --- */
 .rating-group {
     display: flex;
     flex-direction: row-reverse; 
@@ -117,12 +117,12 @@
 .rating-group label {
     /* *** УНІФІКАЦІЯ ШИРИНИ ТА РОЗМІРУ КОНТЕЙНЕРІВ ІКОНОК *** */
     display: inline-block; 
-    width: 28px;           /* Фіксована ширина для всіх іконок */
-    height: 28px;          /* Фіксована висота для всіх іконок */
-    line-height: 1.7;      /* Центрування по вертикалі (1.7 * 1.5em ≈ 28px) */
-    text-align: center;    /* Центрування по горизонталі */
+    width: 28px;           
+    height: 28px;          
+    line-height: 1.7;      
+    text-align: center;    
     padding: 0;            
-    position: relative;    /* ДОДАНО: Для позиціонування номера (::after) */
+    position: relative;    
     /* ********************************************************* */
     color: #888; 
     cursor: pointer;
@@ -133,11 +133,13 @@
 .rating-group label::after {
     display: block;
     position: absolute;
-    top: -15px; /* Розташовуємо над іконкою */
+    /* ЗМІНА: Зменшення розміру та відступу */
+    top: -10px;             /* Ближче до іконки */
+    font-size: 0.6em;       /* Зменшений шрифт */
+    /* ------------------------------------ */
     left: 50%;
     transform: translateX(-50%);
-    font-size: 0.7em; 
-    color: #555; /* Сірий колір для неактивного номера */
+    color: #555; 
     font-weight: normal;
     transition: color 0.2s;
 }
@@ -153,12 +155,9 @@
 .rating-group input[value="8"] + label::after { content: '8'; }
 .rating-group input[value="9"] + label::after { content: '9'; }
 .rating-group input[value="10"] + label::after { content: '10'; }
-/* Номер також активується */
-.rating-group input:checked ~ label::after,
-.rating-group label:hover::after,
-.rating-group label:hover ~ label::after { 
-    /* КОЛІР буде перевизначено нижче для кожної групи */
-}
+
+
+/* --- ГРУПИ ТА АКТИВАЦІЯ --- */
 
 /* 1. Зірки (Сон) */
 .star-group label::before {
@@ -178,7 +177,7 @@
 /* 2. М'ячі (Біль/Втома) */
 .pain-group label::before {
     content: '●'; 
-    font-size: 1.3em; /* Корекція розміру, щоб візуально відповідати іншим символам */
+    font-size: 1.3em; 
 }
 .pain-group input:checked ~ label::before,
 .pain-group label:hover::before,
@@ -192,7 +191,6 @@
 
 
 /* 3. Блискавки (Енергія/Настрій) */
-/* Тут ми видаляємо color: inherit, оскільки ::before використовує фільтр */
 .energy-group label { color: inherit; } 
 .energy-group label::before {
     content: '⚡'; 
@@ -221,9 +219,9 @@
     filter: none; 
 }
 /* Активація номера */
-.hydration-group input:checked ~ label::after,
 .hydration-group label:hover::after,
-.hydration-group label:hover ~ label::after { color: #5B92E5; } /* Синій */
+.hydration-group input:checked ~ label::after,
+.hydration-group label:hover ~ label::after { color: #5B92E5; } 
 
 
 /* 5. Вогник (Стрес) */
@@ -240,7 +238,7 @@
 /* Активація номера */
 .stress-group input:checked ~ label::after,
 .stress-group label:hover::after,
-.stress-group label:hover ~ label::after { color: #FF6700; } /* Помаранчевий */
+.stress-group label:hover ~ label::after { color: #FF6700; } 
 
 
 /* 6. Галочка (Готовність) */
@@ -257,7 +255,7 @@
 /* Активація номера */
 .ready-group input:checked ~ label::after,
 .ready-group label:hover::after,
-.ready-group label:hover ~ label::after { color: #4CAF50; } /* Зелений */
+.ready-group label:hover ~ label::after { color: #4CAF50; } 
 
 
 /* Футер */
@@ -272,12 +270,15 @@ footer {
 
 /* --- СТИЛІ МЕНЮ ТА ШАПКИ НА МОБІЛЬНИХ (ДО 768px) --- */
 @media (max-width: 768px) {
-    /* ... (медіа-запити залишилися без змін) ... */
+    /* *** ФІКС: Забезпечення повної ширини для карток форми та графіка *** */
     .form-card, .chart-card {
         width: 100%;       
         max-width: 100%;   
         min-width: 0;      
     }
+    /* *************************************************************** */
+
+    /* ФІКСОВАНА ШАПКА */
     header {
         position: fixed;
         top: 0;
