@@ -1,5 +1,13 @@
 /* weekly-individual.css */
-
+/* Активний пункт меню */
+.sidebar a.active {
+    background-color: #FFC72C; 
+    color: #000000; 
+    border-left: 2px solid #000000;
+}
+.sidebar a.active img {
+    filter: none; 
+}
 /* --- СТИЛІ MD-СТАТУСІВ (для таблиці та заголовків) --- */
 .md-status {
     padding: 3px 6px;
