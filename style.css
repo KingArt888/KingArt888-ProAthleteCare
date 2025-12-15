@@ -228,23 +228,30 @@ header {
 /* ======================================================= */
 /* DESKTOP — ЗАЛІЗНИЙ ФІКС */
 /* ======================================================= */
+/* 🔥 ГАРАНТОВАНИЙ FLEX LAYOUT ДЛЯ DESKTOP */
 @media (min-width: 901px) {
-
-    .sidebar {
-        position: relative !important;
-        transform: none !important;
-    }
-
-    .menu-toggle {
-        display: none !important;
-    }
-
-    header {
-        position: relative;
+    html, body {
+        width: 100%;
+        overflow-x: hidden;
     }
 
     .content-wrapper {
-        flex-direction: row;
-        padding-top: 0;
+        display: flex !important;
+        flex-direction: row !important;
+        width: 100% !important;
+        min-height: calc(100vh - 100px) !important;
+    }
+
+    .sidebar {
+        flex: 0 0 250px !important;
+        width: 250px !important;
+        min-width: 250px !important;
+        max-width: 250px !important;
+        position: relative !important;
+    }
+
+    .main-content {
+        flex: 1 1 auto !important;
+        width: auto !important;
     }
 }
