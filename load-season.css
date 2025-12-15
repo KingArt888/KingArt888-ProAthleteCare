@@ -1,7 +1,15 @@
 /* =========================================================================
    PROATLETCARE: LOAD-SEASON.CSS - ФІНАЛЬНА ВЕРСІЯ ДВОХ КОЛОНОК
    ========================================================================= */
-
+/* Активний пункт меню */
+.sidebar a.active {
+    background-color: #FFC72C; 
+    color: #000000; 
+    border-left: 2px solid #000000;
+}
+.sidebar a.active img {
+    filter: none; 
+} 
 * {
     box-sizing: border-box; 
 }
