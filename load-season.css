@@ -11,7 +11,7 @@
     display: flex;
     gap: 30px;
     flex-wrap: wrap; 
-    max-width: 90%;
+    max-width: 100%;
     align-items: stretch; /* Щоб ліва та права колонка були однакової висоти */
 }
 
@@ -37,21 +37,19 @@
 
 /* --- 2. РОЗМІРИ КОЛОНОК --- */
 
+/* 2.1. ЛІВА КОЛОНКА: ФОРМА */
 .form-container {
-    /* ВИКОРИСТОВУЄМО FLEX-BASIS ТА FLEX-SHRINK ДЛЯ КРАЩОЇ ГНУЧКОСТІ */
-    flex-basis: 300px; /* Базова ширина */
-    flex-grow: 1; /* Дозволяємо розтягуватися, якщо є місце */
-    flex-shrink: 1; /* Дозволяємо стискатися, якщо потрібно */
-    min-width: 300px; /* Мінімальна ширина залишається */
+    width: 35%; /* Форма займає ~35% ширини */
+    min-width: 350px;
 }
 
 /* 2.2. ПРАВА КОЛОНКА: СТАТИСТИКА + ГРАФІКИ */
 .info-column {
-    flex: 2; /* Займає в 2 рази більше місця, ніж form-container */
+    flex: 1; /* Займає всю решту ширини */
     display: flex;
-    flex-direction: column; 
-    gap: 30px; 
-    min-width: 300px;
+    flex-direction: column; /* КРИТИЧНО: Вирівнює вміст у стовпець */
+    gap: 30px; /* Відступи між спідометром і графіками */
+    min-width: 450px;
 }
 
 /* 2.3. СТИЛІ ЕЛЕМЕНТІВ У ПРАВІЙ КОЛОНЦІ */
@@ -61,7 +59,7 @@
 }
 
 .chart-card {
-    /* КРИТИЧНО: Фіксуємо висоту для стабільності Chart.js */
+    /* КРИТИЧНО: Фіксуємо висоту для стабільності Chart.js на десктопі */
     height: 400px; 
 }
 
@@ -117,7 +115,7 @@ input[type="date"]:focus, input[type="number"]:focus {
     box-shadow: none;
 }
 
-/* --- 4. СТИЛІ RPE GROUP (Без змін) --- */
+/* --- 4. СТИЛІ RPE GROUP --- */
 
 .rpe-group {
     display: flex;
@@ -169,7 +167,8 @@ input[type="date"]:focus, input[type="number"]:focus {
 /* --- КОЛЬОРОВА ЛОГІКА RPE --- */
 .rpe-group input[value="1"]:checked ~ label,
 .rpe-group input[value="2"]:checked ~ label,
-/* ... (кольорова логіка RPE без змін) ... */
+.rpe-group input[value="3"]:checked ~ label,
+.rpe-group input[value="4"]:checked ~ label,
 .rpe-group input[value="5"]:checked ~ label {
     color: #5cb85c; 
 }
@@ -221,7 +220,7 @@ input[type="date"]:focus, input[type="number"]:focus {
 }
 
 
-/* --- 5. СТИЛІ СПІДОМЕТРА ACWR (Без змін) --- */
+/* --- 5. СТИЛІ СПІДОМЕТРА ACWR --- */
 
 .speedometer-widget {
     display: flex;
@@ -354,9 +353,10 @@ input[type="date"]:focus, input[type="number"]:focus {
     font-weight: bold;
 }
 
-/* --- 6. АДАПТИВНІСТЬ --- */
+/* --- 6. АДАПТИВНІСТЬ (ВИПРАВЛЕНА) --- */
 
-@media (max-width: 1000px) {
+@media (max-width: 1200px) { /* ЗМІНА: Порогове значення збільшено до 1200px для запобігання стисненню меню */
+    
     /* На невеликих екранах все розташовуємо у стовпець */
     .dashboard-container, .info-column {
         flex-direction: column; 
@@ -364,10 +364,16 @@ input[type="date"]:focus, input[type="number"]:focus {
     }
 
     /* Всі основні контейнери займають 100% ширини */
-    .form-container, .info-column, .chart-card { 
+    .form-container, .info-column, .stats-card, .chart-card { 
         width: 100%;
         min-width: unset; 
         max-width: 100%; 
+    }
+    
+    /* ФІКСАЦІЯ ГРАФІКІВ: Знімаємо жорстку висоту для адаптації */
+    .chart-card {
+        height: auto; 
+        min-height: 300px; /* Забезпечуємо мінімальну висоту для графіків */
     }
 }
 
@@ -375,4 +381,34 @@ input[type="date"]:focus, input[type="number"]:focus {
     .main-content {
         padding: 15px;
     }
+
+    /* Додаткове стиснення спідометра на малих екранах */
+    .gauge-display {
+        width: 250px; 
+        height: 125px;
+        margin-bottom: 10px;
+    }
+    .gauge-arc {
+        width: 250px;
+        height: 250px;
+    }
+    .gauge-arc::before {
+        width: 250px;
+        height: 250px;
+        /* Регулюємо маску для зменшеного розміру */
+        mask: radial-gradient(transparent 105px, black 105px, black 125px, transparent 125px);
+        -webkit-mask: radial-gradient(transparent 105px, black 105px, black 125px, transparent 125px);
+    }
+    .gauge-needle-pivot {
+        width: 16px; 
+        height: 16px;
+    }
+    .gauge-needle {
+        height: 125px;
+        bottom: 8px;
+    }
+    #acwr-value {
+        font-size: 2.5em; 
+    }
+    
 }
