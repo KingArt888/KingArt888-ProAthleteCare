@@ -99,5 +99,27 @@
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
     margin: 0;
 }
+-------------------------------------------------------------------------------------------------------------------
+
+
+@media (min-width: 769px) {
+    .sidebar {
+        position: relative !important;
+        width: 250px !important;
+        min-width: 250px;
+        max-width: 250px;
+        transform: none !important;
+    }
+
+    .menu-toggle {
+        display: none !important;
+    }
+
+    .content-wrapper {
+        flex-direction: row;
+        padding-top: 0;
+    }
+}
+
 
 
