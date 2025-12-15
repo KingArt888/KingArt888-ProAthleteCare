@@ -354,18 +354,20 @@ input[type="date"]:focus, input[type="number"]:focus {
 
 /* --- 6. АДАПТИВНІСТЬ --- */
 
-@media (max-width: 1000px) {
-    /* На невеликих екранах все розташовуємо у стовпець */
-    .dashboard-container, .info-column {
-        flex-direction: column; 
+@media (max-width: 900px) {
+
+    .dashboard-container,
+    .info-column {
+        flex-direction: column;
         gap: 20px;
     }
 
-    /* Всі основні контейнери займають 100% ширини */
-    .form-container, .info-column, .chart-card { 
+    .form-container,
+    .info-column,
+    .chart-card {
         width: 100%;
-        min-width: unset; 
-        max-width: 100%; 
+        min-width: unset;
+        max-width: 100%;
     }
 }
 
