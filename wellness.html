@@ -1,125 +1,220 @@
 <!DOCTYPE html>
+
 <html lang="uk">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ProAthleteCare | Wellness Control</title>
+    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="wellness.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
+    
+    <link rel="stylesheet" href="navigation-mobile.css"> 
+    </head>
+
 <body>
 
-<header>
+    <header>
     <a href="index.html" class="logo-link">
         <img src="AK_logo.png" alt="ProAthleteCare Logo" class="logo">
     </a>
     <h1 class="project-title">ProAthleteCare</h1>
     <p class="tagline">Онлайн-тренінг та професійний супровід атлетів</p>
+    
+    <button class="menu-toggle" id="menu-toggle-button" aria-label="Toggle Navigation">
+        ☰
+    </button>
 </header>
+    
 
-<div class="content-wrapper">
+    <div class="content-wrapper">
 
-    <nav class="sidebar">
-        <a href="wellness.html" class="active">Wellness Control</a>
-        <a href="injury.html">Injury Story</a>
-        <a href="load-season.html">Load Season</a>
-        <a href="daily-individual.html">Daily Individual</a>
-        <a href="weekly-individual.html">Weekly Individual</a>
-        <a href="weight-control.html">Weight Control</a>
-        <a href="velocity-control.html">Velocity Control</a>
-    </nav>
+       <div class="content-wrapper">
+    
+    <nav class="sidebar" id="main-sidebar">
+        <a href="wellness.html">Wellness Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+         <a href="injury.html">Injury Story <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+    
+    <a href="load-season.html">Load Season <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+    
+    <a href="daily-individual.html">Daily Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+    
+    <a href="weekly-individual.html">Weekly Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+    
+    <a href="weight-control.html">Weight Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+    
+    <a href="velocity-control.html">Velocity Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+        </nav>
+    
+        
 
-    <main class="main-content">
+        <main class="main-content">
 
-        <h2>Wellness Control: Моніторинг стану</h2>
+            <h2>Wellness Control: Моніторинг стану</h2>
 
-        <div class="dashboard-container">
+            <div class="dashboard-container">
 
-            <!-- Форма опитування -->
-            <div class="form-card">
-                <h3>Щоденне опитування</h3>
-                <form id="wellness-form">
+                
 
-                    <!-- Приклад одного блоку: Сон -->
-                    <div class="rating-block">
+                <div class="form-card">
+
+                    <h3>Щоденне опитування</h3>
+
+                    <form id="wellness-form">
+
+                        
                         <label>1. Якість сну (1-10, де 10 - ідеально):</label>
                         <div class="rating-group star-group">
-                            <input type="radio" id="sleep-r10" name="sleep" value="10"><label for="sleep-r10"></label>
-                            <input type="radio" id="sleep-r9" name="sleep" value="9"><label for="sleep-r9"></label>
-                            <input type="radio" id="sleep-r8" name="sleep" value="8"><label for="sleep-r8"></label>
-                            <input type="radio" id="sleep-r7" name="sleep" value="7"><label for="sleep-r7"></label>
-                            <input type="radio" id="sleep-r6" name="sleep" value="6"><label for="sleep-r6"></label>
-                            <input type="radio" id="sleep-r5" name="sleep" value="5"><label for="sleep-r5"></label>
-                            <input type="radio" id="sleep-r4" name="sleep" value="4"><label for="sleep-r4"></label>
-                            <input type="radio" id="sleep-r3" name="sleep" value="3"><label for="sleep-r3"></label>
-                            <input type="radio" id="sleep-r2" name="sleep" value="2"><label for="sleep-r2"></label>
-                            <input type="radio" id="sleep-r1" name="sleep" value="1"><label for="sleep-r1"></label>
+                            <input type="radio" id="sleep-r10" name="sleep" value="10" /><label for="sleep-r10" title="10"></label>
+                            <input type="radio" id="sleep-r9" name="sleep" value="9" /><label for="sleep-r9" title="9"></label>
+                            <input type="radio" id="sleep-r8" name="sleep" value="8" /><label for="sleep-r8" title="8"></label>
+                            <input type="radio" id="sleep-r7" name="sleep" value="7" /><label for="sleep-r7" title="7"></label>
+                            <input type="radio" id="sleep-r6" name="sleep" value="6" /><label for="sleep-r6" title="6"></label>
+                            <input type="radio" id="sleep-r5" name="sleep" value="5" /><label for="sleep-r5" title="5"></label>
+                            <input type="radio" id="sleep-r4" name="sleep" value="4" /><label for="sleep-r4" title="4"></label>
+                            <input type="radio" id="sleep-r3" name="sleep" value="3" /><label for="sleep-r3" title="3"></label>
+                            <input type="radio" id="sleep-r2" name="sleep" value="2" /><label for="sleep-r2" title="2"></label>
+                            <input type="radio" id="sleep-r1" name="sleep" value="1" /><label for="sleep-r1" title="1"></label>
                         </div>
-                        <div class="small-chart-wrapper">
-                            <canvas id="chart-sleep"></canvas>
+                        <p id="stat-sleep" class="wellness-stat"></p> 
+                        <div class="small-chart-container">
+                            <canvas id="chart-sleep" class="small-line-chart"></canvas>
                         </div>
-                    </div>
 
-                    <!-- М'язовий біль / Втома -->
-                    <div class="rating-block">
+                        
                         <label>2. М'язовий біль / Втома (1-10, де 10 - сильний біль):</label>
                         <div class="rating-group pain-group">
-                            <input type="radio" id="soreness-r10" name="soreness" value="10"><label for="soreness-r10"></label>
-                            <input type="radio" id="soreness-r9" name="soreness" value="9"><label for="soreness-r9"></label>
-                            <input type="radio" id="soreness-r8" name="soreness" value="8"><label for="soreness-r8"></label>
-                            <input type="radio" id="soreness-r7" name="soreness" value="7"><label for="soreness-r7"></label>
-                            <input type="radio" id="soreness-r6" name="soreness" value="6"><label for="soreness-r6"></label>
-                            <input type="radio" id="soreness-r5" name="soreness" value="5"><label for="soreness-r5"></label>
-                            <input type="radio" id="soreness-r4" name="soreness" value="4"><label for="soreness-r4"></label>
-                            <input type="radio" id="soreness-r3" name="soreness" value="3"><label for="soreness-r3"></label>
-                            <input type="radio" id="soreness-r2" name="soreness" value="2"><label for="soreness-r2"></label>
-                            <input type="radio" id="soreness-r1" name="soreness" value="1"><label for="soreness-r1"></label>
+                            <input type="radio" id="soreness-r10" name="soreness" value="10" /><label for="soreness-r10" title="10"></label>
+                            <input type="radio" id="soreness-r9" name="soreness" value="9" /><label for="soreness-r9" title="9"></label>
+                            <input type="radio" id="soreness-r8" name="soreness" value="8" /><label for="soreness-r8" title="8"></label>
+                            <input type="radio" id="soreness-r7" name="soreness" value="7" /><label for="soreness-r7" title="7"></label>
+                            <input type="radio" id="soreness-r6" name="soreness" value="6" /><label for="soreness-r6" title="6"></label>
+                            <input type="radio" id="soreness-r5" name="soreness" value="5" /><label for="soreness-r5" title="5"></label>
+                            <input type="radio" id="soreness-r4" name="soreness" value="4" /><label for="soreness-r4" title="4"></label>
+                            <input type="radio" id="soreness-r3" name="soreness" value="3" /><label for="soreness-r3" title="3"></label>
+                            <input type="radio" id="soreness-r2" name="soreness" value="2" /><label for="soreness-r2" title="2"></label>
+                            <input type="radio" id="soreness-r1" name="soreness" value="1" /><label for="soreness-r1" title="1"></label>
                         </div>
-                        <div class="small-chart-wrapper">
-                            <canvas id="chart-soreness"></canvas>
+                        <p id="stat-soreness" class="wellness-stat"></p>
+                        <div class="small-chart-container">
+                            <canvas id="chart-soreness" class="small-line-chart"></canvas>
                         </div>
-                    </div>
 
-                    <!-- Настрій / Енергія -->
-                    <div class="rating-block">
+                        
                         <label>3. Настрій / Рівень енергії (1-10, де 10 - відмінно):</label>
                         <div class="rating-group energy-group">
-                            <input type="radio" id="mood-r10" name="mood" value="10"><label for="mood-r10"></label>
-                            <input type="radio" id="mood-r9" name="mood" value="9"><label for="mood-r9"></label>
-                            <input type="radio" id="mood-r8" name="mood" value="8"><label for="mood-r8"></label>
-                            <input type="radio" id="mood-r7" name="mood" value="7"><label for="mood-r7"></label>
-                            <input type="radio" id="mood-r6" name="mood" value="6"><label for="mood-r6"></label>
-                            <input type="radio" id="mood-r5" name="mood" value="5"><label for="mood-r5"></label>
-                            <input type="radio" id="mood-r4" name="mood" value="4"><label for="mood-r4"></label>
-                            <input type="radio" id="mood-r3" name="mood" value="3"><label for="mood-r3"></label>
-                            <input type="radio" id="mood-r2" name="mood" value="2"><label for="mood-r2"></label>
-                            <input type="radio" id="mood-r1" name="mood" value="1"><label for="mood-r1"></label>
+                            <input type="radio" id="mood-r10" name="mood" value="10" /><label for="mood-r10" title="10"></label>
+                            <input type="radio" id="mood-r9" name="mood" value="9" /><label for="mood-r9" title="9"></label>
+                            <input type="radio" id="mood-r8" name="mood" value="8" /><label for="mood-r8" title="8"></label>
+                            <input type="radio" id="mood-r7" name="mood" value="7" /><label for="mood-r7" title="7"></label>
+                            <input type="radio" id="mood-r6" name="mood" value="6" /><label for="mood-r6" title="6"></label>
+                            <input type="radio" id="mood-r5" name="mood" value="5" /><label for="mood-r5" title="5"></label>
+                            <input type="radio" id="mood-r4" name="mood" value="4" /><label for="mood-r4" title="4"></label>
+                            <input type="radio" id="mood-r3" name="mood" value="3" /><label for="mood-r3" title="3"></label>
+                            <input type="radio" id="mood-r2" name="mood" value="2" /><label for="mood-r2" title="2"></label>
+                            <input type="radio" id="mood-r1" name="mood" value="1" /><label for="mood-r1" title="1"></label>
                         </div>
-                        <div class="small-chart-wrapper">
-                            <canvas id="chart-mood"></canvas>
+                        <p id="stat-mood" class="wellness-stat"></p>
+                        <div class="small-chart-container">
+                            <canvas id="chart-mood" class="small-line-chart"></canvas>
                         </div>
+
+
+                        <label>4. Рівень гідратації (1-10, де 10 - норма):</label>
+                        <div class="rating-group hydration-group">
+                            <input type="radio" id="water-r10" name="water" value="10" /><label for="water-r10" title="10"></label>
+                            <input type="radio" id="water-r9" name="water" value="9" /><label for="water-r9" title="9"></label>
+                            <input type="radio" id="water-r8" name="water" value="8" /><label for="water-r8" title="8"></label>
+                            <input type="radio" id="water-r7" name="water" value="7" /><label for="water-r7" title="7"></label>
+                            <input type="radio" id="water-r6" name="water" value="6" /><label for="water-r6" title="6"></label>
+                            <input type="radio" id="water-r5" name="water" value="5" /><label for="water-r5" title="5"></label>
+                            <input type="radio" id="water-r4" name="water" value="4" /><label for="water-r4" title="4"></label>
+                            <input type="radio" id="water-r3" name="water" value="3" /><label for="water-r3" title="3"></label>
+                            <input type="radio" id="water-r2" name="water" value="2" /><label for="water-r2" title="2"></label>
+                            <input type="radio" id="water-r1" name="water" value="1" /><label for="water-r1" title="1"></label>
+                        </div>
+                        <p id="stat-water" class="wellness-stat"></p>
+                        <div class="small-chart-container">
+                            <canvas id="chart-water" class="small-line-chart"></canvas>
+                        </div>
+
+                        
+                        <label>5. Психологічний стрес (1-10, де 10 - максимальний):</label>
+                        <div class="rating-group stress-group">
+                            <input type="radio" id="stress-r10" name="stress" value="10" /><label for="stress-r10" title="10"></label>
+                            <input type="radio" id="stress-r9" name="stress" value="9" /><label for="stress-r9" title="9"></label>
+                            <input type="radio" id="stress-r8" name="stress" value="8" /><label for="stress-r8" title="8"></label>
+                            <input type="radio" id="stress-r7" name="stress" value="7" /><label for="stress-r7" title="7"></label>
+                            <input type="radio" id="stress-r6" name="stress" value="6" /><label for="stress-r6" title="6"></label>
+                            <input type="radio" id="stress-r5" name="stress" value="5" /><label for="stress-r5" title="5"></label>
+                            <input type="radio" id="stress-r4" name="stress" value="4" /><label for="stress-r4" title="4"></label>
+                            <input type="radio" id="stress-r3" name="stress" value="3" /><label for="stress-r3" title="3"></label>
+                            <input type="radio" id="stress-r2" name="stress" value="2" /><label for="stress-r2" title="2"></label>
+                            <input type="radio" id="stress-r1" name="stress" value="1" /><label for="stress-r1" title="1"></label>
+                        </div>
+                        <p id="stat-stress" class="wellness-stat"></p>
+                        <div class="small-chart-container">
+                            <canvas id="chart-stress" class="small-line-chart"></canvas>
+                        </div>
+
+
+                        <label>6. Суб'єктивна готовність до тренування (1-10, де 10 - повна готовність):</label>
+                        <div class="rating-group ready-group">
+                            <input type="radio" id="ready-r10" name="ready" value="10" /><label for="ready-r10" title="10"></label>
+                            <input type="radio" id="ready-r9" name="ready" value="9" /><label for="ready-r9" title="9"></label>
+                            <input type="radio" id="ready-r8" name="ready" value="8" /><label for="ready-r8" title="8"></label>
+                            <input type="radio" id="ready-r7" name="ready" value="7" /><label for="ready-r7" title="7"></label>
+                            <input type="radio" id="ready-r6" name="ready" value="6" /><label for="ready-r6" title="6"></label>
+                            <input type="radio" id="ready-r5" name="ready" value="5" /><label for="ready-r5" title="5"></label>
+                            <input type="radio" id="ready-r4" name="ready" value="4" /><label for="ready-r4" title="4"></label>
+                            <input type="radio" id="ready-r3" name="ready" value="3" /><label for="ready-r3" title="3"></label>
+                            <input type="radio" id="ready-r2" name="ready" value="2" /><label for="ready-r2" title="2"></label>
+                            <input type="radio" id="ready-r1" name="ready" value="1" /><label for="ready-r1" title="1"></label>
+                        </div>
+                        <p id="stat-ready" class="wellness-stat"></p>
+                        <div class="small-chart-container">
+                            <canvas id="chart-ready" class="small-line-chart"></canvas>
+                        </div>
+
+                        
+                        <button type="submit" class="gold-button">Записати 6 точок даних</button>
+
+                    </form>
+
+                </div>
+
+                
+
+                <div class="chart-card">
+
+                    <h3>Індивідуальна динаміка Wellness</h3>
+
+                    <div class="chart-area">
+
+                        <canvas id="wellnessChart"></canvas>
+
                     </div>
 
-                    <!-- Додаткові блоки: вода, стрес, готовність можна додати аналогічно -->
-
-                    <button type="submit" class="gold-button">Записати 6 точок даних</button>
-                </form>
-            </div>
-
-            <!-- Великий графік -->
-            <div class="chart-card">
-                <h3>Індивідуальна динаміка Wellness</h3>
-                <div class="chart-area">
-                    <canvas id="wellnessChart"></canvas>
                 </div>
+
             </div>
 
-        </div>
-    </main>
-</div>
+        </main>
 
-<footer>&copy; 2025 ProAthleteCare.</footer>
+    </div>
 
-<script src="wellness.js"></script>
+    
+
+    <footer>
+
+        &copy; 2025 ProAthleteCare. 
+
+    </footer>
+
+    <script src="wellness.js"></script>
+    <script src="navigation-common.js"></script>
+
 </body>
+
 </html>
