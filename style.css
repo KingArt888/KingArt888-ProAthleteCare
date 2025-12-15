@@ -22,15 +22,41 @@
     color: #888888;
     font-style: italic;
     font-size: 0.9em;
-}/* Обгортка для вмісту та меню */.content-wrapper {
-    display: flex;
+
+    
+/* Обгортка для вмісту та меню */
+.content-wrapper {
+    /* Прибираємо display: flex; з content-wrapper, коли sidebar фіксований */
     min-height: calc(100vh - 100px);
-}/* Бічне меню (Sidebar) */.sidebar {
+    /* ✅ НОВЕ: Відступ для фіксованого sidebar (його ширина: 250px) */
+    padding-left: 250px; 
+}
+
+/* Бічне меню (Sidebar) */
+.sidebar {
     width: 250px;
-    flex-shrink: 0; /* <--- Забороняє стискатися */
+    flex-shrink: 0; 
     background-color: #0d0d0d;
     padding: 20px;
     box-shadow: 2px 0 10px rgba(255, 199, 44, 0.2);
+    
+    /* ✅ КЛЮЧОВІ ЗМІНИ ДЛЯ ФІКСАЦІЇ НА ДЕСКТОПІ */
+    position: fixed; 
+    top: 100px; /* Висота вашого хедера */
+    left: 0; 
+    /* ✅ ВИПРАВЛЕНО: Висота вікна мінус висота хедера */
+    height: calc(100vh - 100px); 
+    z-index: 500; 
+}
+
+/* Основний вміст */
+.main-content {
+    flex-grow: 1;
+    padding: 30px; 
+    background-color: #000000;
+    /* ЗБЕРЕЖЕНО: width: 100%; тут не потрібен, оскільки контейнер вже має padding-left */
+}
+    
 }/* Стилі для кожного пункту меню */.sidebar a {
     display: flex;
     justify-content: flex-start;
