@@ -166,34 +166,37 @@ function initCharts() {
     // ----------------------------------------------------
     
     // Базова конфігурація для міні-графіків
-    const config = {
-        type: 'line',
-        options: {
-             responsive: true,
-             maintainAspectRatio: false,
-             animation: true, // Залишаємо анімацію "поступового" заповнення
-             scales: {
-                y: {
-                    min: 1,
-                    max: 10,
-                    title: { display: false },
-                    // Приховуємо числа та сітку на осі Y для мінімалістичного вигляду
-                    ticks: { stepSize: 1, color: 'white', display: false }, 
-                    grid: { color: 'rgba(255, 255, 255, 0.1)', display: false } 
-                },
-                x: {
-                    // Приховуємо підписи дат та сітку на осі X
-                    grid: { color: 'rgba(255, 255, 255, 0.1)', display: false }, 
-                    ticks: { color: 'rgba(255, 255, 255, 0.5)', display: false } 
-                }
+const config = {
+    type: 'line',
+    options: {
+         responsive: true,
+         maintainAspectRatio: false,
+         animation: true, // Залишаємо анімацію "поступового" заповнення
+         scales: {
+             y: {
+                 min: 1,
+                 max: 10,
+                 // 🛑 ВИПРАВЛЕННЯ: Явно вмикаємо відображення осі Y
+                 display: true, 
+                 title: { display: false },
+                 // ✅ ВИПРАВЛЕННЯ: Вмикаємо відображення чисел (міток) на осі Y
+                 ticks: { stepSize: 1, color: '#AAAAAA', display: true }, // ПОКАЗУЄМО ШКАЛУ
+                 // Сітку залишаємо прихованою, щоб графік був чистим
+                 grid: { color: 'rgba(255, 255, 255, 0.1)', display: false } 
              },
-            plugins: {
-                legend: { display: false },
-                title: { display: false },
-                tooltip: { enabled: true }
-            }
-        }
-    };
+             x: {
+                 // Приховуємо підписи дат та сітку на осі X (бо це міні-графік)
+                 grid: { color: 'rgba(255, 255, 255, 0.1)', display: false }, 
+                 ticks: { color: 'rgba(255, 255, 255, 0.5)', display: false } 
+             }
+            },
+         plugins: {
+             legend: { display: false },
+             title: { display: false },
+             tooltip: { enabled: true }
+         }
+    }
+};
 
     // Створення маленьких графіків
     WELLNESS_FIELDS.forEach(field => {
