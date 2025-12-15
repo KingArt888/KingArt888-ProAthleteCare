@@ -1,58 +1,37 @@
-/* Базові стилі */
-body {
+/* Базові стилі */body {
     margin: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #000000;
     color: #CCCCCC;
-}
-
-/* Хедер - верхня панель */
-header {
+}/* Хедер - верхня панель */header {
     background-color: #0d0d0d;
     padding: 15px 30px;
     display: flex;
     align-items: center;
     border-bottom: 3px solid #FFC72C;
-}
-
-.logo {
+}.logo {
     height: 70px;
     margin-right: 15px;
     border-radius: 50%; 
-}
-
-.project-title {
+}.project-title {
     margin: 0;
     font-size: 1.8em;
     color: #FFC72C;
-}
-
-.tagline {
+}.tagline {
     margin-left: 20px;
     color: #888888;
     font-style: italic;
     font-size: 0.9em;
-}
-
-/* Обгортка для вмісту та меню */
-.content-wrapper {
+}/* Обгортка для вмісту та меню */.content-wrapper {
     display: flex;
     min-height: calc(100vh - 100px);
-    /* 🛑 КРИТИЧНЕ ВИПРАВЛЕННЯ 1: Запобігаємо горизонтальному скролу на сторінці */
-    overflow-x: hidden; 
-}
-
-/* Бічне меню (Sidebar) */
-.sidebar {
+}/* Бічне меню (Sidebar) */.sidebar {
     width: 250px;
-    flex-shrink: 0; /* Гарантує, що меню НЕ стискається */
+    flex-shrink: 0; /* <--- Забороняє стискатися */
     background-color: #0d0d0d;
     padding: 20px;
     box-shadow: 2px 0 10px rgba(255, 199, 44, 0.2);
-}
-
-/* Стилі для кожного пункту меню */
-.sidebar a {
+}/* Стилі для кожного пункту меню */.sidebar a {
     display: flex;
     justify-content: flex-start;
     align-items: center;
@@ -64,39 +43,23 @@ header {
     border-radius: 8px;
     transition: background-color 0.3s, border-left 0.3s, color 0.3s;
     border-left: 2px solid transparent;
-}
-
-/* Стилі для маленької КАРТИНКИ "АК" у меню */
-.menu-icon {
+}/* Стилі для маленької КАРТИНКИ "АК" у меню */.menu-icon {
     width: 24px;
     height: 24px;
     border-radius: 50%;
     margin-left: auto;
-}
-
-.sidebar a:hover {
+}.sidebar a:hover {
     background-color: #1f1f1f;
     border-left: 2px solid #FFC72C;
     color: #FFC72C;
-}
-
-/* Основний вміст */
-.main-content {
+}/* Основний вміст */.main-content {
     flex-grow: 1;
     padding: 30px; 
     background-color: #000000;
-    /* 🛑 КРИТИЧНЕ ВИПРАВЛЕННЯ 2: ДОЗВОЛЯЄМО КОНТЕНТУ СТИСКАТИСЯ */
-    min-width: 0; 
-}
-
-/* Стиль для заголовків основного контенту */
-.main-content h2 {
+}/* Стиль для заголовків основного контенту */.main-content h2 {
     color: #FFC72C;
     margin-bottom: 20px;
-}
-
-/* --- HERO SECTION: КАРТИНКА + ТЕКСТ ЗВЕРХУ --- */
-.hero {
+}/* --- HERO SECTION: КАРТИНКА + ТЕКСТ ЗВЕРХУ --- */.hero {
     position: relative; 
     max-width: 80%; 
     margin: 0 auto 20px auto; 
@@ -104,18 +67,13 @@ header {
     border-radius: 10px;
     overflow: hidden; 
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
-}
-
-.hero-image {
+}.hero-image {
     width: 100%;
     height: 100%;
     display: block; 
     object-fit: cover; 
     filter: brightness(60%);
-}
-
-/* Оверлей з текстом поверх картинки */
-.hero-overlay {
+}/* Оверлей з текстом поверх картинки */.hero-overlay {
     position: absolute; 
     bottom: 0; 
     left: 0;
@@ -128,20 +86,18 @@ header {
     text-align: left; 
     color: #ffffff; 
     background: linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0)); 
-}
-
-.hero-overlay h2 {
+}.hero-overlay h2 {
     color: #FFC72C; 
     margin-bottom: 5px;
     font-size: 2.2em; 
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7); 
     border-bottom: none; 
     padding-bottom: 0;
-}
-
-.hero-overlay p {
+}.hero-overlay p {
     font-size: 1.1em;
     line-height: 1.5;
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
     margin: 0;
 }
+
+
