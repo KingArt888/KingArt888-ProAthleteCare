@@ -1,8 +1,8 @@
 // weekly-individual.js
 // ПОТРЕБУЄ exercise_library.js ДЛЯ РОБОТИ
 
-const WEEKLY_STORAGE_KEY = 'weeklyPlanData'; // ЗМІНЕНО назву змінної
-const COLOR_MAP = {
+const WEEKLY_STORAGE_KEY = 'weeklyPlanData'; // ЗМІНА
+const COLOR_MAP = { // ЗАЛИШЕНО ТУТ
     'MD': { status: 'MD', colorClass: 'color-red' },
     'MD+1': { status: 'MD+1', colorClass: 'color-dark-green' }, 
     'MD+2': { status: 'MD+2', colorClass: 'color-green' }, 
@@ -41,7 +41,7 @@ function generateRandomExercises(stage, category, count) {
 }
 
 
-// --- ФУНКЦІЇ ЗБЕРЕЖЕННЯ/ЗАВАНТАЖЕННЯ (ВИПРАВЛЕННЯ: ПЕРЕМІЩЕНО ВГОРУ ДЛЯ УНИКНЕННЯ REFERENCEERROR) ---
+// --- ФУНКЦІЇ ЗБЕРЕЖЕННЯ/ЗАВАНТАЖЕННЯ ---
 
 function collectTemplatesFromUI() {
     const templateData = {};
@@ -99,8 +99,7 @@ function collectManualChanges() {
 function saveData(newWeeklyPlan = null, templatesFromUI = null) {
     const saveButton = document.querySelector('.save-button');
     try {
-        // ЗМІНЕНО: Використовує WEEKLY_STORAGE_KEY
-        let existingData = JSON.parse(localStorage.getItem(WEEKLY_STORAGE_KEY) || '{}');
+        let existingData = JSON.parse(localStorage.getItem(WEEKLY_STORAGE_KEY) || '{}'); // ЗМІНА
         const activityData = {};
         let finalPlanData = {};
         
@@ -133,8 +132,7 @@ function saveData(newWeeklyPlan = null, templatesFromUI = null) {
         }
         
         const combinedData = { ...existingData, ...activityData, ...templateData, ...finalPlanData };
-        // ЗМІНЕНО: Використовує WEEKLY_STORAGE_KEY
-        localStorage.setItem(WEEKLY_STORAGE_KEY, JSON.stringify(combinedData));
+        localStorage.setItem(WEEKLY_STORAGE_KEY, JSON.stringify(combinedData)); // ЗМІНА
         
         if (saveButton) {
             saveButton.textContent = 'Збережено! (✔)';
@@ -394,8 +392,7 @@ function generateWeeklyPlan(mdStatuses, templates) {
             }
         }
         
-        // ЗМІНЕНО: Використовує WEEKLY_STORAGE_KEY
-        const savedData = JSON.parse(localStorage.getItem(WEEKLY_STORAGE_KEY) || '{}');
+        const savedData = JSON.parse(localStorage.getItem(WEEKLY_STORAGE_KEY) || '{}'); // ЗМІНА
         const manualPlanKey = `day_plan_${dayIndex}`;
         let finalExercises = generatedExercises;
         
@@ -492,8 +489,7 @@ function updateCycleColors(shouldGenerate = false) {
              }
         });
         
-        // ЗМІНЕНО: Використовує WEEKLY_STORAGE_KEY
-        const savedData = JSON.parse(localStorage.getItem(WEEKLY_STORAGE_KEY) || '{}');
+        const savedData = JSON.parse(localStorage.getItem(WEEKLY_STORAGE_KEY) || '{}'); // ЗМІНА
         const savedTemplates = {};
         Object.keys(savedData).forEach(key => {
             if (key.startsWith('template_')) {
@@ -521,8 +517,7 @@ function updateCycleColors(shouldGenerate = false) {
 
 function loadData() {
     try {
-        // ЗМІНЕНО: Використовує WEEKLY_STORAGE_KEY
-        const savedData = localStorage.getItem(WEEKLY_STORAGE_KEY);
+        const savedData = localStorage.getItem(WEEKLY_STORAGE_KEY); // ЗМІНА
         let data = savedData ? JSON.parse(savedData) : {};
 
         document.querySelectorAll('#weekly-plan-form [name^="activity_"]').forEach(element => {
@@ -774,32 +769,29 @@ window.initializeCollapsibles = function () {
 
 document.addEventListener('DOMContentLoaded', () => {
     
-    // Перевіряємо наявність activitySelects
     const activitySelects = document.querySelectorAll('.activity-type-select');
+    const form = document.getElementById('weekly-plan-form');
+    
     activitySelects.forEach((select) => { 
          select.addEventListener('change', () => {
              updateCycleColors(true); 
          });
     });
 
-    // Перевіряємо наявність форми
-    const form = document.getElementById('weekly-plan-form');
-    if (form) {
+    if (form) { // ДОДАНО ПЕРЕВІРКУ
         form.addEventListener('submit', (e) => {
              e.preventDefault();
              saveData(null, null);
         });
     }
-
-    // Перевіряємо наявність кнопки додавання
+    
     const addSelectedBtn = document.getElementById('add-selected-btn');
-    if (addSelectedBtn) {
+    if (addSelectedBtn) { // ДОДАНО ПЕРЕВІРКУ
         addSelectedBtn.addEventListener('click', handleSelectionComplete);
     }
     
-    // Перевіряємо наявність модального вікна (ПРИЧИНА ПОМИЛКИ: Element may be null)
     const modal = document.getElementById('exercise-selection-modal');
-    if (modal) { // Додано перевірку, щоб уникнути TypeError
+    if (modal) { // ДОДАНО ПЕРЕВІРКУ
         modal.addEventListener('click', (e) => {
             if (e.target.id === 'exercise-selection-modal' || e.target.classList.contains('close-modal-btn')) {
                 closeExerciseModal();
