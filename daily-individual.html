@@ -100,52 +100,58 @@
 
     <script>
         /**
-         * Функція-слухач для Collapse/Expand (тепер працює через класи CSS).
+         * Функція, яка перемикає клас 'is-active' на заголовку та вмісті.
+         * CSS робить решту (display: none/block та обертання іконки).
          */
         function toggleSection(event) {
             let headerElement = event.currentTarget; 
             let content = headerElement.nextElementSibling;
-            let icon = headerElement.querySelector('.toggle-icon');
-
-            // 1. Тогглимо клас 'is-active' на заголовку та вмісті
+            
+            // Тогглимо клас 'is-active'
             headerElement.classList.toggle('is-active');
             content.classList.toggle('is-active');
-
-            // 2. Оновлюємо іконку відповідно до нового стану
-            if (headerElement.classList.contains('is-active')) {
-                icon.textContent = "▼";
-            } else {
-                icon.textContent = "►";
-            }
         }
 
         /**
-         * Ініціалізація: прикріплюємо слухачі та перевіряємо початковий стан.
+         * Ініціалізація: прикріплюємо слухачі до всіх заголовків-вкладок.
          */
-        function initializeCollapsibles() {
+        window.initializeCollapsibles = function() {
             let collapsibles = document.querySelectorAll('.stage-header.collapsible');
             
             collapsibles.forEach(header => {
                 // 1. Прикріплюємо слухач кліку
                 header.addEventListener('click', toggleSection);
 
-                // 2. Ініціалізуємо іконку на основі класу 'is-active'
+                // 2. Ініціалізуємо іконку (її вигляд контролюється CSS завдяки is-active)
                 let content = header.nextElementSibling;
-                let icon = header.querySelector('.toggle-icon');
 
-                if (content && icon && content.classList.contains('is-active')) {
-                    // Якщо контент має is-active, гарантуємо, що заголовок і іконка також активні
-                    header.classList.add('is-active');
-                    icon.textContent = "▼";
-                }
+                // Перевірка: Якщо секція MAIN TRAINING завантажилася, вона має клас is-active, 
+                // іконка вже буде ▼ завдяки CSS.
             });
         }
         
         // --- ЗАПУСК ---
-        // Викликаємо функцію ініціалізації після завантаження всього DOM
-        document.addEventListener('DOMContentLoaded', initializeCollapsibles);
+        
+        // Оскільки dynamic-individual.js генерує вміст,
+        // найкраще викликати initializeCollapsibles() в кінці функції генерації.
+        
+        // Якщо у Вас немає доступу до daily-individual.js, 
+        // спробуйте запустити з невеликою затримкою.
+        // Це не ідеально, але може вирішити проблему, якщо DOM генерується швидко:
+        window.addEventListener('load', () => {
+             // Викликати через 100 мс після повного завантаження сторінки
+             setTimeout(window.initializeCollapsibles, 100); 
+        });
 
-    </script> 
+
+        /*
+         * НАЙКРАЩЕ РІШЕННЯ:
+         * В кінці функції у daily-individual.js, яка вставляє вправи в DOM,
+         * додайте виклик:
+         * initializeCollapsibles();
+         */
+
+    </script>
     
 </body>
 </html>
