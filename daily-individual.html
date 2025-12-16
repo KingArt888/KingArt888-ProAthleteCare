@@ -1,144 +1,141 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Individual | ProAthleteCare</title>
-    
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="weekly-individual.css"> 
-    <link rel="stylesheet" href="daily-individual.css">
-    <link rel="stylesheet" href="navigation-mobile.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Individual | ProAthleteCare</title>
 
-    <style>
-        /* Базові стилі для модалки */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0; top: 0;
-            width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            justify-content: center; align-items: center;
-        }
-        .modal.is-active {
-            display: flex;
-        }
-        .modal-content {
-            background: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            max-width: 800px;
-            width: 90%;
-            max-height: 90%;
-            overflow-y: auto;
-        }
-        .close-modal-btn {
-            float: right;
-            cursor: pointer;
-            font-size: 24px;
-        }
-    </style>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="daily-individual.css">
+<link rel="stylesheet" href="navigation-mobile.css">
+
 </head>
 <body>
-    <header>
-        <a href="index.html" class="logo-link">
-            <img src="AK_logo.png" alt="ProAthleteCare Logo" class="logo">
-        </a>
-        <h1 class="project-title">ProAthleteCare</h1>
-        <p class="tagline">Онлайн-тренінг та професійний супровід атлетів</p>
-        
-        <button class="menu-toggle" id="menu-toggle-button" aria-label="Toggle Navigation">
-            ☰
-        </button>
-    </header>
+<header>
+    <a href="index.html" class="logo-link">
+        <img src="AK_logo.png" alt="ProAthleteCare Logo" class="logo">
+    </a>
+    <h1 class="project-title">ProAthleteCare</h1>
+    <p class="tagline">Онлайн-тренінг та професійний супровід атлетів</p>
 
-    <div class="content-wrapper">
-        <nav class="sidebar" id="main-sidebar"> 
-            <a href="wellness.html">Wellness Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="injury.html">Injury Story <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="load-season.html">Load Season <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="daily-individual.html">Daily Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="weekly-individual.html">Weekly Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="weight-control.html">Weight Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="velocity-control.html">Velocity Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
-        </nav>
+    <button class="menu-toggle" id="menu-toggle-button" aria-label="Toggle Navigation">
+        ☰
+    </button>
+</header>
 
-        <main class="main-content">
-            <h2>🔥 Ваш Індивідуальний План на Сьогодні</h2>
-            <p id="current-date-display" class="sub-header"></p>
+<div class="content-wrapper">
 
-            <div class="daily-plan-header">
-                <h3>Статус дня:</h3>
-                <span id="md-status-display" class="md-status color-dark-grey">Завантаження...</span>
-                
-                <h3 style="margin-left: 20px;">Цикл MDX:</h3>
-                <span id="mdx-range-display">Завантаження...</span>
-            </div>
-            
-            <section id="md-recommendations">
-                <p>Завантаження рекомендацій...</p>
-            </section>
-            
-            <hr>
+    <nav class="sidebar" id="main-sidebar"> 
+        <a href="wellness.html">Wellness Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+        <a href="injury.html">Injury Story <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+        <a href="load-season.html">Load Season <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+        <a href="daily-individual.html">Daily Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+        <a href="weekly-individual.html">Weekly Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+        <a href="weight-control.html">Weight Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+        <a href="velocity-control.html">Velocity Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+    </nav>
 
-            <div id="daily-exercise-list">
-                <p id="loading-message">Завантаження плану тренування...</p>
-            </div>
-            
-            <hr style="margin-top: 40px; border-color: #555;">
+    <main class="main-content">
+        <h2>🔥 Ваш Індивідуальний План на Сьогодні</h2>
+        <p id="current-date-display" class="sub-header"></p>
 
-            <section id="user-feedback-container" class="feedback-block">
-                <h3>Завантаження форми зворотного зв'язку...</h3>
-            </section>
-        </main>
-    </div>
+        <div class="daily-plan-header">
+            <h3>Статус дня:</h3>
+            <span id="md-status-display" class="md-status color-dark-grey">Завантаження...</span>
 
-    <footer>
-        &copy; 2025 ProAthleteCare. 
-    </footer>
-
-    <!-- Модальне вікно -->
-    <div id="exercise-selection-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal-btn">&times;</span>
-            <h3 id="modal-title-context">Вибір вправи</h3>
-            <div id="quality-filters"></div>
-            <div id="exercise-list-container"></div>
-            <button id="add-selected-btn">Додати вибрані (0)</button>
+            <h3 style="margin-left: 20px;">Цикл MDX:</h3>
+            <span id="mdx-range-display">Завантаження...</span>
         </div>
-    </div>
 
-    <!-- Скрипти -->
-    <script src="exercise_library.js"></script>
-    <script src="weekly-individual.js"></script>
-    <script src="daily-individual.js"></script>
-    <script src="navigation-common.js"></script>
+        <section id="md-recommendations">
+            <p>Завантаження рекомендацій...</p>
+        </section>
 
-    <script>
-        function toggleSection(header) {
-            const content = header.nextElementSibling;
-            const icon = header.querySelector('.toggle-icon');
+        <hr>
 
-            const isOpen = content.classList.contains('is-active');
+        <div id="daily-exercise-list">
+            <p id="loading-message">Завантаження плану тренування...</p>
+        </div>
 
-            if (isOpen) {
-                content.classList.remove('is-active');
-                header.classList.remove('is-active');
-                icon.textContent = '►';
+        <hr style="margin-top: 40px; border-color: #555;">
+
+        <section id="user-feedback-container" class="feedback-block">
+            <h3>Завантаження форми зворотного зв'язку...</h3>
+        </section>
+
+    </main>
+</div>
+
+<footer>
+    &copy; 2025 ProAthleteCare. 
+</footer>
+
+<!-- ===== DAILY INDIVIDUAL JS ===== -->
+<script>
+(function(){
+    // Глобальні змінні тільки для цього файлу
+    const DAILY_STORAGE_KEY = 'dailyPlanData';
+    const DAILY_COLOR_MAP = {
+        'MD': { status: 'MD', colorClass: 'color-red' },
+        'MD+1': { status: 'MD+1', colorClass: 'color-dark-green' },
+        'MD+2': { status: 'MD+2', colorClass: 'color-green' },
+        'MD-1': { status: 'MD-1', colorClass: 'color-yellow' },
+        'REST': { status: 'REST', colorClass: 'color-neutral' },
+        'TRAIN': { status: 'TRAIN', colorClass: 'color-dark-grey' },
+    };
+
+    const dayNamesShort = ['Пн','Вт','Ср','Чт','Пт','Сб','Нд'];
+
+    // ==== Функція оновлення статусу дня ====
+    function updateDailyStatus(mdStatus) {
+        const statusEl = document.getElementById('md-status-display');
+        if (statusEl) {
+            const style = DAILY_COLOR_MAP[mdStatus] || DAILY_COLOR_MAP['TRAIN'];
+            statusEl.textContent = style.status;
+            Object.values(DAILY_COLOR_MAP).forEach(m => statusEl.classList.remove(m.colorClass));
+            statusEl.classList.add(style.colorClass);
+        }
+    }
+
+    // ==== Завантаження плану ====
+    function loadDailyPlan() {
+        let data = JSON.parse(localStorage.getItem(DAILY_STORAGE_KEY) || '{}');
+        const todayStatus = data.todayStatus || 'TRAIN';
+        updateDailyStatus(todayStatus);
+
+        const exercises = data.exercises || [];
+        const container = document.getElementById('daily-exercise-list');
+        if (container) {
+            container.innerHTML = '';
+            if (exercises.length === 0) {
+                container.innerHTML = '<p>План на сьогодні відсутній.</p>';
             } else {
-                content.classList.add('is-active');
-                header.classList.add('is-active');
-                icon.textContent = '▼';
+                exercises.forEach(ex => {
+                    const div = document.createElement('div');
+                    div.className = 'exercise-item';
+                    div.innerHTML = `
+                        <label>Назва вправи:</label>
+                        <input type="text" value="${ex.name}" readonly>
+                        <label>Опис:</label>
+                        <textarea readonly>${ex.description}</textarea>
+                    `;
+                    container.appendChild(div);
+                });
             }
         }
+    }
 
-        window.initializeCollapsibles = function () {
-            document.querySelectorAll('.collapsible').forEach(header => {
-                header.onclick = () => toggleSection(header);
-            });
-        };
-    </script>
-    
+    // ==== Ініціалізація ====
+    document.addEventListener('DOMContentLoaded', () => {
+        // Показати сьогоднішню дату
+        const dateEl = document.getElementById('current-date-display');
+        if(dateEl) dateEl.textContent = new Date().toLocaleDateString('uk-UA',{weekday:'long', year:'numeric', month:'long', day:'numeric'});
+        
+        loadDailyPlan();
+    });
+
+})();
+</script>
+
 </body>
 </html>
