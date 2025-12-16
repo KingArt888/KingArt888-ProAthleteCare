@@ -180,6 +180,13 @@ input[type="checkbox"]:checked::after {
     font-weight: bolder;
 }
 
+.section-content {
+    display: none;
+}
+
+.section-content.active {
+    display: block;
+}
 
 /* ======================================================= */
 /* --- СТИЛІ ЗВОРОТНОГО ЗВ'ЯЗКУ (ФІДБЕК) --- */
