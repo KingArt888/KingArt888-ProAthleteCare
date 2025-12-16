@@ -77,33 +77,32 @@
     <script src="navigation-common.js"></script>
 
     <script>
-function toggleSection(headerElement) {
-    headerElement.classList.toggle("is-active");
-    const content = headerElement.nextElementSibling;
-    const icon = headerElement.querySelector('.toggle-icon');
+    function toggleSection(headerElement) {
+        headerElement.classList.toggle("is-active");
+        const content = headerElement.nextElementSibling;
+        const icon = headerElement.querySelector('.toggle-icon');
 
-    if (content.classList.contains("is-active")) {
-        content.classList.remove("is-active");
-        icon.textContent = '►';
-    } else {
-        content.classList.add("is-active");
-        icon.textContent = '▼';
+        if (content.classList.contains("is-active")) {
+            content.classList.remove("is-active");
+            icon.textContent = '►'; // Закрито
+        } else {
+            content.classList.add("is-active");
+            icon.textContent = '▼'; // Відкрито
+        }
     }
-}
 
-// Ця функція викликається після динамічного завантаження
-window.initializeCollapsibles = function() {
-    const collapsibles = document.querySelectorAll(".collapsible");
-    collapsibles.forEach(header => {
-        // Видаляємо старі слухачі, якщо вони були
-        header.removeEventListener('click', toggleHandler); 
-
-        // Додаємо новий слухач
-        header.addEventListener('click', function toggleHandler() {
-            toggleSection(this);
+    // Ця функція викликається loadAndDisplayDailyPlan після генерації HTML
+    window.initializeCollapsibles = function() {
+        const collapsibles = document.querySelectorAll(".collapsible");
+        collapsibles.forEach(header => {
+            // Запобігаємо подвійному навішуванню слухачів
+            header.removeEventListener('click', toggleSection); 
+            header.addEventListener('click', function() {
+                toggleSection(this);
+            });
         });
-    });
-};
+    };
+    // ... інші функції, якщо вони тут
 </script>
     
 </body>
