@@ -55,8 +55,32 @@
             <hr>
 
             <div id="daily-exercise-list">
-                <p id="loading-message">Завантаження плану тренування...</p>
+    
+    <div class="training-section">
+        <h3 class="stage-header collapsible" onclick="toggleSection(this)">
+            1. Pre training <span class="toggle-icon">►</span>
+        </h3>
+        <div class="section-content" style="display: none;">
             </div>
+    </div>
+    
+    <div class="training-section">
+        <h3 class="stage-header collapsible" onclick="toggleSection(this)">
+            2. MAIN TRAINING (ОСНОВНЕ ТРЕНУВАННЯ) <span class="toggle-icon">▼</span>
+        </h3>
+        <div class="section-content" style="display: block;">
+            </div>
+    </div>
+
+    <div class="training-section">
+        <h3 class="stage-header collapsible" onclick="toggleSection(this)">
+            3. Post training <span class="toggle-icon">►</span>
+        </h3>
+        <div class="section-content" style="display: none;">
+            </div>
+    </div>
+
+</div>
             
             <hr style="margin-top: 40px; border-color: #555;">
 
@@ -73,5 +97,46 @@
 
     <script src="daily-individual.js"></script>
     <script src="navigation-common.js"></script>
+
+    <script>
+        /**
+         * Функція для перемикання видимості секції тренування.
+         */
+        function toggleSection(headerElement) {
+            let content = headerElement.nextElementSibling;
+            let icon = headerElement.querySelector('.toggle-icon');
+
+            if (content.style.display === "block" || content.style.display === "") {
+                content.style.display = "none";
+                if (icon) {
+                    icon.textContent = "►"; // Закрита
+                }
+            } else {
+                content.style.display = "block";
+                if (icon) {
+                    icon.textContent = "▼"; // Відкрита
+                }
+            }
+        }
+
+        /**
+         * Ініціалізація іконок після завантаження сторінки
+         */
+        document.addEventListener('DOMContentLoaded', (event) => {
+            document.querySelectorAll('.stage-header.collapsible').forEach(header => {
+                let content = header.nextElementSibling;
+                let icon = header.querySelector('.toggle-icon');
+
+                if (content && icon) {
+                    if (content.style.display === "block" || content.style.display === "") {
+                        icon.textContent = "▼";
+                    } else {
+                        icon.textContent = "►";
+                    }
+                }
+            });
+        });
+    </script>
+    
 </body>
 </html>
