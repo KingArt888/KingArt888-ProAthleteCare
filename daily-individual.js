@@ -285,18 +285,68 @@ function loadAndDisplayDailyPlan() {
             return;
         }
         
-        let exercisesHtml = '';
-        let currentStage = '';
-
+        // ----------------------------------------------------
+        // НОВИЙ БЛОК КОДУ: ГЕНЕРАЦІЯ ВКЛАДОК ТА ВПРАВ
+        // ----------------------------------------------------
+        
+        let exercisesByStage = {};
+        // 1. Групування вправ за їхнім етапом (stage)
         todayPlan.exercises.forEach((exercise, index) => {
-            if (exercise.stage && exercise.stage !== currentStage) {
-                currentStage = exercise.stage;
-                exercisesHtml += `<h3 class="stage-header">${currentStage.replace('-', ' ')}</h3>`;
+            // Якщо stage порожній, використовуємо 'UNSORTED'
+            const stage = exercise.stage || 'UNSORTED'; 
+            if (!exercisesByStage[stage]) {
+                exercisesByStage[stage] = [];
             }
-            exercisesHtml += createExerciseItemHTML(exercise, index); 
+            // Додаємо вправу, зберігаючи оригінальний індекс для унікального ID
+            exercisesByStage[stage].push({ ...exercise, originalIndex: index }); 
+        });
+        
+        let exercisesHtml = '';
+        let stageIndex = 0;
+        
+        // 2. Встановлюємо порядок етапів
+        const stageOrder = ['Pre-training', 'Main-training', 'Post-training', 'Recovery', 'UNSORTED'];
+
+        stageOrder.forEach(stageKey => {
+            if (exercisesByStage[stageKey] && exercisesByStage[stageKey].length > 0) {
+                stageIndex++;
+                
+                // Всі секції ЗАКРИТІ за замовчуванням
+                const activeClass = ''; 
+                const icon = '►'; // Іконка "закрита" (вправо)
+                
+                const stageTitle = stageKey.replace('-', ' ').toUpperCase();
+                
+                // 3. Створення HTML
+                exercisesHtml += `<div class="training-section">`;
+
+                // Заголовок (Клікабельна вкладка)
+                exercisesHtml += `
+                    <h3 class="stage-header collapsible ${activeClass}">
+                        ${stageIndex}. ${stageTitle} <span class="toggle-icon">${icon}</span>
+                    </h3>
+                `;
+
+                // Вміст вправ (Контейнер) - закритий за замовчуванням через CSS
+                exercisesHtml += `<div class="section-content ${activeClass}">`;
+                
+                exercisesByStage[stageKey].forEach((exercise) => {
+                    exercisesHtml += createExerciseItemHTML(exercise, exercise.originalIndex); 
+                });
+                
+                exercisesHtml += `</div></div>`; // Закриття контейнерів
+            }
         });
 
         listContainer.innerHTML = exercisesHtml;
+        
+        // !!! КРИТИЧНИЙ ВИКЛИК !!! 
+        // Запускаємо ініціалізацію слухачів КЛІКІВ після того, як DOM повністю згенерований
+        if (window.initializeCollapsibles) {
+            window.initializeCollapsibles();
+        } else {
+            console.warn("initializeCollapsibles() не знайдено. Переконайтеся, що JS-блок з цією функцією визначено в daily-individual.html.");
+        }
         
         // Відображення секції зворотного зв'язку
         updateFeedbackDisplay();
@@ -306,6 +356,7 @@ function loadAndDisplayDailyPlan() {
         listContainer.innerHTML = '<p style="color:red;">❌ Виникла критична помилка при завантаженні плану тренувань. Перевірте console.</p>';
     }
 }
+// ...
 
 
 /**
