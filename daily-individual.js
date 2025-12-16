@@ -62,27 +62,18 @@ function getCurrentDayIndex() {
 function normalizeStage(stage) {
     if (!stage) return 'UNSORTED';
 
-    const normalized = stage
+    const s = stage
         .toLowerCase()
-        .replace(/\s+/g, '-')   // пробіли → дефіс
-        .replace(/--+/g, '-');  // подвійні дефіси
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-');
 
-    // Повертаємо стандартизовані назви
-    switch (normalized) {
-        case 'pre-training':
-            return 'Pre-training';
-        case 'main-training':
-            return 'Main-training';
-        case 'post-training':
-            return 'Post-training';
-        case 'recovery':
-            return 'Recovery';
-        default:
-            // Для будь-яких інших незрозумілих етапів
-            return stage.replace(/\s+/g, '-');
-    }
+    if (s === 'pre-training') return 'Pre-training';
+    if (s === 'main-training') return 'Main-training';
+    if (s === 'post-training') return 'Post-training';
+
+    return 'UNSORTED';
 }
-
 
 /* ======================================================= */
 /* --- ОБРОБКА ВИКОНАННЯ ВПРАВ ТА ЗВОРОТНОГО ЗВ'ЯЗКУ --- */
@@ -444,6 +435,18 @@ function loadAndDisplayDailyPlan() {
 }
 
 
+function normalizeStage(stage) {
+    if (!stage) return 'UNSORTED';
+
+    return stage
+        .toLowerCase()
+        .replace(/\s+/g, '-')   // пробіли → дефіс
+        .replace(/--+/g, '-')   // подвійні дефіси
+        .replace(/training$/, 'training') // захист
+        .replace(/^pre-training$/, 'Pre-training')
+        .replace(/^main-training$/, 'Main-training')
+        .replace(/^post-training$/, 'Post-training');
+}
 
 
 
