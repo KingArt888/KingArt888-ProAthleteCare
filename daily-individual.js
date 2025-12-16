@@ -448,6 +448,28 @@ function normalizeStage(stage) {
         .replace(/^post-training$/, 'Post-training');
 }
 
+function initializeCollapsibles() {
+    const headers = document.querySelectorAll('.stage-header.collapsible');
+
+    headers.forEach(header => {
+        header.addEventListener('click', () => {
+            const content = header.nextElementSibling;
+            if (!content) return;
+
+            const icon = header.querySelector('.toggle-icon');
+            const isOpen = content.classList.contains('active');
+
+            // toggle
+            content.classList.toggle('active');
+            header.classList.toggle('active');
+
+            if (icon) {
+                icon.textContent = isOpen ? '►' : '▼';
+            }
+        });
+    });
+}
+
 
 
 // Запуск при завантаженні сторінки
