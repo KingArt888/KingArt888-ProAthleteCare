@@ -308,19 +308,23 @@ function loadAndDisplayDailyPlan() {
 }
 
 
-/**
- * Логіка для перемикання бічної панелі на мобільних пристроях
- */
-function setupMenuToggle() {
-    const toggleButton = document.getElementById('menu-toggle-button');
-    const sidebar = document.getElementById('main-sidebar');
+window.initializeCollapsibles = function () {
+    document.querySelectorAll('.stage-header.collapsible').forEach(header => {
+        const content = header.nextElementSibling;
+        const icon = header.querySelector('.toggle-icon');
 
-    if (toggleButton && sidebar) {
-        toggleButton.addEventListener('click', () => {
-            sidebar.classList.toggle('active');
+        // Закритий за замовчуванням
+        content.style.display = 'none';
+        icon.textContent = '►'; // стрілка вправо
+
+        header.addEventListener('click', () => {
+            const isVisible = content.style.display === 'block';
+            content.style.display = isVisible ? 'none' : 'block';
+            icon.textContent = isVisible ? '►' : '▼';
         });
-    }
-}
+    });
+};
+
 
 
 // Запуск при завантаженні сторінки
