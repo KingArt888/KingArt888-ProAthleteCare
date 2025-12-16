@@ -1,14 +1,14 @@
 // daily-individual.js
 
-const DAILY_STORAGE_KEY = 'weeklyPlanData';
+const DAILY_STORAGE_KEY = 'weeklyPlanData'; // ЗМІНА: для уникнення конфлікту
 const YOUTUBE_EMBED_BASE = 'https://www.youtube.com/embed/';
 
 // ===================== COLORS =====================
-// ВИДАЛЕНО: const COLOR_MAP = { ... } для уникнення конфлікту
+// *** ВИДАЛЕНО const COLOR_MAP = {...} для уникнення конфлікту з weekly-individual.js ***
 
 const dayNamesFull = [
-    // ЗМІНА: Починаємо з Понеділка, щоб відповідати індексам 0-6
-    'Понеділок', 'Вівторок', 'Середа', 'Четвер', 'Пʼятниця', 'Субота', 'Неділя' 
+    // 0=Понеділок, 6=Неділя, щоб відповідати day_plan_X у localStorage
+    'Понеділок','Вівторок','Середа','Четвер','Пʼятниця','Субота','Неділя' 
 ];
 
 // ===================== RECOMMENDATIONS =====================
@@ -27,9 +27,10 @@ const MD_RECOMMENDATIONS = {
 // ===================== HELPERS =====================
 function getCurrentDayIndex() {
     const d = new Date().getDay(); // 0 (Неділя) до 6 (Субота)
-    // Повертає 0 для Понеділка, 6 для Неділі, щоб відповідати збереженим day_plan_X
+    // Повертає 0 для Понеділка, 6 для Неділі
     return d === 0 ? 6 : d - 1; 
 }
+// ... (інші функції HELPER без змін)
 
 function normalizeStage(stage) {
     if (!stage) return 'UNSORTED';
@@ -42,7 +43,7 @@ function normalizeStage(stage) {
         .replace(/^post-training$/, 'Post-training');
 }
 
-// ===================== COLLAPSIBLE LOGIC (🔥 ВАЖЛИВО) =====================
+// ===================== COLLAPSIBLE LOGIC (без змін) =====================
 function initializeCollapsibles() {
     const headers = document.querySelectorAll('.stage-header.collapsible');
 
@@ -64,7 +65,8 @@ function initializeCollapsibles() {
     });
 }
 
-// ===================== EXERCISE ITEM =====================
+// ... (функція createExerciseItemHTML без змін)
+
 function createExerciseItemHTML(exercise, index) {
     const todayIndex = getCurrentDayIndex();
     const id = `ex-${todayIndex}-${index}`;
@@ -96,15 +98,15 @@ function createExerciseItemHTML(exercise, index) {
     `;
 }
 
-// ===================== MAIN LOAD =====================
+// ===================== MAIN LOAD (ЗМІНА) =====================
 function loadAndDisplayDailyPlan() {
     const todayIndex = getCurrentDayIndex();
-    const dayName = dayNamesFull[todayIndex]; // Отримання назви дня
+    const dayName = dayNamesFull[todayIndex]; 
     const planKey = `day_plan_${todayIndex}`;
 
     const list = document.getElementById('daily-exercise-list');
     
-    // НОВІ ЕЛЕМЕНТИ ДЛЯ СТАТУСУ ТА РЕКОМЕНДАЦІЙ
+    // НОВІ ЕЛЕМЕНТИ ДЛЯ СТАТУСУ ТА РЕКОМЕНДАЦІЙ:
     const dayNameEl = document.getElementById('daily-day-name'); 
     const mdStatusEl = document.getElementById('daily-md-status'); 
     const recommendationEl = document.getElementById('daily-recommendation-text');
@@ -122,7 +124,7 @@ function loadAndDisplayDailyPlan() {
     if (todayPlan && todayPlan.mdStatus) {
         mdStatus = todayPlan.mdStatus;
         recommendation = MD_RECOMMENDATIONS[mdStatus] || MD_RECOMMENDATIONS['TRAIN'];
-    } else if (!todayPlan) {
+    } else if (!todayPlan && list) {
         // Якщо плану немає, встановлюємо статус як REST/Немає плану
         mdStatus = 'REST';
         recommendation = MD_RECOMMENDATIONS['REST'];
@@ -131,6 +133,8 @@ function loadAndDisplayDailyPlan() {
     if (mdStatusEl) mdStatusEl.textContent = mdStatus;
     if (recommendationEl) recommendationEl.textContent = recommendation;
     // ----------------------------------------------------
+
+    if (!list) return; // Якщо немає списку, зупиняємось
 
     if (!todayPlan || !todayPlan.exercises?.length) {
         list.innerHTML = `<p>На сьогодні немає запланованих вправ.</p>`;
