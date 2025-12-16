@@ -94,52 +94,43 @@
 
     <script>
         /**
-         * Функція-слухач для Collapse/Expand.
+         * Функція-слухач для Collapse/Expand (тепер працює через класи CSS).
          */
         function toggleSection(event) {
-            // "this" тепер не працює, тому використовуємо event.currentTarget
             let headerElement = event.currentTarget; 
-            
-            // nextElementSibling - це div.section-content
             let content = headerElement.nextElementSibling;
             let icon = headerElement.querySelector('.toggle-icon');
 
-            // Перевіряємо та перемикаємо
-            if (content.style.display === "block" || content.style.display === "") {
-                content.style.display = "none";
-                if (icon) {
-                    icon.textContent = "►";
-                }
+            // 1. Тогглимо клас 'is-active' на заголовку та вмісті
+            headerElement.classList.toggle('is-active');
+            content.classList.toggle('is-active');
+
+            // 2. Оновлюємо іконку відповідно до нового стану
+            if (headerElement.classList.contains('is-active')) {
+                icon.textContent = "▼";
             } else {
-                content.style.display = "block";
-                if (icon) {
-                    icon.textContent = "▼";
-                }
+                icon.textContent = "►";
             }
         }
 
         /**
-         * Ініціалізація: прикріплюємо слухачі до всіх заголовків-вкладок.
-         * Цей код повинен запускатися після того, як вміст daily-individual.js завантажився.
+         * Ініціалізація: прикріплюємо слухачі та перевіряємо початковий стан.
          */
         function initializeCollapsibles() {
-            // Вибираємо всі заголовки з класом collapsible
             let collapsibles = document.querySelectorAll('.stage-header.collapsible');
             
             collapsibles.forEach(header => {
                 // 1. Прикріплюємо слухач кліку
                 header.addEventListener('click', toggleSection);
 
-                // 2. Ініціалізуємо іконку (на випадок, якщо вона не задана в HTML)
+                // 2. Ініціалізуємо іконку на основі класу 'is-active'
                 let content = header.nextElementSibling;
                 let icon = header.querySelector('.toggle-icon');
 
-                if (content && icon) {
-                    if (content.style.display === "block" || content.style.display === "") {
-                        icon.textContent = "▼";
-                    } else {
-                        icon.textContent = "►";
-                    }
+                if (content && icon && content.classList.contains('is-active')) {
+                    // Якщо контент має is-active, гарантуємо, що заголовок і іконка також активні
+                    header.classList.add('is-active');
+                    icon.textContent = "▼";
                 }
             });
         }
@@ -148,14 +139,7 @@
         // Викликаємо функцію ініціалізації після завантаження всього DOM
         document.addEventListener('DOMContentLoaded', initializeCollapsibles);
 
-        /*
-         * Якщо dynamic-individual.js перезаписує DOM пізніше,
-         * Вам потрібно викликати initializeCollapsibles() знову після того,
-         * як dynamic-individual.js завершить генерацію вмісту.
-         * (Це вимагатиме доступу до коду dynamic-individual.js).
-         */
-
-    </script>
+    </script> 
     
 </body>
 </html>
