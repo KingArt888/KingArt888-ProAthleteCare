@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weekly Individual | ProAthleteCare</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="weekly-individual.css"> 
+    <link rel="stylesheet" href="weekly-individual.css">
     <link rel="stylesheet" href="navigation-mobile.css">
 </head>
 <body>
@@ -15,7 +15,10 @@
         </a>
         <h1 class="project-title">ProAthleteCare</h1>
         <p class="tagline">Онлайн-тренінг та професійний супровід атлетів</p>
-        <button class="menu-toggle" id="menu-toggle-button" aria-label="Toggle Navigation">☰</button>
+
+        <button class="menu-toggle" id="menu-toggle-button" aria-label="Toggle Navigation">
+            ☰
+        </button>
     </header>
 
     <div class="content-wrapper">
@@ -34,6 +37,7 @@
             <p class="sub-header">Ваш тижневий план, цикли навантаження та шаблони завдань.</p>
 
             <form id="weekly-plan-form">
+                
                 <div class="table-container">
                     <table class="weekly-table">
                         <thead>
@@ -45,23 +49,52 @@
                         <tbody>
                             <tr id="md-colors-row">
                                 <td>MD Status</td>
-                                <td class="cycle-day" data-day-index="0"><span class="md-status color-dark-grey">TRAIN</span></td>
-                                <td class="cycle-day" data-day-index="1"><span class="md-status color-dark-grey">TRAIN</span></td>
-                                <td class="cycle-day" data-day-index="2"><span class="md-status color-dark-grey">TRAIN</span></td>
-                                <td class="cycle-day" data-day-index="3"><span class="md-status color-dark-grey">TRAIN</span></td>
-                                <td class="cycle-day" data-day-index="4"><span class="md-status color-dark-grey">TRAIN</span></td>
-                                <td class="cycle-day" data-day-index="5"><span class="md-status color-dark-grey">TRAIN</span></td>
-                                <td class="cycle-day" data-day-index="6"><span class="md-status color-dark-grey">TRAIN</span></td>
+                                <td class="cycle-day" data-day-index="0" id="day-status-0"><span class="md-status color-dark-grey">TRAIN</span></td>
+                                <td class="cycle-day" data-day-index="1" id="day-status-1"><span class="md-status color-dark-grey">TRAIN</span></td>
+                                <td class="cycle-day" data-day-index="2" id="day-status-2"><span class="md-status color-dark-grey">TRAIN</span></td>
+                                <td class="cycle-day" data-day-index="3" id="day-status-3"><span class="md-status color-dark-grey">TRAIN</span></td>
+                                <td class="cycle-day" data-day-index="4" id="day-status-4"><span class="md-status color-dark-grey">TRAIN</span></td>
+                                <td class="cycle-day" data-day-index="5" id="day-status-5"><span class="md-status color-dark-grey">TRAIN</span></td>
+                                <td class="cycle-day" data-day-index="6" id="day-status-6"><span class="md-status color-dark-grey">TRAIN</span></td>
                             </tr>
+                            
                             <tr>
                                 <td>Активність</td>
-                                <td><select name="activity_0" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option></select></td>
-                                <td><select name="activity_1" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option></select></td>
-                                <td><select name="activity_2" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option></select></td>
-                                <td><select name="activity_3" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option></select></td>
-                                <td><select name="activity_4" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option></select></td>
-                                <td><select name="activity_5" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option></select></td>
-                                <td><select name="activity_6" class="activity-type-select"><option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option></select></td>
+                                <td data-day-index="0">
+                                    <select name="activity_0" class="activity-type-select">
+                                        <option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option>
+                                    </select>
+                                </td>
+                                <td data-day-index="1">
+                                    <select name="activity_1" class="activity-type-select">
+                                        <option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option>
+                                    </select>
+                                </td>
+                                <td data-day-index="2">
+                                    <select name="activity_2" class="activity-type-select">
+                                        <option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option>
+                                    </select>
+                                </td>
+                                <td data-day-index="3">
+                                    <select name="activity_3" class="activity-type-select">
+                                        <option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option>
+                                    </select>
+                                </td>
+                                <td data-day-index="4">
+                                    <select name="activity_4" class="activity-type-select">
+                                        <option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option>
+                                    </select>
+                                </td>
+                                <td data-day-index="5">
+                                    <select name="activity_5" class="activity-type-select">
+                                        <option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option>
+                                    </select>
+                                </td>
+                                <td data-day-index="6">
+                                    <select name="activity_6" class="activity-type-select">
+                                        <option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option>
+                                    </select>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -72,13 +105,43 @@
                     <p class="note-info">❗ Тут ви вказуєте **яку категорію** і **скільки вправ** генерувати для MD-статусу, який має цей день.</p>
                     
                     <div class="tasks-grid">
-                        <div class="day-template-wrapper"><h4 class="day-md-title" id="md-title-0"></h4><div class="task-day-container" data-day-index="0"></div></div>
-                        <div class="day-template-wrapper"><h4 class="day-md-title" id="md-title-1"></h4><div class="task-day-container" data-day-index="1"></div></div>
-                        <div class="day-template-wrapper"><h4 class="day-md-title" id="md-title-2"></h4><div class="task-day-container" data-day-index="2"></div></div>
-                        <div class="day-template-wrapper"><h4 class="day-md-title" id="md-title-3"></h4><div class="task-day-container" data-day-index="3"></div></div>
-                        <div class="day-template-wrapper"><h4 class="day-md-title" id="md-title-4"></h4><div class="task-day-container" data-day-index="4"></div></div>
-                        <div class="day-template-wrapper"><h4 class="day-md-title" id="md-title-5"></h4><div class="task-day-container" data-day-index="5"></div></div>
-                        <div class="day-template-wrapper"><h4 class="day-md-title" id="md-title-6"></h4><div class="task-day-container" data-day-index="6"></div></div>
+                        
+                        <div class="day-template-wrapper">
+                            <h4 class="day-md-title" id="md-title-0"></h4>
+                            <div class="task-day-container" data-day-index="0">
+                                 </div>
+                        </div>
+
+                        <div class="day-template-wrapper">
+                            <h4 class="day-md-title" id="md-title-1"></h4>
+                            <div class="task-day-container" data-day-index="1"></div>
+                        </div>
+                        
+                        <div class="day-template-wrapper">
+                            <h4 class="day-md-title" id="md-title-2"></h4>
+                            <div class="task-day-container" data-day-index="2"></div>
+                        </div>
+                        
+                        <div class="day-template-wrapper">
+                            <h4 class="day-md-title" id="md-title-3"></h4>
+                            <div class="task-day-container" data-day-index="3"></div>
+                        </div>
+                        
+                        <div class="day-template-wrapper">
+                            <h4 class="day-md-title" id="md-title-4"></h4>
+                            <div class="task-day-container" data-day-index="4"></div>
+                        </div>
+                        
+                        <div class="day-template-wrapper">
+                            <h4 class="day-md-title" id="md-title-5"></h4>
+                            <div class="task-day-container" data-day-index="5"></div>
+                        </div>
+                        
+                        <div class="day-template-wrapper">
+                            <h4 class="day-md-title" id="md-title-6"></h4>
+                            <div class="task-day-container" data-day-index="6"></div>
+                        </div>
+
                     </div>
                 </section>
                 
@@ -93,11 +156,19 @@
         <div class="modal-content">
             <span class="close-modal-btn">&times;</span>
             <h3 id="modal-title-context">Вибір вправи</h3>
+
             <h4>Фільтр за якістю навантаження:</h4>
-            <div id="quality-filters" class="quality-filters-container"></div>
+            <div id="quality-filters" class="quality-filters-container">
+                </div>
+            
             <hr>
-            <div id="exercise-list-container" class="exercise-list-container"></div>
-            <button id="add-selected-btn" class="gold-button" style="display: none; margin-top: 20px;">Додати вибрані (0)</button>
+
+            <div id="exercise-list-container" class="exercise-list-container">
+                </div>
+            
+            <button id="add-selected-btn" class="gold-button" style="display: none; margin-top: 20px;">
+                Додати вибрані (0)
+            </button>
         </div>
     </div>
 

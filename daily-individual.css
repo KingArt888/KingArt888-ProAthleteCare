@@ -1,6 +1,5 @@
-/* daily-individual.css - ОНОВЛЕНО ЗІ СТИЛЯМИ WELLNESS ТА COLLAPSE-ЕФЕКТАМИ */
-
-/* Активний пункт меню - БЕЗ ЗМІН */
+/* daily-individual.css */
+/* Активний пункт меню */
 .sidebar a.active {
     background-color: #FFC72C; 
     color: #000000; 
@@ -25,154 +24,163 @@
     border-radius: 6px;
 }
 
-/* ЗМІНЕНО: Колір на акцентний з wellness.css */
 #mdx-range-display {
-    color: #FFC72C; /* Було #FFD700 */
+    color: #FFD700; 
     font-weight: bold; 
     font-size: 1.1em;
 }
 
-/* ЗМІНЕНО: Фон, колір кордону з wellness.css. Додано !important для мобільного фіксу. */
 #md-recommendations {
-    border: 1px solid #1a1a1a !important; /* Було 1px solid #FFD700 */
+    border: 1px solid #FFD700; 
     padding: 15px; 
     border-radius: 6px; 
-    background-color: #0d0d0d !important; /* Було #333 */
+    background-color: #333; 
     margin-bottom: 20px; 
     color: #EEE;
 }
 
 /* --- СТИЛІ СПИСКУ ВПРАВ --- */
-/* ЗМІНЕНО: Фон, колір кордону, та товщина кордону з wellness.css */
 .daily-exercise-item {
-    background-color: #0d0d0d; /* Було #222 */
-    border: 1px solid #1a1a1a; /* Було 2px solid #FFD700 */
-    padding: 20px;
-    margin-bottom: 15px; /* Зменшимо відступ, оскільки вміст буде всередині .section-content */
-    border-radius: 10px; 
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); 
+    background-color: #222; 
+    border: 2px solid #FFD700; 
+    padding: 15px;
+    margin-bottom: 20px; 
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: row;
     gap: 20px;
     justify-content: space-between;
 }
+.exercise-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
 .daily-exercise-item h4 {
-    color: #FFC72C; /* Було #FFD700 */
+    color: #FFD700;
     margin-top: 0;
-    border-bottom: 1px solid #333333; /* Було 1px solid #444 */
-    padding-bottom: 10px;
+    border-bottom: 1px solid #444;
+    padding-bottom: 5px;
     font-size: 1.3em; 
 }
+.exercise-details p {
+    margin: 3px 0;
+    color: #ccc;
+    font-size: 0.95em;
+}
+.sets-reps-display {
+    padding: 5px 0;
+    margin-top: 5px;
+    font-weight: bold;
+    color: #FFF;
+}
 .sets-reps-display span {
-    color: #FFC72C; /* Було #FFD700 */
+    color: #FFD700; 
     font-size: 1.1em;
 }
-
-/* --- СТИЛІ ДЛЯ COLLAPSE-ВКЛАДОК (Заголовки тренувань) --- */
 .main-content h3.stage-header {
-    /* Видалено стандартний border-bottom, додамо стилі вкладки */
     color: #FFF; 
     margin-top: 30px; 
+    border-bottom: 2px solid #555; 
     padding-bottom: 5px;
     font-size: 1.2em; 
 }
-
-.main-content h3.stage-header.collapsible {
-    cursor: pointer; /* Зробити курсор як посилання */
-    transition: background-color 0.2s;
-    user-select: none; 
-    padding: 15px 20px; /* Більша клікабельна область */
-    border-radius: 8px; 
-    background-color: #1a1a1a; /* Темніший фон для вкладки */
-    border: 1px solid #333333; /* Додатковий кордон */
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center;
-    margin-bottom: 10px; /* Відступ від наступної вкладки або контенту */
+/* --- СТИЛІ МЕДІА ТА ГАЛОЧКИ --- */
+.media-container {
+    width: 320px; 
+    min-width: 320px;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end; 
+    gap: 10px;
 }
-
-.main-content h3.stage-header.collapsible:hover {
-    background-color: #222222; /* Затемнення при наведенні */
-    color: #FFC72C;
-}
-
-.toggle-icon {
-    font-size: 1.1em;
-    font-weight: bold;
-    margin-left: 10px;
-    color: #FFC72C; /* Золотий акцент */
-    transition: transform 0.3s;
-}
-
-
-/* --- СТИЛІ МЕДІА ТА ЗВОРОТНОГО ЗВ'ЯЗКУ (Оновлено стилі Wellness) --- */
 .media-container img, .media-container iframe {
-    border: 1px solid #333333; /* Було 1px solid #FFD700 */
+    max-width: 100%;
+    width: 300px; 
+    height: 180px; 
+    border: 1px solid #FFD700;
     border-radius: 4px;
 }
 .completion-section {
-    color: #FFC72C; /* Було #FFD700 */
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #FFD700;
+    font-weight: bold;
+    font-size: 1.1em;
 }
+/* Стилі чекбоксів */
 input[type="checkbox"] {
-    border: 2px solid #FFC72C; /* Було #FFD700 */
+    appearance: none;
+    width: 25px;
+    height: 25px;
+    border: 2px solid #FFD700;
+    border-radius: 4px;
+    background-color: #000;
+    cursor: pointer;
+    position: relative;
+    outline: none;
 }
 input[type="checkbox"]:checked {
-    background-color: #FFC72C; /* Було #FFD700 */
+    background-color: #FFD700; 
 }
+input[type="checkbox"]:checked::after {
+    content: '✔';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+    color: #000; 
+    font-weight: bolder;
+}
+/* --- СТИЛІ ЗВОРОТНОГО ЗВ'ЯЗКУ --- */
 .feedback-block {
-    background-color: #0d0d0d; /* Було #1a1a1a */
-    border: 1px solid #1a1a1a; /* Було 1px solid #FFD700 */
+    background-color: #1a1a1a;
+    border: 1px solid #FFD700;
     padding: 25px;
-    border-radius: 10px; 
+    border-radius: 8px;
     margin-top: 30px;
     color: #EEE;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 }
 .feedback-block h3 {
-    color: #FFC72C; /* Було #FFD700 */
-    border-bottom: 1px solid #333333; /* Було 1px solid #444 */
+    color: #FFD700;
+    border-bottom: 1px solid #444;
     padding-bottom: 10px;
     margin-top: 0;
 }
+.feedback-form textarea {
+    width: 100%;
+    background-color: #333;
+    color: #EEE;
+    border: 1px solid #555;
+    padding: 10px;
+    border-radius: 4px;
+    margin: 10px 0;
+    box-sizing: border-box;
+}
+.feedback-form input[type="range"] {
+    width: 80%;
+}
 .feedback-form button {
-    background-color: #FFC72C; /* Було #FFD700 */
+    background-color: #FFD700;
     color: #000;
     border: none;
-    padding: 12px 25px;
-    border-radius: 5px;
+    padding: 10px 20px;
+    border-radius: 4px;
     cursor: pointer;
     font-weight: bold;
     margin-top: 15px;
-    font-size: 1.1em;
-    transition: background-color 0.3s;
 }
 .feedback-form button:hover {
-    background-color: #E6B800;
+    background-color: #e0c100;
 }
 
----------------------------------------------------------------------------------------------------
-
-/* daily-individual.css - ОНОВЛЕНО ЗІ СТИЛЯМИ WELLNESS ТА COLLAPSE-ЕФЕКТАМИ */
-
-/* ... (весь Ваш існуючий код CSS вище) ... */
-
-/* --- ДОДАТКОВІ СТИЛІ ДЛЯ УНИКНЕННЯ МИГОТІННЯ (FOUC FIX) --- */
-
-/* 1. Сховати всі секції вмісту за замовчуванням (CSS застосовується миттєво) */
-.section-content {
-    display: none !important; /* <--- КРИТИЧНО: ДОДАЙТЕ !important */
-}
-
-/* 2. Показати тільки ті секції, які мають клас 'is-active' (Активний стан) */
-.section-content.is-active {
-    display: block !important; /* <--- КРИТИЧНО: ДОДАЙТЕ !important */
-}
-
-
-/* ======================================================= */
-/* МОБІЛЬНА АДАПТАЦІЯ КОНТЕНТУ (Daily Individual) */
-/* ======================================================= */
-/* ... (весь Ваш існуючий код CSS нижче) ... */
 
 /* ======================================================= */
 /* МОБІЛЬНА АДАПТАЦІЯ КОНТЕНТУ (Daily Individual) */
@@ -189,7 +197,7 @@ input[type="checkbox"]:checked {
         width: 100%; 
         min-width: 100%;
         align-items: center; 
-        order: -1; 
+        order: -1; /* Відео/медіа йде над текстом */
     }
     .media-container img, .media-container iframe {
         width: 100%;
