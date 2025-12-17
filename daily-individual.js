@@ -1,16 +1,15 @@
 // daily-individual.js
+// ФІНАЛЬНА ВЕРСІЯ: ВИПРАВЛЕНО КОНФЛІКТИ, ДАТУ, СТАТУС, РЕКОМЕНДАЦІЇ ТА ФОРМУ ЗВОРОТНОГО ЗВ'ЯЗКУ
 
-const DAILY_STORAGE_KEY = 'weeklyPlanData'; // Усунення конфлікту змінних
+const DAILY_STORAGE_KEY = 'weeklyPlanData'; 
 const YOUTUBE_EMBED_BASE = 'https://www.youtube.com/embed/';
 
-// ===================== COLORS & STATUS =====================
-// *** ВИДАЛЕНО const COLOR_MAP для уникнення SyntaxError (має бути лише в weekly-individual.js) ***
-
+// ===================== CONSTANTS (АДАПТОВАНО ПІД КОНФЛІКТИ) =====================
 const dayNamesFull = [ 
-    'Понеділок','Вівторок','Середа','Четвер','Пʼятниця','Субота','Неділя' // Коректний індекс (0-6)
+    'Понеділок','Вівторок','Середа','Четвер','Пʼятниця','Субота','Неділя' 
 ];
 
-// Карта кольорів (дублюємо класи для встановлення стилів)
+// Карта класів кольору (для відображення MD-статусу)
 const MD_COLOR_CLASSES = {
     'MD': 'color-red',
     'MD+1': 'color-dark-green',
@@ -23,7 +22,6 @@ const MD_COLOR_CLASSES = {
     'TRAIN': 'color-dark-grey'
 };
 
-// ===================== RECOMMENDATIONS =====================
 const MD_RECOMMENDATIONS = {
     'MD': 'Сьогодні ігровий день...',
     'MD+1': 'Високе навантаження!',
@@ -39,15 +37,12 @@ const MD_RECOMMENDATIONS = {
 // ===================== HELPERS =====================
 function getCurrentDayIndex() {
     const d = new Date().getDay(); // 0 (Неділя) до 6 (Субота)
-    // Повертає 0 для Понеділка, 6 для Неділі
     return d === 0 ? 6 : d - 1; 
 }
 
-// ФУНКЦІЯ: Форматування дати
 function getCurrentDateFormatted() {
     const today = new Date();
-    const dayIndex = today.getDay(); // 0-6
-    // Отримуємо назву дня з коректним індексом
+    const dayIndex = today.getDay(); 
     const dayName = dayNamesFull[dayIndex === 0 ? 6 : dayIndex - 1]; 
     
     const day = String(today.getDate()).padStart(2, '0');
@@ -90,7 +85,7 @@ function initializeCollapsibles() {
     });
 }
 
-// ===================== EXERCISE ITEM (ВИПРАВЛЕНО: для уникнення ReferenceError) =====================
+// ===================== EXERCISE ITEM =====================
 function createExerciseItemHTML(exercise, index) {
     const todayIndex = getCurrentDayIndex();
     const id = `ex-${todayIndex}-${index}`;
@@ -122,6 +117,42 @@ function createExerciseItemHTML(exercise, index) {
     `;
 }
 
+// ===================== FEEDBACK FORM LOGIC (ПОВЕРНЕНО) =====================
+function loadFeedbackForm() {
+    // Шукаємо ваш контейнер id="user-feedback-container"
+    const feedbackSection = document.getElementById('user-feedback-container'); 
+    
+    if (!feedbackSection) return;
+
+    // Вставляємо HTML-структуру форми
+    feedbackSection.innerHTML = `
+        <h3>Ваш Відгук та Показники Самопочуття</h3>
+        <form id="daily-feedback-form">
+            <textarea name="feedback_text" rows="4" placeholder="Коментарі щодо тренування та самопочуття..." required></textarea>
+            <button type="submit" class="save-button">Надіслати відгук</button>
+        </form>
+        <p id="feedback-message" style="display:none; color: green;"></p>
+    `;
+
+    const form = document.getElementById('daily-feedback-form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const feedbackText = form.elements['feedback_text'].value;
+            console.log("Відгук надіслано:", feedbackText);
+            
+            const messageEl = document.getElementById('feedback-message');
+            if (messageEl) {
+                messageEl.textContent = 'Дякуємо! Ваш відгук отримано.';
+                messageEl.style.display = 'block';
+                form.reset();
+                setTimeout(() => messageEl.style.display = 'none', 3000);
+            }
+        });
+    }
+}
+
 
 // ===================== MAIN LOAD =====================
 function loadAndDisplayDailyPlan() {
@@ -130,7 +161,7 @@ function loadAndDisplayDailyPlan() {
 
     const list = document.getElementById('daily-exercise-list');
     
-    // 1. АДАПТАЦІЯ ID ПІД ВАШ HTML:
+    // 1. ОТРИМАННЯ ЕЛЕМЕНТІВ:
     const currentDateDisplayEl = document.getElementById('current-date-display'); 
     const mdStatusEl = document.getElementById('md-status-display'); 
     const recommendationsSection = document.getElementById('md-recommendations');
@@ -140,33 +171,40 @@ function loadAndDisplayDailyPlan() {
     // Виводимо назву дня та дату
     if (currentDateDisplayEl) currentDateDisplayEl.textContent = getCurrentDateFormatted(); 
     
-    // ОЧИЩЕННЯ: Прибираємо "MD-1" з "Цикл MDX"
+    // ОЧИЩЕННЯ: Прибираємо "Цикл MDX"
     if (mdxRangeEl) mdxRangeEl.textContent = ''; 
-
-    const savedData = JSON.parse(localStorage.getItem(DAILY_STORAGE_KEY) || '{}');
+    
+    // 2. ЗАВАНТАЖЕННЯ ДАНИХ
+    let savedData;
+    try {
+        savedData = JSON.parse(localStorage.getItem(DAILY_STORAGE_KEY) || '{}');
+    } catch (e) {
+        console.error("Помилка при зчитуванні плану з localStorage:", e);
+        savedData = {};
+    }
+    
     const todayPlan = savedData[planKey];
 
-    // 2. ЛОГІКА ДЛЯ ВИЗНАЧЕННЯ СТАТУСУ ТА РЕКОМЕНДАЦІЙ:
-    let mdStatus = 'TRAIN'; 
-    let recommendationText = MD_RECOMMENDATIONS['TRAIN'];
+    // 3. ЛОГІКА ДЛЯ ВИЗНАЧЕННЯ СТАТУСУ ТА РЕКОМЕНДАЦІЙ:
+    let mdStatus = 'REST'; 
+    let recommendationText = MD_RECOMMENDATIONS['REST'];
+    let defaultStatus = true; 
 
     if (todayPlan && todayPlan.mdStatus) {
         mdStatus = todayPlan.mdStatus;
         recommendationText = MD_RECOMMENDATIONS[mdStatus] || MD_RECOMMENDATIONS['TRAIN'];
-    } else if (!todayPlan) {
-        mdStatus = 'REST';
-        recommendationText = MD_RECOMMENDATIONS['REST'];
+        defaultStatus = false;
     }
 
-    // 3. ВСТАВЛЯЄМО СТАТУС ТА РЕКОМЕНДАЦІЮ В HTML:
+    // 4. ВСТАВЛЯЄМО СТАТУС ТА РЕКОМЕНДАЦІЮ В HTML:
     if (mdStatusEl) {
         mdStatusEl.textContent = mdStatus;
         
-        // Встановлюємо клас кольору
         const colorClass = MD_COLOR_CLASSES[mdStatus] || MD_COLOR_CLASSES['TRAIN'];
         
-        // Видаляємо всі класи кольору, щоб уникнути конфліктів
+        // Видаляємо всі класи кольору, включаючи клас за замовчуванням з HTML
         Object.values(MD_COLOR_CLASSES).forEach(cls => mdStatusEl.classList.remove(cls));
+        mdStatusEl.classList.remove('color-dark-grey'); 
         
         // Додаємо коректний клас
         mdStatusEl.classList.add(colorClass);
@@ -174,7 +212,6 @@ function loadAndDisplayDailyPlan() {
     
     // Оновлюємо секцію рекомендацій (ЗАГРУЖАЄМО РЕКОМЕНДАЦІЇ)
     if (recommendationsSection) {
-        // Оновлюємо вміст секції. Припускаємо, що рекомендація відображається у <p> всередині <section>.
         const pElement = recommendationsSection.querySelector('p');
         if (pElement) {
             pElement.textContent = recommendationText;
@@ -187,15 +224,15 @@ function loadAndDisplayDailyPlan() {
         loadingMessageEl.style.display = 'none'; 
     }
     
-    // 4. ВІДОБРАЖЕННЯ ВПРАВ
+    // 5. ВІДОБРАЖЕННЯ ВПРАВ
     if (!list) return;
 
-    if (!todayPlan || !todayPlan.exercises?.length) {
-        list.innerHTML = `<p>На сьогодні немає запланованих вправ.</p>`;
+    if (defaultStatus || !todayPlan.exercises?.length) {
+        list.innerHTML = `<p>На сьогодні немає запланованих вправ (або план ще не був збережений у тижневому планувальнику).</p>`;
         return;
     }
 
-    // === GROUP BY STAGE ===
+    // === GROUP BY STAGE (ОБРОБКА ВПРАВ) ===
     const grouped = {};
     todayPlan.exercises.forEach((ex, i) => {
         const stage = normalizeStage(ex.stage);
@@ -237,5 +274,8 @@ function loadAndDisplayDailyPlan() {
 
 // ===================== INIT =====================
 document.addEventListener('DOMContentLoaded', () => {
+    // Ініціалізація форми зворотного зв'язку
+    loadFeedbackForm(); 
+    // Завантаження плану
     loadAndDisplayDailyPlan();
 });
