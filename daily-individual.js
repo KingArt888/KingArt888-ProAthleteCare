@@ -1,15 +1,27 @@
 // daily-individual.js
 
-const DAILY_STORAGE_KEY = 'weeklyPlanData';
+const DAILY_STORAGE_KEY = 'weeklyPlanData'; 
 const YOUTUBE_EMBED_BASE = 'https://www.youtube.com/embed/';
 
-// ===================== COLORS =====================
-// *** ВИДАЛЕНО const COLOR_MAP = {...} для уникнення конфлікту (SyntaxError) ***
+// ===================== COLORS & STATUS =====================
+// *** ВИДАЛЕНО const COLOR_MAP для уникнення SyntaxError, дублюємо лише класи ***
 
-const dayNamesFull = [
-    // 0=Понеділок, 6=Неділя, щоб відповідати day_plan_X
+const dayNamesFull = [ 
     'Понеділок','Вівторок','Середа','Четвер','Пʼятниця','Субота','Неділя' 
 ];
+
+// Карта кольорів (дублюємо класи з weekly-individual.js для коректного відображення)
+const MD_COLOR_CLASSES = {
+    'MD': 'color-red',
+    'MD+1': 'color-dark-green',
+    'MD+2': 'color-green',
+    'MD-1': 'color-yellow',
+    'MD-2': 'color-deep-green',
+    'MD-3': 'color-orange',
+    'MD-4': 'color-blue',
+    'REST': 'color-neutral',
+    'TRAIN': 'color-dark-grey'
+};
 
 // ===================== RECOMMENDATIONS =====================
 const MD_RECOMMENDATIONS = {
@@ -31,6 +43,19 @@ function getCurrentDayIndex() {
     return d === 0 ? 6 : d - 1; 
 }
 
+// НОВА ФУНКЦІЯ: Форматування дати
+function getCurrentDateFormatted() {
+    const today = new Date();
+    const dayIndex = today.getDay(); // 0-6
+    const dayName = dayNamesFull[dayIndex === 0 ? 6 : dayIndex - 1]; // Коректний день
+    
+    const day = String(today.getDate()).padStart(2, '0');
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const year = today.getFullYear();
+
+    return `${dayName}, ${day}.${month}.${year}`;
+}
+
 function normalizeStage(stage) {
     if (!stage) return 'UNSORTED';
     return stage
@@ -42,7 +67,7 @@ function normalizeStage(stage) {
         .replace(/^post-training$/, 'Post-training');
 }
 
-// ===================== COLLAPSIBLE LOGIC (🔥 ВАЖЛИВО) =====================
+// ===================== COLLAPSIBLE LOGIC =====================
 function initializeCollapsibles() {
     const headers = document.querySelectorAll('.stage-header.collapsible');
 
@@ -97,10 +122,9 @@ function createExerciseItemHTML(exercise, index) {
 }
 
 
-// ===================== MAIN LOAD (ЗМІНА: АДАПТАЦІЯ ID) =====================
+// ===================== MAIN LOAD =====================
 function loadAndDisplayDailyPlan() {
     const todayIndex = getCurrentDayIndex();
-    const dayName = dayNamesFull[todayIndex]; 
     const planKey = `day_plan_${todayIndex}`;
 
     const list = document.getElementById('daily-exercise-list');
@@ -109,11 +133,14 @@ function loadAndDisplayDailyPlan() {
     const currentDateDisplayEl = document.getElementById('current-date-display'); 
     const mdStatusEl = document.getElementById('md-status-display'); 
     const recommendationsSection = document.getElementById('md-recommendations');
-    const mdxRangeEl = document.getElementById('mdx-range-display'); // Для заповнення "Цикл MDX:"
-    const loadingMessageEl = document.getElementById('loading-message'); // Прибираємо повідомлення про завантаження
+    const mdxRangeEl = document.getElementById('mdx-range-display'); 
+    const loadingMessageEl = document.getElementById('loading-message'); 
 
-    // Виводимо назву дня у "sub-header" (якщо він є)
-    if (currentDateDisplayEl) currentDateDisplayEl.textContent = dayName; 
+    // ВИПРАВЛЕННЯ: Виводимо назву дня та дату
+    if (currentDateDisplayEl) currentDateDisplayEl.textContent = getCurrentDateFormatted(); 
+    
+    // ВИПРАВЛЕННЯ: Очищуємо поле "Цикл MDX"
+    if (mdxRangeEl) mdxRangeEl.textContent = ''; 
 
     const savedData = JSON.parse(localStorage.getItem(DAILY_STORAGE_KEY) || '{}');
     const todayPlan = savedData[planKey];
@@ -133,13 +160,15 @@ function loadAndDisplayDailyPlan() {
     // 3. ВСТАВЛЯЄМО СТАТУС ТА РЕКОМЕНДАЦІЮ В HTML:
     if (mdStatusEl) {
         mdStatusEl.textContent = mdStatus;
-        // Тут ви можете додати логіку зміни кольору, якщо вона буде потрібна (використовуючи COLOR_MAP з weekly-individual.js)
-        // Наразі просто оновлюємо текст.
         
-        // Оновлюємо MDX Range, використовуючи той самий статус
-        if (mdxRangeEl) {
-             mdxRangeEl.textContent = mdStatus;
-        }
+        // ВИПРАВЛЕННЯ: Додаємо клас кольору
+        const colorClass = MD_COLOR_CLASSES[mdStatus] || MD_COLOR_CLASSES['TRAIN'];
+        
+        // Видаляємо всі попередні класи кольору (наприклад, 'color-dark-grey' з HTML)
+        Object.values(MD_COLOR_CLASSES).forEach(cls => mdStatusEl.classList.remove(cls));
+        
+        // Додаємо новий клас
+        mdStatusEl.classList.add(colorClass);
     }
     
     // Оновлюємо секцію рекомендацій
@@ -148,7 +177,7 @@ function loadAndDisplayDailyPlan() {
     }
     
     if (loadingMessageEl) {
-        loadingMessageEl.style.display = 'none'; // Приховуємо повідомлення "Завантаження плану тренування..."
+        loadingMessageEl.style.display = 'none'; 
     }
     
     // 4. ВІДОБРАЖЕННЯ ВПРАВ
