@@ -1,4 +1,4 @@
-// weekly-individual.js — ProAtletCare
+// weekly-individual.js — ProAtletCare (FULL FINAL VERSION)
 const STORAGE_KEY = 'weeklyPlanData';
 const COLOR_MAP = {
     'MD': { status: 'MD', colorClass: 'color-red' },
@@ -13,119 +13,185 @@ const COLOR_MAP = {
 };
 
 const dayNamesShort = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд'];
+const templateStages = {
+    'Pre-Training': ['Mobility', 'Activation'],
+    'Main Training': ['Legs', 'Core', 'UpperBody'],
+    'Post-Training': ['Recovery', 'FoamRolling']
+};
 
-// 1. Отримати план саме для конкретного MD-статусу
-function getPlanByStatus(dayIndex, mdStatus) {
-    const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-    const dayKey = `day_plan_${dayIndex}`;
-    
-    // Якщо для цього дня вже є збережені вправи з ТАКИМ САМИМ статусом — повертаємо їх
-    if (data[dayKey] && data[dayKey].mdStatus === mdStatus && data[dayKey].exercises.length > 0) {
-        return data[dayKey].exercises;
-    }
+// =========================================================
+// 1. ОСНОВНЕ ЗБЕРЕЖЕННЯ (ФУНКЦІЯ ПЕРЕД ВИКЛИКОМ)
+// =========================================================
 
-    // Якщо статус змінився (наприклад, був TRAIN, став MD-1), беремо вправи з ШАБЛОНУ статусу
-    const templateKey = `template_${mdStatus}`;
-    if (data[templateKey] && data[templateKey].exercises) {
-        return data[templateKey].exercises;
-    }
+function saveData(manualData = null) {
+    try {
+        let existingData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+        const activityData = {};
+        
+        // Збір станів селектів
+        document.querySelectorAll('.activity-type-select').forEach(sel => {
+            activityData[sel.name] = sel.value;
+        });
 
-    return []; // Порожньо, якщо ще нічого не налаштовано
+        // Якщо передано нові вправи, оновлюємо їх
+        const finalData = { ...existingData, ...activityData, ...(manualData || {}) };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(finalData));
+        
+        const btn = document.querySelector('.save-button');
+        if (btn) {
+            btn.textContent = 'Збережено! (✔)';
+            setTimeout(() => btn.textContent = 'Зберегти План', 2000);
+        }
+    } catch (e) { console.error("Save error:", e); }
 }
 
-// 2. Розрахунок мікроциклу (MD-статуси навколо матчу)
-function calculateMicrocycle(activityTypes) {
-    let statuses = activityTypes.map(t => (t === 'MATCH' ? 'MD' : (t === 'REST' ? 'REST' : 'TRAIN')));
+// =========================================================
+// 2. ДИНАМІЧНИЙ МІКРОЦИКЛ (ШКАЛА)
+// =========================================================
+
+function updateCycleColors(shouldGenerate = false) {
+    const selects = document.querySelectorAll('.activity-type-select');
+    const dayCells = document.querySelectorAll('#md-colors-row .cycle-day');
+    
+    let activityTypes = Array.from(selects).map(s => s.value);
+    let dayStatuses = activityTypes.map(v => (v === 'MATCH' ? 'MD' : (v === 'REST' ? 'REST' : 'TRAIN')));
     const matchIdx = activityTypes.indexOf('MATCH');
 
+    // Розрахунок MD-статусів навколо матчу
     if (matchIdx !== -1) {
-        // MD-1...MD-4 (Дні до гри)
-        for (let i = 1; i <= 4; i++) {
-            let p = (matchIdx - i + 7) % 7;
-            if (statuses[p] === 'TRAIN') statuses[p] = `MD-${i}`;
+        for (let j = 1; j <= 4; j++) {
+            let i = (matchIdx - j + 7) % 7;
+            if (activityTypes[i] !== 'REST' && activityTypes[i] !== 'MATCH') dayStatuses[i] = `MD-${j}`;
+            else break;
         }
-        // MD+1...MD+2 (Дні після гри)
-        for (let i = 1; i <= 2; i++) {
-            let n = (matchIdx + i) % 7;
-            if (statuses[n] === 'TRAIN') statuses[n] = `MD+${i}`;
+        for (let j = 1; j <= 2; j++) {
+            let i = (matchIdx + j) % 7;
+            if (activityTypes[i] !== 'REST' && activityTypes[i] !== 'MATCH') dayStatuses[i] = `MD+${j}`;
+            else break;
         }
     }
-    return statuses;
-}
 
-// 3. Оновлення візуалу та вправ
-function updateCycleColors(isAutoSave = false) {
-    const selects = document.querySelectorAll('.activity-type-select');
-    const activityTypes = Array.from(selects).map(s => s.value);
-    const dayStatuses = calculateMicrocycle(activityTypes);
-
-    dayStatuses.forEach((statusKey, index) => {
-        const style = COLOR_MAP[statusKey] || COLOR_MAP['TRAIN'];
-        
-        // Оновлення кольору заголовка
-        const titleEl = document.getElementById(`md-title-${index}`);
-        if (titleEl) {
-            titleEl.className = `day-md-title ${style.colorClass}`;
-            titleEl.innerHTML = `<span class="md-status-label">${style.status}</span> (${dayNamesShort[index]})`;
+    // Оновлення візуалу
+    dayStatuses.forEach((status, idx) => {
+        const style = COLOR_MAP[status] || COLOR_MAP['TRAIN'];
+        // Верхня шкала
+        const mdEl = dayCells[idx]?.querySelector('.md-status');
+        if (mdEl) {
+            mdEl.textContent = style.status;
+            Object.values(COLOR_MAP).forEach(m => mdEl.classList.remove(m.colorClass));
+            mdEl.classList.add(style.colorClass);
         }
-
-        // Рендер вправ для цього дня та статусу
-        const exercises = getPlanByStatus(index, statusKey);
-        renderExercisesForDay(index, statusKey, exercises);
+        // Заголовок блоку
+        const titleEl = document.getElementById(`md-title-${idx}`);
+        if (titleEl) {
+            titleEl.innerHTML = `<span class="md-status-label ${style.colorClass}">${style.status}</span> (${dayNamesShort[idx]})`;
+        }
+        
+        // Рендер вправ під конкретний статус
+        renderDayExercises(idx, status);
     });
 
-    if (isAutoSave) saveCurrentState();
+    saveData();
 }
 
-function renderExercisesForDay(dayIndex, mdStatus, exercises) {
+// =========================================================
+// 3. РОБОТА З ВПРАВАМИ
+// =========================================================
+
+function renderDayExercises(dayIndex, mdStatus) {
     const container = document.querySelector(`.task-day-container[data-day-index="${dayIndex}"]`);
     if (!container) return;
 
+    const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    const dayPlan = data[`day_plan_${dayIndex}`] || { exercises: [] };
+
     if (mdStatus === 'REST') {
-        container.innerHTML = '<div class="rest-box">ВІДПОЧИНОК</div>';
+        container.innerHTML = '<div class="rest-box">☕ ВІДПОЧИНОК</div>';
         return;
     }
 
-    let html = '<div class="exercises-wrapper">';
-    if (exercises.length === 0) {
-        html += `<p class="empty-msg">Для ${mdStatus} ще немає вправ.</p>`;
-    } else {
-        exercises.forEach(ex => {
-            html += `<div class="exercise-item"><span>${ex.name}</span></div>`;
+    let html = '<div class="generated-exercises-list">';
+    Object.keys(templateStages).forEach(stage => {
+        const stageExs = dayPlan.exercises.filter(ex => ex.stage === stage);
+        html += `<h5 class="template-stage-header">${stage}</h5>`;
+        
+        stageExs.forEach(ex => {
+            html += `
+                <div class="exercise-item">
+                    <span>${ex.name}</span>
+                    <button type="button" class="remove-btn" onclick="removeExercise(${dayIndex}, '${ex.name}')">✕</button>
+                </div>`;
         });
-    }
-    
-    html += `
-        <button type="button" class="add-btn" onclick="openExerciseModal(${dayIndex}, '${mdStatus}')">+ Додати</button>
-        <button type="button" class="save-template-btn" onclick="saveAsTemplate(${dayIndex}, '${mdStatus}')">★ Зберегти шаблон ${mdStatus}</button>
-    </div>`;
-    
+        html += `<button type="button" class="add-manual-btn" onclick="openExerciseModal(${dayIndex}, '${mdStatus}', '${stage}')">+ Додати</button>`;
+    });
+    html += '</div>';
     container.innerHTML = html;
 }
 
-// 4. Збереження шаблону статусу
-function saveAsTemplate(dayIndex, mdStatus) {
-    const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-    const dayKey = `day_plan_${dayIndex}`;
+// МОДАЛКА: ВІДКРИТТЯ
+function openExerciseModal(dayIndex, mdStatus, stage) {
+    window.currentAddContext = { dayIndex, mdStatus, stage };
+    const modal = document.getElementById('exercise-selection-modal');
+    const list = document.getElementById('exercise-list-container');
     
-    if (data[dayKey] && data[dayKey].exercises.length > 0) {
-        data[`template_${mdStatus}`] = { exercises: data[dayKey].exercises };
+    if (!modal || !list) return;
+    list.innerHTML = '';
+
+    const stageData = EXERCISE_LIBRARY[stage];
+    if (stageData) {
+        for (const cat in stageData) {
+            list.innerHTML += `<div class="modal-cat-title">${cat}</div>`;
+            stageData[cat].exercises.forEach(ex => {
+                list.innerHTML += `
+                    <div class="exercise-select-item">
+                        <span>${ex.name}</span>
+                        <button class="gold-button btn-small" onclick="confirmAdd('${ex.name}', '${stage}', '${cat}')">Вибрати</button>
+                    </div>`;
+            });
+        }
+    }
+    modal.style.display = 'flex';
+}
+
+// МОДАЛКА: ПІДТВЕРДЖЕННЯ
+function confirmAdd(name, stage, category) {
+    const { dayIndex } = window.currentAddContext;
+    const exTemplate = EXERCISE_LIBRARY[stage][category].exercises.find(e => e.name === name);
+    
+    if (exTemplate) {
+        const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+        const key = `day_plan_${dayIndex}`;
+        if (!data[key]) data[key] = { exercises: [] };
+        
+        data[key].exercises.push({ ...exTemplate, stage, category });
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-        alert(`Шаблон для ${mdStatus} успішно оновлено!`);
+        
+        document.getElementById('exercise-selection-modal').style.display = 'none';
+        updateCycleColors();
     }
 }
 
-function saveCurrentState() {
-    // Логіка збору даних з селектів та планів і запис у localStorage
+function removeExercise(dayIndex, name) {
     const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-    // ... (збір activity_X)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    const key = `day_plan_${dayIndex}`;
+    if (data[key]) {
+        data[key].exercises = data[key].exercises.filter(e => e.name !== name);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        updateCycleColors();
+    }
 }
 
-// 5. Ініціалізація
+// =========================================================
+// 4. ІНІЦІАЛІЗАЦІЯ
+// =========================================================
+
 document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.activity-type-select').forEach(select => {
-        select.addEventListener('change', () => updateCycleColors(true));
+    // Завантаження станів селектів
+    const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    document.querySelectorAll('.activity-type-select').forEach(sel => {
+        if (data[sel.name]) sel.value = data[sel.name];
+        sel.addEventListener('change', () => updateCycleColors());
     });
+
     updateCycleColors();
 });
