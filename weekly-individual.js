@@ -1,4 +1,4 @@
-// weekly-individual.js — ProAtletCare (SUPPORT FOR MULTIPLE MATCHES)
+// weekly-individual.js — ProAtletCare (FINAL: Multi-match support + Modal Fix)
 const STORAGE_KEY = 'weeklyPlanData';
 const COLOR_MAP = {
     'MD': { status: 'MD', colorClass: 'color-red' },
@@ -20,7 +20,7 @@ const templateStages = {
 };
 
 // =========================================================
-// 1. ЛОГІКА СКЛАДНОГО МІКРОЦИКЛУ (2 МАТЧІ)
+// 1. РОЗРАХУНОК ЦИКЛУ (ПІДТРИМКА ДВОХ МАТЧІВ)
 // =========================================================
 
 function updateCycleColors() {
@@ -30,8 +30,8 @@ function updateCycleColors() {
     let activityTypes = Array.from(activitySelects).map(s => s.value);
     let dayStatuses = new Array(7).fill('TRAIN');
 
-    // Знаходимо ВСІ індекси матчів
-    const matchIndices = activityTypes.map((type, index) => type === 'MATCH' ? index : -1).filter(index => index !== -1);
+    // Знаходимо всі індекси матчів
+    const matchIndices = activityTypes.map((type, index) => type === 'MATCH' ? index : -1).filter(idx => idx !== -1);
 
     for (let i = 0; i < 7; i++) {
         if (activityTypes[i] === 'MATCH') {
@@ -39,27 +39,24 @@ function updateCycleColors() {
             continue;
         }
 
-        // Для кожного дня шукаємо найближчий матч
         let minDiff = Infinity;
         let bestStatus = 'TRAIN';
 
         matchIndices.forEach(mIdx => {
-            // Розрахунок дистанції з урахуванням циклічності тижня (7 днів)
             for (let offset of [-7, 0, 7]) {
                 let diff = i - (mIdx + offset);
-                
-                // MD+1, MD+2
+                // MD+1, MD+2 мають пріоритет після гри
                 if (diff === 1 || diff === 2) {
                     if (Math.abs(diff) < Math.abs(minDiff)) {
                         minDiff = diff;
                         bestStatus = `MD+${diff}`;
                     }
                 }
-                // MD-1, MD-2, MD-3, MD-4
-                if (diff >= -4 && diff <= -1) {
+                // MD-1...MD-4 перед грою
+                else if (diff >= -4 && diff <= -1) {
                     if (Math.abs(diff) < Math.abs(minDiff)) {
                         minDiff = diff;
-                        bestStatus = `MD${diff}`; // diff вже від'ємний
+                        bestStatus = `MD${diff}`; 
                     }
                 }
             }
@@ -67,7 +64,6 @@ function updateCycleColors() {
         dayStatuses[i] = bestStatus;
     }
 
-    // ВІЗУАЛІЗАЦІЯ
     dayStatuses.forEach((status, idx) => {
         const isRest = activityTypes[idx] === 'REST';
         const finalStatus = isRest ? 'REST' : status;
@@ -87,7 +83,6 @@ function updateCycleColors() {
             titleEl.innerHTML = `<span class="md-status-label ${style.colorClass}">${finalStatus}</span> (${dayNamesShort[idx]})`;
         }
         
-        // Рендер вправ за СТАТУСОМ
         renderExercisesByStatus(idx, finalStatus);
     });
 
@@ -95,7 +90,7 @@ function updateCycleColors() {
 }
 
 // =========================================================
-// 2. ФУНКЦІЇ ЗБЕРЕЖЕННЯ (ПРИВ'ЯЗКА ДО СТАТУСУ)
+// 2. УПРАВЛІННЯ ВПРАВАМИ
 // =========================================================
 
 function renderExercisesByStatus(dayIndex, status) {
@@ -113,22 +108,67 @@ function renderExercisesByStatus(dayIndex, status) {
     let html = '<div class="generated-exercises-list">';
     Object.keys(templateStages).forEach(stage => {
         const stageExs = plan.exercises.filter(ex => ex.stage === stage);
-        html += `<div style="font-size: 0.7rem; color: #d4af37; margin-top: 10px; border-bottom: 1px solid #333;">${stage}</div>`;
+        html += `<div style="font-size: 0.7rem; color: #d4af37; margin-top: 10px; border-bottom: 1px solid #333; text-transform: uppercase;">${stage}</div>`;
         
         stageExs.forEach(ex => {
             html += `
                 <div class="exercise-item" style="display:flex; justify-content:space-between; align-items:center; background:#111; margin: 3px 0; padding: 5px; border-left: 2px solid #d4af37;">
-                    <span style="font-size: 0.85rem;">${ex.name}</span>
-                    <button type="button" style="color:red; background:none; border:none; cursor:pointer;" onclick="removeExerciseFromStatus('${status}', '${ex.name}')">✕</button>
+                    <span style="font-size: 0.85rem; color: #fff;">${ex.name}</span>
+                    <button type="button" style="color:#ff4d4d; background:none; border:none; cursor:pointer; font-weight:bold;" onclick="removeExerciseFromStatus('${status}', '${ex.name}')">✕</button>
                 </div>`;
         });
-        html += `<button type="button" class="add-manual-btn" style="width:100%;" onclick="openExerciseModal('${status}', '${stage}')">+ Додати</button>`;
+        html += `<button type="button" class="add-manual-btn" style="width:100%; margin-top:5px; padding:3px; cursor:pointer;" onclick="openExerciseModal('${status}', '${stage}')">+ Додати</button>`;
     });
     html += '</div>';
     container.innerHTML = html;
 }
 
-function addExerciseToStatus(name, stage, category) {
+// =========================================================
+// 3. МОДАЛЬНЕ ВІКНО (МУЛЬТИ-ВИБІР ТА ЗАКРИТТЯ)
+// =========================================================
+
+function openExerciseModal(status, stage) {
+    window.currentAddStatus = status;
+    window.currentAddStage = stage;
+    const modal = document.getElementById('exercise-selection-modal');
+    const list = document.getElementById('exercise-list-container');
+    
+    if (!modal || !list) return;
+    list.innerHTML = '';
+
+    const stageData = EXERCISE_LIBRARY[stage];
+    if (stageData) {
+        for (const cat in stageData) {
+            // Заголовок категорії
+            const catDiv = document.createElement('div');
+            catDiv.style.cssText = "background: #d4af37; color: #000; padding: 6px; margin-top: 10px; font-weight: bold; font-size: 0.8rem; text-transform: uppercase;";
+            catDiv.textContent = cat;
+            list.appendChild(catDiv);
+
+            stageData[cat].exercises.forEach(ex => {
+                const item = document.createElement('div');
+                item.style.cssText = "display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #222; background: #0a0a0a;";
+                item.innerHTML = `
+                    <span style="color: #fff; font-size: 0.9rem;">${ex.name}</span>
+                    <button class="gold-button btn-small" onclick="addExerciseToStatus(this, '${ex.name}', '${stage}', '${cat}')">Додати</button>
+                `;
+                list.appendChild(item);
+            });
+        }
+    }
+
+    // Золота кнопка закриття внизу
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = "Зберегти та закрити";
+    closeBtn.className = "gold-button";
+    closeBtn.style.cssText = "width: 100%; padding: 12px; margin-top: 20px; font-weight: bold; cursor: pointer;";
+    closeBtn.onclick = closeExerciseModal;
+    list.appendChild(closeBtn);
+
+    modal.style.display = 'flex';
+}
+
+function addExerciseToStatus(btn, name, stage, category) {
     const status = window.currentAddStatus;
     const exTemplate = EXERCISE_LIBRARY[stage][category].exercises.find(e => e.name === name);
     
@@ -141,9 +181,18 @@ function addExerciseToStatus(name, stage, category) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         
         updateCycleColors();
-        event.target.textContent = "✔";
-        event.target.style.background = "green";
+        
+        btn.textContent = "✔";
+        btn.style.background = "#28a745";
+        btn.style.color = "#fff";
+        btn.disabled = true;
     }
+}
+
+// Функція закриття (викликається кнопкою, хрестиком або кліком на фон)
+function closeExerciseModal() {
+    const modal = document.getElementById('exercise-selection-modal');
+    if (modal) modal.style.display = 'none';
 }
 
 function removeExerciseFromStatus(status, name) {
@@ -156,46 +205,37 @@ function removeExerciseFromStatus(status, name) {
     }
 }
 
-// --- ІНШІ ФУНКЦІЇ (МОДАЛКА) ---
-
-function openExerciseModal(status, stage) {
-    window.currentAddStatus = status;
-    window.currentAddStage = stage;
-    const modal = document.getElementById('exercise-selection-modal');
-    const list = document.getElementById('exercise-list-container');
-    if (!modal || !list) return;
-    list.innerHTML = '';
-    const stageData = EXERCISE_LIBRARY[stage];
-    if (stageData) {
-        for (const cat in stageData) {
-            list.innerHTML += `<div style="background:#d4af37; color:#000; padding:5px; font-weight:bold; margin-top:10px;">${cat}</div>`;
-            stageData[cat].exercises.forEach(ex => {
-                list.innerHTML += `<div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #222;">
-                    <span>${ex.name}</span>
-                    <button class="gold-button btn-small" onclick="addExerciseToStatus('${ex.name}', '${stage}', '${cat}')">Додати</button>
-                </div>`;
-            });
-        }
-    }
-    const closeBtn = document.createElement('button');
-    closeBtn.textContent = "Зберегти та закрити";
-    closeBtn.style.cssText = "width:100%; padding:10px; margin-top:10px; background:#d4af37; color:#000; font-weight:bold;";
-    closeBtn.onclick = () => modal.style.display = 'none';
-    list.appendChild(closeBtn);
-    modal.style.display = 'flex';
-}
+// =========================================================
+// 4. СЛУХАЧІ ТА СТАРТ
+// =========================================================
 
 function saveData() {
     let data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-    document.querySelectorAll('.activity-type-select').forEach(sel => { data[sel.name] = sel.value; });
+    document.querySelectorAll('.activity-type-select').forEach(sel => {
+        data[sel.name] = sel.value;
+    });
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    // 1. Відновлення активностей
     const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
     document.querySelectorAll('.activity-type-select').forEach(sel => {
         if (data[sel.name]) sel.value = data[sel.name];
         sel.addEventListener('change', updateCycleColors);
     });
+
+    // 2. Налаштування хрестика закриття (якщо він є в HTML)
+    const closeX = document.querySelector('.close-modal');
+    if (closeX) {
+        closeX.onclick = closeExerciseModal;
+    }
+
+    // 3. Закриття при кліку на темний фон
+    window.onclick = function(event) {
+        const modal = document.getElementById('exercise-selection-modal');
+        if (event.target == modal) closeExerciseModal();
+    };
+
     updateCycleColors();
 });
