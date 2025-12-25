@@ -1,6 +1,7 @@
 // ==============================================
 // --- ДОПОМІЖНІ ФУНКЦІЇ ---
 // ==============================================
+
 function getTodayDateString() {
     const today = new Date();
     const year = today.getFullYear();
