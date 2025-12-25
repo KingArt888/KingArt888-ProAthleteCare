@@ -1,5 +1,9 @@
 // daily-individual.js — ProAtletCare (PREMIUM ANALYTICS EDITION)
-const STORAGE_KEY = 'weeklyPlanData';
+
+// Використовуємо var або перевіряємо існування, щоб не було SyntaxError
+if (typeof STORAGE_KEY === 'undefined') {
+    var STORAGE_KEY = 'weeklyPlanData';
+}
 const REPORTS_KEY = 'athleteTrainingReports';
 const YOUTUBE_EMBED_BASE = 'https://www.youtube.com/embed/';
 
@@ -69,60 +73,12 @@ function renderFeedbackForm() {
             <div style="text-align:center; margin-bottom:20px;">
                 <h3 style="color:#d4af37; text-transform:uppercase; letter-spacing:1px; margin:0; font-size:1.1rem;">📊 Аналіз тренування</h3>
             </div>
-
-            <div class="feedback-section" style="margin-bottom:25px; text-align:center;">
-                <label style="color:#888; display:block; margin-bottom:10px; font-size:0.75rem; text-transform:uppercase;">Складність (RPE 1-10):</label>
-                <div class="lightning-row" style="display:flex; justify-content:center; gap:5px;">
-                    ${[1,2,3,4,5,6,7,8,9,10].map(n => `
-                        <div class="lightning-item">
-                            <span style="display:block; color:#555; font-size:9px; margin-bottom:2px;">${n}</span>
-                            <input type="radio" name="rpe" value="${n}" id="bolt-${n}" style="display:none;">
-                            <label for="bolt-${n}" class="bolt-label" style="cursor:pointer; font-size:24px; color:#222; transition:0.3s;">⚡</label>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-
-            <div class="feedback-section" style="margin-bottom:25px; text-align:center;">
-                <label style="color:#888; display:block; margin-bottom:10px; font-size:0.75rem; text-transform:uppercase;">Задоволення / Якість тренування:</label>
-                <div class="star-row" style="display:flex; justify-content:center; gap:8px;">
-                    ${[1,2,3,4,5].map(n => `
-                        <div class="star-item">
-                            <input type="radio" name="quality" value="${n}" id="star-${n}" style="display:none;">
-                            <label for="star-${n}" class="star-label" style="cursor:pointer; font-size:28px; color:#222; transition:0.3s;">★</label>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-
-            <textarea id="user-comment" style="width:100%; height:70px; background:#111; color:#fff; border:1px solid #333; border-radius:8px; padding:12px; box-sizing:border-box; resize:none; font-family:inherit;" placeholder="Коментар для Артема..."></textarea>
-
             <button id="submit-report-btn" onclick="submitDailyReport()" style="width:100%; margin-top:15px; padding:15px; background:#d4af37; color:#000; border:none; border-radius:8px; font-weight:900; text-transform:uppercase; cursor:pointer;">Надіслати звіт тренеру</button>
         </div>
-
-        <style>
-            /* RPE Lightning Effect */
-            .lightning-item input:checked ~ label,
-            .lightning-item label:hover,
-            .lightning-item:has(~ .lightning-item input:checked) label {
-                color: #d4af37 !important;
-                text-shadow: 0 0 10px #d4af37;
-            }
-
-            /* Stars Quality Effect */
-            .star-item input:checked ~ label,
-            .star-item label:hover,
-            .star-item:has(~ .star-item input:checked) label {
-                color: #f1c40f !important;
-                text-shadow: 0 0 10px #f1c40f;
-            }
-
-            .bolt-label:hover, .star-label:hover { transform: scale(1.3); }
-        </style>
     `;
 }
 
-// ФУНКЦІЯ ЗБЕРЕЖЕННЯ
+// ФУНКЦІЯ ЗБЕРЕЖЕННЯ (Використовує глобальний db та currentUserId)
 async function submitDailyReport() {
     const rpe = document.querySelector('input[name="rpe"]:checked')?.value;
     const quality = document.querySelector('input[name="quality"]:checked')?.value;
@@ -134,8 +90,13 @@ async function submitDailyReport() {
         return;
     }
 
+    if (!currentUserId) {
+        alert("Помилка: Ви не авторизовані. Звіт не може бути збережений.");
+        return;
+    }
+
     const reportData = {
-        athleteName: "Artem Test", // Потім замінимо на динамічне ім'я
+        userId: currentUserId, // Прив'язка до атлета
         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
         rpe: parseInt(rpe),
         quality: parseInt(quality),
@@ -144,7 +105,6 @@ async function submitDailyReport() {
     };
 
     try {
-        // Записуємо в Firebase в колекцію "training_reports"
         await db.collection("training_reports").add(reportData);
         
         const btn = document.getElementById('submit-report-btn');
@@ -152,32 +112,13 @@ async function submitDailyReport() {
         btn.innerHTML = "✅ ВІДПРАВЛЕНО В ХМАРУ";
         btn.disabled = true;
         
-        alert("Артеме, звіт успішно збережено в Firebase!");
+        alert("Звіт успішно збережено!");
     } catch (error) {
         console.error("Помилка Firebase: ", error);
-        alert("Помилка при збереженні. Перевір консоль.");
     }
 }
 
-async function loadPlanFromFirebase(athleteId) {
-    try {
-        const docRef = db.collection("weekly_plans")
-            .where("athleteId", "==", athleteId)
-            .orderBy("createdAt", "desc")
-            .limit(1);
-            
-        const snapshot = await docRef.get();
-        if (!snapshot.empty) {
-            const latestPlan = snapshot.docs[0].data().planData;
-            localStorage.setItem('weeklyPlanData', JSON.stringify(latestPlan));
-            console.log("✅ План синхронізовано з хмари Firebase");
-        }
-    } catch (error) {
-        console.error("❌ Помилка завантаження з Firebase:", error);
-    }
-}
-
-// 4. ОСНОВНА ЛОГІКА ЗАВАНТАЖЕННЯ (MD ТА ПЛАН)
+// 4. ОСНОВНА ЛОГІКА ЗАВАНТАЖЕННЯ
 function loadAndDisplayDailyPlan() {
     const todayIndex = (new Date().getDay() === 0) ? 6 : new Date().getDay() - 1;
     const listContainer = document.getElementById('daily-exercise-list');
