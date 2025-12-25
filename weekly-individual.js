@@ -1,4 +1,4 @@
-// weekly-individual.js — ProAtletCare (FINAL STABLE VERSION)
+// weekly-individual.js — ProAtletCare (FINAL STABLE VERSION - FULL MICROCYCLE)
 const STORAGE_KEY = 'weeklyPlanData';
 const COLOR_MAP = {
     'MD': { status: 'MD', colorClass: 'color-red' },
@@ -20,21 +20,19 @@ const templateStages = {
 };
 
 // =========================================================
-// 1. ОСНОВНЕ ЗБЕРЕЖЕННЯ ТА ІНІЦІАЛІЗАЦІЯ
+// 1. ЗБЕРЕЖЕННЯ ТА РОЗРАХУНОК ЦИКЛУ
 // =========================================================
 
 function saveData(manualData = null) {
     try {
         let existingData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
         const activityData = {};
-        
         document.querySelectorAll('.activity-type-select').forEach(sel => {
             activityData[sel.name] = sel.value;
         });
-
         const finalData = { ...existingData, ...activityData, ...(manualData || {}) };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(finalData));
-    } catch (e) { console.error("Помилка збереження:", e); }
+    } catch (e) { console.error("Save error:", e); }
 }
 
 function updateCycleColors() {
@@ -42,48 +40,52 @@ function updateCycleColors() {
     const dayCells = document.querySelectorAll('#md-colors-row .cycle-day');
     
     let activityTypes = Array.from(activitySelects).map(s => s.value);
-    let dayStatuses = activityTypes.map(v => (v === 'MATCH' ? 'MD' : (v === 'REST' ? 'REST' : 'TRAIN')));
+    let dayStatuses = new Array(7).fill('TRAIN');
     const matchIdx = activityTypes.indexOf('MATCH');
 
-    // Розрахунок MD-статусів (Недільний мікроцикл)
+    // КОРЕКТНИЙ РОЗРАХУНОК МІКРОЦИКЛУ (БЕЗ ОБРИВІВ ЧЕРЕЗ REST)
     if (matchIdx !== -1) {
+        dayStatuses[matchIdx] = 'MD';
+        // Дні ДО матчу (назад по колу до 4 днів)
         for (let j = 1; j <= 4; j++) {
             let i = (matchIdx - j + 7) % 7;
-            if (activityTypes[i] !== 'REST' && activityTypes[i] !== 'MATCH') dayStatuses[i] = `MD-${j}`;
+            if (activityTypes[i] !== 'MATCH') dayStatuses[i] = `MD-${j}`;
             else break;
         }
+        // Дні ПІСЛЯ матчу (вперед по колу до 2 днів)
         for (let j = 1; j <= 2; j++) {
             let i = (matchIdx + j) % 7;
-            if (activityTypes[i] !== 'REST' && activityTypes[i] !== 'MATCH') dayStatuses[i] = `MD+${j}`;
+            if (activityTypes[i] !== 'MATCH') dayStatuses[i] = `MD+${j}`;
             else break;
         }
     }
 
     dayStatuses.forEach((status, idx) => {
-        const style = COLOR_MAP[status] || COLOR_MAP['TRAIN'];
+        const isRest = activityTypes[idx] === 'REST';
+        const style = isRest ? COLOR_MAP['REST'] : (COLOR_MAP[status] || COLOR_MAP['TRAIN']);
         
-        // Оновлення верхньої шкали кольорів
+        // Оновлення верхньої шкали
         const mdEl = dayCells[idx]?.querySelector('.md-status');
         if (mdEl) {
-            mdEl.textContent = style.status;
+            mdEl.textContent = isRest ? 'REST' : status;
             Object.values(COLOR_MAP).forEach(m => mdEl.classList.remove(m.colorClass));
             mdEl.classList.add(style.colorClass);
         }
         
-        // Оновлення великих заголовків блоків
+        // Оновлення заголовків блоків
         const titleEl = document.getElementById(`md-title-${idx}`);
         if (titleEl) {
-            titleEl.innerHTML = `<span class="md-status-label ${style.colorClass}">${style.status}</span> <span style="color:#fff">(${dayNamesShort[idx]})</span>`;
+            const labelText = isRest ? `REST (${status})` : status;
+            titleEl.innerHTML = `<span class="md-status-label ${style.colorClass}">${labelText}</span> <span style="color:#fff">(${dayNamesShort[idx]})</span>`;
         }
         
-        renderDayExercises(idx, status);
+        renderDayExercises(idx, isRest ? 'REST' : status);
     });
-
     saveData();
 }
 
 // =========================================================
-// 2. ВІДОБРАЖЕННЯ ВПРАВ У БЛОКАХ ДНІВ
+// 2. ВІДОБРАЖЕННЯ ВПРАВ
 // =========================================================
 
 function renderDayExercises(dayIndex, mdStatus) {
@@ -101,13 +103,13 @@ function renderDayExercises(dayIndex, mdStatus) {
     let html = '<div class="generated-exercises-list">';
     Object.keys(templateStages).forEach(stage => {
         const stageExs = dayPlan.exercises.filter(ex => ex.stage === stage);
-        html += `<div style="font-size: 0.75rem; color: #d4af37; margin-top: 12px; border-bottom: 1px solid #333; text-transform: uppercase; letter-spacing: 1px;">${stage}</div>`;
+        html += `<div style="font-size: 0.75rem; color: #d4af37; margin-top: 12px; border-bottom: 1px solid #333; text-transform: uppercase;">${stage}</div>`;
         
         stageExs.forEach(ex => {
             html += `
                 <div class="exercise-item" style="display:flex; justify-content:space-between; align-items:center; background:#111; margin: 4px 0; padding: 6px 10px; border-left: 2px solid #d4af37;">
                     <span style="font-size: 0.85rem; color: #eee;">${ex.name}</span>
-                    <button type="button" style="background:none; border:none; color:#ff4d4d; cursor:pointer; font-weight:bold;" onclick="removeExercise(${dayIndex}, '${ex.name}')">✕</button>
+                    <button type="button" style="background:none; border:none; color:#ff4d4d; cursor:pointer;" onclick="removeExercise(${dayIndex}, '${ex.name}')">✕</button>
                 </div>`;
         });
         html += `<button type="button" class="add-manual-btn" style="width:100%; margin-top:5px; padding: 5px; cursor:pointer; background: #222; color: #ccc; border: 1px dashed #444;" onclick="openExerciseModal(${dayIndex}, '${mdStatus}', '${stage}')">+ Додати</button>`;
@@ -117,7 +119,7 @@ function renderDayExercises(dayIndex, mdStatus) {
 }
 
 // =========================================================
-// 3. МОДАЛКА (КАТЕГОРІЇ ТА МУЛЬТИ-ВИБІР)
+// 3. МОДАЛКА (МУЛЬТИ-ВИБІР ТА КАТЕГОРІЇ)
 // =========================================================
 
 function openExerciseModal(dayIndex, mdStatus, stage) {
@@ -131,13 +133,11 @@ function openExerciseModal(dayIndex, mdStatus, stage) {
     const stageData = EXERCISE_LIBRARY[stage];
     if (stageData) {
         for (const cat in stageData) {
-            // Заголовок категорії
             const catDiv = document.createElement('div');
             catDiv.style.cssText = "background: #d4af37; color: #000; padding: 6px 12px; margin-top: 15px; font-weight: bold; font-size: 0.85rem; text-transform: uppercase;";
             catDiv.textContent = cat;
             list.appendChild(catDiv);
 
-            // Список вправ
             stageData[cat].exercises.forEach(ex => {
                 const item = document.createElement('div');
                 item.style.cssText = "display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #222; background: #0a0a0a;";
@@ -150,7 +150,6 @@ function openExerciseModal(dayIndex, mdStatus, stage) {
         }
     }
 
-    // Велика кнопка закриття внизу
     const closeBtn = document.createElement('button');
     closeBtn.textContent = "Зберегти та закрити";
     closeBtn.style.cssText = "width: 100%; padding: 15px; margin-top: 25px; background: #d4af37; color: #000; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 1rem;";
@@ -169,14 +168,11 @@ function addSingleExercise(btn, name, stage, category) {
         const key = `day_plan_${dayIndex}`;
         if (!data[key]) data[key] = { exercises: [] };
         
-        // Додаємо вправу в масив
         data[key].exercises.push({ ...exTemplate, stage, category });
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         
-        // Оновлюємо основну сторінку під модалкою
-        updateCycleColors();
+        updateCycleColors(); // Оновлюємо фон миттєво
         
-        // Змінюємо стан кнопки в модалці
         btn.textContent = "Додано ✔";
         btn.style.background = "#28a745";
         btn.style.color = "#fff";
@@ -199,24 +195,20 @@ function closeExerciseModal() {
     if (modal) modal.style.display = 'none';
 }
 
-// Закриття по кліку на фон
 window.onclick = function(event) {
     const modal = document.getElementById('exercise-selection-modal');
     if (event.target == modal) closeExerciseModal();
 }
 
 // =========================================================
-// 4. СТАРТ ТА СЛУХАЧІ ПОДІЙ
+// 4. ІНІЦІАЛІЗАЦІЯ
 // =========================================================
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Відновлення вибраних селектів (Матч/Тренування)
     const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
     document.querySelectorAll('.activity-type-select').forEach(sel => {
         if (data[sel.name]) sel.value = data[sel.name];
         sel.addEventListener('change', () => updateCycleColors());
     });
-
-    // Перший запуск
     updateCycleColors();
 });
