@@ -1,281 +1,118 @@
-// daily-individual.js
-// ФІНАЛЬНА ВЕРСІЯ: ВИПРАВЛЕНО КОНФЛІКТИ, ДАТУ, СТАТУС, РЕКОМЕНДАЦІЇ ТА ФОРМУ ЗВОРОТНОГО ЗВ'ЯЗКУ
-
-const DAILY_STORAGE_KEY = 'weeklyPlanData'; 
+// daily-individual.js — ProAtletCare
+const STORAGE_KEY = 'weeklyPlanData';
 const YOUTUBE_EMBED_BASE = 'https://www.youtube.com/embed/';
 
-// ===================== CONSTANTS (АДАПТОВАНО ПІД КОНФЛІКТИ) =====================
-const dayNamesFull = [ 
-    'Понеділок','Вівторок','Середа','Четвер','Пʼятниця','Субота','Неділя' 
-];
-
-// Карта класів кольору (для відображення MD-статусу)
-const MD_COLOR_CLASSES = {
-    'MD': 'color-red',
-    'MD+1': 'color-dark-green',
-    'MD+2': 'color-green',
-    'MD-1': 'color-yellow',
-    'MD-2': 'color-deep-green',
-    'MD-3': 'color-orange',
-    'MD-4': 'color-blue',
-    'REST': 'color-neutral',
-    'TRAIN': 'color-dark-grey'
+const COLOR_MAP = {
+    'MD': { status: 'MD', colorClass: 'color-red' },
+    'MD+1': { status: 'MD+1', colorClass: 'color-dark-green' }, 
+    'MD+2': { status: 'MD+2', colorClass: 'color-green' }, 
+    'MD-1': { status: 'MD-1', colorClass: 'color-yellow' }, 
+    'MD-2': { status: 'MD-2', colorClass: 'color-deep-green' }, 
+    'MD-3': { status: 'MD-3', colorClass: 'color-orange' }, 
+    'MD-4': { status: 'MD-4', colorClass: 'color-blue' }, 
+    'REST': { status: 'REST', colorClass: 'color-neutral' }, 
+    'TRAIN': { status: 'TRAIN', colorClass: 'color-dark-grey' }, 
 };
 
+// Твої професійні рекомендації
 const MD_RECOMMENDATIONS = {
-    'MD': 'Сьогодні ігровий день...',
-    'MD+1': 'Високе навантаження!',
-    'MD+2': 'Середнє навантаження.',
-    'MD-1': 'День перед матчем.',
-    'MD-2': 'Глибоке відновлення.',
-    'MD-3': 'Активний відпочинок.',
-    'MD-4': 'Базове тренування.',
-    'REST': 'Повний відпочинок.',
-    'TRAIN': 'Стандартний тренувальний день.'
+    'MD': 'Сьогодні ігровий день. Максимальна концентрація. Харчування за 3-4 години до матчу.',
+    'MD+1': 'Відновлення (Recovery). МФР, легка мобільність. Завдання — прибрати набряки та відновити м’язи.',
+    'MD-1': 'Активація нервової системи. Низький об’єм, висока інтенсивність. Фокус на швидкості та реакції.',
+    'MD-2': 'Силова робота / Технічна підготовка. Акцент на якість рухів та стабільність.',
+    'REST': 'ПОВНИЙ ВІДПОЧИНОК. Сон 8+ годин, якісне харчування — твої головні тренування на сьогодні.',
+    'TRAIN': 'Стандартний тренувальний день. Дотримуйтесь техніки виконання вправ.'
 };
 
-// ===================== HELPERS =====================
 function getCurrentDayIndex() {
-    const d = new Date().getDay(); // 0 (Неділя) до 6 (Субота)
-    return d === 0 ? 6 : d - 1; 
-}
-
-function getCurrentDateFormatted() {
     const today = new Date();
-    const dayIndex = today.getDay(); 
-    const dayName = dayNamesFull[dayIndex === 0 ? 6 : dayIndex - 1]; 
-    
-    const day = String(today.getDate()).padStart(2, '0');
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const year = today.getFullYear();
-
-    return `${dayName}, ${day}.${month}.${year}`;
+    const jsDay = today.getDay(); 
+    return (jsDay === 0) ? 6 : jsDay - 1; // Перетворюємо Пн=0, Нд=6
 }
 
-function normalizeStage(stage) {
-    if (!stage) return 'UNSORTED';
-    return stage
-        .toLowerCase()
-        .replace(/\s+/g, '-')
-        .replace(/--+/g, '-')
-        .replace(/^pre-training$/, 'Pre-training')
-        .replace(/^main-training$/, 'Main-training')
-        .replace(/^post-training$/, 'Post-training');
-}
-
-// ===================== COLLAPSIBLE LOGIC =====================
-function initializeCollapsibles() {
-    const headers = document.querySelectorAll('.stage-header.collapsible');
-
-    headers.forEach(header => {
-        header.addEventListener('click', () => {
-            const content = header.nextElementSibling;
-            if (!content) return;
-
-            const icon = header.querySelector('.toggle-icon');
-            const isOpen = content.classList.contains('active');
-
-            content.classList.toggle('active');
-            header.classList.toggle('active');
-
-            if (icon) {
-                icon.textContent = isOpen ? '►' : '▼';
-            }
-        });
-    });
-}
-
-// ===================== EXERCISE ITEM =====================
-function createExerciseItemHTML(exercise, index) {
-    const todayIndex = getCurrentDayIndex();
-    const id = `ex-${todayIndex}-${index}`;
-    const checked = localStorage.getItem(id) === 'true' ? 'checked' : '';
-
-    let media = '';
-    if (exercise.imageURL) {
-        media += `<img src="${exercise.imageURL}" alt="${exercise.name}">`;
-    }
-    if (exercise.videoKey) {
-        media += `<iframe src="${YOUTUBE_EMBED_BASE}${exercise.videoKey}" allowfullscreen></iframe>`;
-    }
-
-    return `
-        <div class="daily-exercise-item" data-exercise-id="${id}">
-            <div class="exercise-content">
-                <h4>${exercise.name}</h4>
-                <p>${exercise.description || ''}</p>
-            </div>
-            <div class="media-container">
-                ${media}
-                <label>
-                    <input type="checkbox" ${checked}
-                        onchange="localStorage.setItem('${id}', this.checked)">
-                    Виконано
-                </label>
-            </div>
-        </div>
-    `;
-}
-
-// ===================== FEEDBACK FORM LOGIC (ПОВЕРНЕНО) =====================
-function loadFeedbackForm() {
-    // Шукаємо ваш контейнер id="user-feedback-container"
-    const feedbackSection = document.getElementById('user-feedback-container'); 
-    
-    if (!feedbackSection) return;
-
-    // Вставляємо HTML-структуру форми
-    feedbackSection.innerHTML = `
-        <h3>Ваш Відгук та Показники Самопочуття</h3>
-        <form id="daily-feedback-form">
-            <textarea name="feedback_text" rows="4" placeholder="Коментарі щодо тренування та самопочуття..." required></textarea>
-            <button type="submit" class="save-button">Надіслати відгук</button>
-        </form>
-        <p id="feedback-message" style="display:none; color: green;"></p>
-    `;
-
-    const form = document.getElementById('daily-feedback-form');
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const feedbackText = form.elements['feedback_text'].value;
-            console.log("Відгук надіслано:", feedbackText);
-            
-            const messageEl = document.getElementById('feedback-message');
-            if (messageEl) {
-                messageEl.textContent = 'Дякуємо! Ваш відгук отримано.';
-                messageEl.style.display = 'block';
-                form.reset();
-                setTimeout(() => messageEl.style.display = 'none', 3000);
-            }
-        });
-    }
-}
-
-
-// ===================== MAIN LOAD =====================
 function loadAndDisplayDailyPlan() {
     const todayIndex = getCurrentDayIndex();
-    const planKey = `day_plan_${todayIndex}`;
+    const listContainer = document.getElementById('daily-exercise-list');
+    const statusDisplay = document.getElementById('md-status-display');
+    const recommendationContainer = document.getElementById('md-recommendations');
 
-    const list = document.getElementById('daily-exercise-list');
-    
-    // 1. ОТРИМАННЯ ЕЛЕМЕНТІВ:
-    const currentDateDisplayEl = document.getElementById('current-date-display'); 
-    const mdStatusEl = document.getElementById('md-status-display'); 
-    const recommendationsSection = document.getElementById('md-recommendations');
-    const mdxRangeEl = document.getElementById('mdx-range-display'); 
-    const loadingMessageEl = document.getElementById('loading-message'); 
-
-    // Виводимо назву дня та дату
-    if (currentDateDisplayEl) currentDateDisplayEl.textContent = getCurrentDateFormatted(); 
-    
-    // ОЧИЩЕННЯ: Прибираємо "Цикл MDX"
-    if (mdxRangeEl) mdxRangeEl.textContent = ''; 
-    
-    // 2. ЗАВАНТАЖЕННЯ ДАНИХ
-    let savedData;
     try {
-        savedData = JSON.parse(localStorage.getItem(DAILY_STORAGE_KEY) || '{}');
-    } catch (e) {
-        console.error("Помилка при зчитуванні плану з localStorage:", e);
-        savedData = {};
-    }
-    
-    const todayPlan = savedData[planKey];
-
-    // 3. ЛОГІКА ДЛЯ ВИЗНАЧЕННЯ СТАТУСУ ТА РЕКОМЕНДАЦІЙ:
-    let mdStatus = 'REST'; 
-    let recommendationText = MD_RECOMMENDATIONS['REST'];
-    let defaultStatus = true; 
-
-    if (todayPlan && todayPlan.mdStatus) {
-        mdStatus = todayPlan.mdStatus;
-        recommendationText = MD_RECOMMENDATIONS[mdStatus] || MD_RECOMMENDATIONS['TRAIN'];
-        defaultStatus = false;
-    }
-
-    // 4. ВСТАВЛЯЄМО СТАТУС ТА РЕКОМЕНДАЦІЮ В HTML:
-    if (mdStatusEl) {
-        mdStatusEl.textContent = mdStatus;
+        const savedData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
         
-        const colorClass = MD_COLOR_CLASSES[mdStatus] || MD_COLOR_CLASSES['TRAIN'];
+        // Визначаємо статус сьогоднішнього дня (беремо з селектів Weekly Individual)
+        let mdStatus = 'TRAIN';
+        const activityKey = `activity_${todayIndex}`;
         
-        // Видаляємо всі класи кольору, включаючи клас за замовчуванням з HTML
-        Object.values(MD_COLOR_CLASSES).forEach(cls => mdStatusEl.classList.remove(cls));
-        mdStatusEl.classList.remove('color-dark-grey'); 
-        
-        // Додаємо коректний клас
-        mdStatusEl.classList.add(colorClass);
-    }
-    
-    // Оновлюємо секцію рекомендацій (ЗАГРУЖАЄМО РЕКОМЕНДАЦІЇ)
-    if (recommendationsSection) {
-        const pElement = recommendationsSection.querySelector('p');
-        if (pElement) {
-            pElement.textContent = recommendationText;
+        // Логіка визначення статусу як у календарі
+        if (savedData[activityKey] === 'REST') {
+            mdStatus = 'REST';
+        } else if (savedData[activityKey] === 'MATCH') {
+            mdStatus = 'MD';
         } else {
-            recommendationsSection.innerHTML = `<p>${recommendationText}</p>`;
+            // Тут можна додати автоматичний розрахунок MD-1, MD-2 як у weekly.js
+            // Для спрощення зараз беремо статус, який зберігся в системі
+            mdStatus = calculateTodayStatus(savedData, todayIndex);
+        }
+
+        // Оновлюємо колір та текст статусу
+        const style = COLOR_MAP[mdStatus] || COLOR_MAP['TRAIN'];
+        statusDisplay.textContent = mdStatus;
+        statusDisplay.className = `md-status ${style.colorClass}`;
+
+        // Відображаємо рекомендацію
+        recommendationContainer.innerHTML = `<p><strong>Порада тренера:</strong> ${MD_RECOMMENDATIONS[mdStatus] || MD_RECOMMENDATIONS['TRAIN']}</p>`;
+
+        // Завантажуємо вправи, закріплені за цим статусом (ті, що ти додавав у модалці)
+        const planKey = `status_plan_${mdStatus}`;
+        const plan = savedData[planKey];
+
+        if (!plan || !plan.exercises || plan.exercises.length === 0) {
+            listContainer.innerHTML = '<div class="note-info">На сьогодні вправ не заплановано. Відпочивайте або зверніться до тижневого плану.</div>';
+            return;
+        }
+
+        // Генеруємо список вправ
+        let html = '';
+        plan.exercises.forEach((ex, idx) => {
+            html += `
+                <div class="daily-exercise-item">
+                    <div class="exercise-content">
+                        <h4>${ex.name}</h4>
+                        <p style="color: #d4af37; font-weight: bold;">${ex.stage} | ${ex.category || ''}</p>
+                        <p>${ex.desc || 'Опис вправи в бібліотеці...'}</p>
+                    </div>
+                    <div class="completion-section">
+                        <input type="checkbox" id="ex-${idx}" onchange="this.parentElement.parentElement.style.opacity = this.checked ? '0.5' : '1'">
+                        <label for="ex-${idx}">Виконано</label>
+                    </div>
+                </div>`;
+        });
+        listContainer.innerHTML = html;
+
+    } catch (e) {
+        console.error("Помилка:", e);
+    }
+}
+
+// Допоміжна функція для визначення статусу дня
+function calculateTodayStatus(data, todayIdx) {
+    // Шукаємо найближчий матч у даних
+    let matchIdx = -1;
+    for (let i = 0; i < 7; i++) {
+        if (data[`activity_${i}`] === 'MATCH') {
+            matchIdx = i;
+            break;
         }
     }
     
-    if (loadingMessageEl) {
-        loadingMessageEl.style.display = 'none'; 
-    }
+    if (matchIdx === -1) return 'TRAIN';
     
-    // 5. ВІДОБРАЖЕННЯ ВПРАВ
-    if (!list) return;
-
-    if (defaultStatus || !todayPlan.exercises?.length) {
-        list.innerHTML = `<p>На сьогодні немає запланованих вправ (або план ще не був збережений у тижневому планувальнику).</p>`;
-        return;
-    }
-
-    // === GROUP BY STAGE (ОБРОБКА ВПРАВ) ===
-    const grouped = {};
-    todayPlan.exercises.forEach((ex, i) => {
-        const stage = normalizeStage(ex.stage);
-        if (!grouped[stage]) grouped[stage] = [];
-        grouped[stage].push({ ...ex, originalIndex: i });
-    });
-
-    const order = ['Pre-training','Main-training','Post-training','Recovery','UNSORTED'];
-    const stages = Object.keys(grouped).sort((a,b) => {
-        const ia = order.indexOf(a), ib = order.indexOf(b);
-        if (ia !== -1 && ib !== -1) return ia - ib;
-        if (ia !== -1) return -1;
-        if (ib !== -1) return 1;
-        return a.localeCompare(b);
-    });
-
-    let html = '';
-    let idx = 1;
-
-    stages.forEach(stage => {
-        html += `
-            <div class="training-section">
-                <h3 class="stage-header collapsible">
-                    ${idx++}. ${stage.replace('-', ' ').toUpperCase()}
-                    <span class="toggle-icon">►</span>
-                </h3>
-                <div class="section-content">
-                    ${grouped[stage].map(e =>
-                        createExerciseItemHTML(e, e.originalIndex)
-                    ).join('')}
-                </div>
-            </div>
-        `;
-    });
-
-    list.innerHTML = html;
-    initializeCollapsibles();
+    const diff = todayIdx - matchIdx;
+    if (diff === 0) return 'MD';
+    if (diff > 0 && diff <= 2) return `MD+${diff}`;
+    if (diff < 0 && diff >= -4) return `MD${diff}`;
+    
+    return 'TRAIN';
 }
 
-// ===================== INIT =====================
-document.addEventListener('DOMContentLoaded', () => {
-    // Ініціалізація форми зворотного зв'язку
-    loadFeedbackForm(); 
-    // Завантаження плану
-    loadAndDisplayDailyPlan();
-});
+document.addEventListener('DOMContentLoaded', loadAndDisplayDailyPlan);
