@@ -135,7 +135,7 @@ async function submitDailyReport() {
     }
 
     const reportData = {
-        athleteName: "Artem Test", // Тут потім буде ім'я авторизованого юзера
+        athleteName: "Artem Test", // Потім замінимо на динамічне ім'я
         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
         rpe: parseInt(rpe),
         quality: parseInt(quality),
@@ -144,10 +144,9 @@ async function submitDailyReport() {
     };
 
     try {
-        // Записуємо в Firebase
+        // Записуємо в Firebase в колекцію "training_reports"
         await db.collection("training_reports").add(reportData);
         
-        // Візуальний ефект
         const btn = document.getElementById('submit-report-btn');
         btn.style.background = "#2ecc71";
         btn.innerHTML = "✅ ВІДПРАВЛЕНО В ХМАРУ";
@@ -156,7 +155,7 @@ async function submitDailyReport() {
         alert("Артеме, звіт успішно збережено в Firebase!");
     } catch (error) {
         console.error("Помилка Firebase: ", error);
-        alert("Помилка при збереженні. Перевір інтернет.");
+        alert("Помилка при збереженні. Перевір консоль.");
     }
 }
 
