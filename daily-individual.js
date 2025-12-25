@@ -1,10 +1,11 @@
-// daily-individual.js — ProAtletCare (PREMIUM ANALYTICS EDITION)
+// daily-individual.js — ProAtletCare (FINAL STABLE VERSION)
 
-// Захист від помилки повторного оголошення
+// 1. ЗАХИСТ ВІД КОНФЛІКТІВ (Перевіряємо, чи змінна вже існує)
 if (typeof STORAGE_KEY === 'undefined') {
     var STORAGE_KEY = 'weeklyPlanData';
 }
-const YOUTUBE_EMBED_BASE = 'https://www.youtube.com/embed/';
+var REPORTS_KEY = 'athleteTrainingReports';
+var YOUTUBE_EMBED_BASE = 'https://www.youtube.com/embed/';
 
 const COLOR_MAP = {
     'MD': { status: 'MD', colorClass: 'color-red' },
@@ -28,25 +29,19 @@ const MD_RECOMMENDATIONS = {
 
 const STAGES = ['Pre-Training', 'Main Training', 'Post-Training'];
 
-// 1. УПРАВЛІННЯ АКОРДЕОНОМ
+// 2. УПРАВЛІННЯ АКОРДЕОНОМ
 function toggleStage(headerElement) {
     const content = headerElement.nextElementSibling;
     const arrow = headerElement.querySelector('.stage-arrow');
     if (content.style.display === "none" || content.style.display === "") {
         content.style.display = "block";
         if (arrow) arrow.textContent = "▼";
+        headerElement.style.borderLeftColor = "#d4af37";
     } else {
         content.style.display = "none";
         if (arrow) arrow.textContent = "▶";
+        headerElement.style.borderLeftColor = "#444";
     }
-}
-
-// 2. ВІЗУАЛІЗАЦІЯ ВИБОРУ (Блискавки та Зірки)
-function highlightSelection(groupName, value, activeColor) {
-    const labels = document.querySelectorAll(`label[data-group="${groupName}"]`);
-    labels.forEach((label, index) => {
-        label.style.color = (index < value) ? activeColor : '#222';
-    });
 }
 
 // 3. СТВОРЕННЯ КАРТКИ ВПРАВИ
@@ -68,7 +63,7 @@ function createExerciseItemHTML(exercise, index) {
     `;
 }
 
-// 4. ФОРМА З БЛИСКАВКАМИ ТА ЗІРКАМИ
+// 4. ФОРМА ЗВОРОТНОГО ЗВ'ЯЗКУ
 function renderFeedbackForm() {
     const container = document.getElementById('user-feedback-container');
     if (!container) return;
@@ -78,31 +73,36 @@ function renderFeedbackForm() {
             <div style="text-align:center; margin-bottom:20px;">
                 <h3 style="color:#d4af37; text-transform:uppercase; letter-spacing:1px; margin:0; font-size:1.1rem;">📊 Аналіз тренування</h3>
             </div>
-
-            <div style="margin-bottom:20px; text-align:center;">
-                <p style="color:#888; font-size:0.8rem; margin-bottom:10px;">СКЛАДНІСТЬ (RPE):</p>
-                <div style="display:flex; justify-content:center; gap:5px;">
+            <div class="feedback-section" style="margin-bottom:25px; text-align:center;">
+                <label style="color:#888; display:block; margin-bottom:10px; font-size:0.75rem; text-transform:uppercase;">Складність (RPE 1-10):</label>
+                <div class="lightning-row" style="display:flex; justify-content:center; gap:5px;">
                     ${[1,2,3,4,5,6,7,8,9,10].map(n => `
-                        <input type="radio" name="rpe" value="${n}" id="bolt-${n}" style="display:none;">
-                        <label for="bolt-${n}" data-group="rpe" style="cursor:pointer; font-size:22px; color:#222; transition:0.3s;" onclick="highlightSelection('rpe', ${n}, '#d4af37')">⚡</label>
+                        <div class="lightning-item">
+                            <span style="display:block; color:#555; font-size:9px; margin-bottom:2px;">${n}</span>
+                            <input type="radio" name="rpe" value="${n}" id="bolt-${n}" style="display:none;">
+                            <label for="bolt-${n}" class="bolt-label" style="cursor:pointer; font-size:24px; color:#222; transition:0.3s;">⚡</label>
+                        </div>
                     `).join('')}
                 </div>
             </div>
-
-            <div style="margin-bottom:20px; text-align:center;">
-                <p style="color:#888; font-size:0.8rem; margin-bottom:10px;">ЯКІСТЬ ВИКОНАННЯ:</p>
-                <div style="display:flex; justify-content:center; gap:8px;">
+            <div class="feedback-section" style="margin-bottom:25px; text-align:center;">
+                <label style="color:#888; display:block; margin-bottom:10px; font-size:0.75rem; text-transform:uppercase;">Якість тренування:</label>
+                <div class="star-row" style="display:flex; justify-content:center; gap:8px;">
                     ${[1,2,3,4,5].map(n => `
-                        <input type="radio" name="quality" value="${n}" id="star-${n}" style="display:none;">
-                        <label for="star-${n}" data-group="quality" style="cursor:pointer; font-size:26px; color:#222; transition:0.3s;" onclick="highlightSelection('quality', ${n}, '#d4af37')">★</label>
+                        <div class="star-item">
+                            <input type="radio" name="quality" value="${n}" id="star-${n}" style="display:none;">
+                            <label for="star-${n}" class="star-label" style="cursor:pointer; font-size:28px; color:#222; transition:0.3s;">★</label>
+                        </div>
                     `).join('')}
                 </div>
             </div>
-
             <textarea id="user-comment" style="width:100%; height:70px; background:#111; color:#fff; border:1px solid #333; border-radius:8px; padding:12px; box-sizing:border-box; resize:none;" placeholder="Коментар для Артема..."></textarea>
-
             <button id="submit-report-btn" onclick="submitDailyReport()" style="width:100%; margin-top:15px; padding:15px; background:#d4af37; color:#000; border:none; border-radius:8px; font-weight:900; text-transform:uppercase; cursor:pointer;">Надіслати звіт тренеру</button>
         </div>
+        <style>
+            .lightning-item input:checked ~ label, .lightning-item label:hover { color: #d4af37 !important; }
+            .star-item input:checked ~ label, .star-item label:hover { color: #f1c40f !important; }
+        </style>
     `;
 }
 
@@ -113,34 +113,25 @@ async function submitDailyReport() {
     const comment = document.getElementById('user-comment').value;
     const status = document.getElementById('md-status-display')?.textContent;
 
-    if (!rpe || !quality) {
-        alert("Оберіть блискавки ⚡ та зірки ★!");
-        return;
-    }
-
-    const reportData = {
-        userId: currentUserId || "unknown",
-        rpe: parseInt(rpe),
-        quality: parseInt(quality),
-        comment: comment,
-        mdStatus: status,
-        date: new Date().toISOString().split('T')[0],
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    };
+    if (!rpe || !quality) { alert("Оберіть блискавки ⚡ та зірки ★!"); return; }
 
     try {
-        await db.collection("athlete_reports").add(reportData);
+        await db.collection("athlete_reports").add({
+            athleteName: "Artem Test",
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            rpe: parseInt(rpe),
+            quality: parseInt(quality),
+            comment: comment,
+            mdStatus: status
+        });
         const btn = document.getElementById('submit-report-btn');
         btn.style.background = "#2ecc71";
         btn.innerHTML = "✅ ВІДПРАВЛЕНО";
         btn.disabled = true;
-        alert("Звіт успішно збережено!");
-    } catch (error) {
-        console.error("Помилка:", error);
-    }
+    } catch (error) { console.error("Помилка Firebase:", error); }
 }
 
-// 6. ЗАВАНТАЖЕННЯ ПЛАНУ
+// 6. ОСНОВНА ЛОГІКА ЗАВАНТАЖЕННЯ ТРЕНУВАННЯ
 function loadAndDisplayDailyPlan() {
     const todayIndex = (new Date().getDay() === 0) ? 6 : new Date().getDay() - 1;
     const listContainer = document.getElementById('daily-exercise-list');
@@ -148,6 +139,7 @@ function loadAndDisplayDailyPlan() {
     const recContainer = document.getElementById('md-recommendations');
 
     try {
+        // Беремо дані з localStorage
         const savedData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
         const mdStatus = calculateTodayStatus(savedData, todayIndex);
 
@@ -164,8 +156,9 @@ function loadAndDisplayDailyPlan() {
         const planKey = `status_plan_${mdStatus}`;
         const plan = savedData[planKey];
 
+        // ЯКЩО ПЛАНУ НЕМАЄ В LOCALSTORAGE — ВИВОДИМО ПОВІДОМЛЕННЯ
         if (!plan || !plan.exercises || plan.exercises.length === 0) {
-            listContainer.innerHTML = '<p style="text-align:center; color:#555; padding:30px; border:1px dashed #333;">На сьогодні вправ немає.</p>';
+            listContainer.innerHTML = '<p style="text-align:center; color:#555; padding:30px; border:1px dashed #333;">На сьогодні вправ немає. Перевір "Weekly Individual" або статус дня.</p>';
             renderFeedbackForm();
             return;
         }
@@ -190,7 +183,10 @@ function loadAndDisplayDailyPlan() {
         listContainer.innerHTML = html;
         renderFeedbackForm();
 
-    } catch (e) { console.error(e); }
+    } catch (e) { 
+        console.error("Помилка рендерингу:", e);
+        listContainer.innerHTML = "<p style='color:red;'>Помилка завантаження даних.</p>";
+    }
 }
 
 function calculateTodayStatus(data, todayIdx) {
@@ -205,17 +201,5 @@ function calculateTodayStatus(data, todayIdx) {
     return 'TRAIN';
 }
 
-// 7. СИНХРОНІЗАЦІЯ
-firebase.auth().onAuthStateChanged((user) => {
-    if (user) {
-        currentUserId = user.uid;
-        db.collection("weekly_plans").doc(user.uid).onSnapshot((doc) => {
-            if (doc.exists) {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(doc.data().planData));
-                loadAndDisplayDailyPlan();
-            }
-        });
-    }
-});
-
+// Запускаємо завантаження
 document.addEventListener('DOMContentLoaded', loadAndDisplayDailyPlan);
