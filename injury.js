@@ -1,32 +1,34 @@
 // ==========================================================
-// КОНФІГУРАЦІЯ ТА ГЛОБАЛЬНІ ЗМІННІ
+// 1. КОНФІГУРАЦІЯ ТА ІНІЦІАЛІЗАЦІЯ
 // ==========================================================
+// Перевірка, щоб уникнути помилки "Identifier 'db' has already been declared"
+if (typeof db === 'undefined') {
+    var db = firebase.firestore();
+}
+
 const INJURY_COLLECTION = 'injuries';
 let currentUser = null;
 let injuries = [];
 let selectedInjury = null;
 let currentPainChart = null;
 
-const db = firebase.firestore();
-
-// Функція-хелпер для дати
 function getTodayDateString() { 
     return new Date().toISOString().split('T')[0]; 
 }
 
-// ==========================================================
-// FIREBASE АВТОРИЗАЦІЯ ТА ЗАВАНТАЖЕННЯ
-// ==========================================================
+// Слухач авторизації
 firebase.auth().onAuthStateChanged((user) => {
     if (user) {
         currentUser = user;
-        console.log("Injury Story: Авторизовано", user.uid);
         loadInjuriesFromFirebase();
     } else {
         console.warn("Injury Story: Користувач не авторизований");
     }
 });
 
+// ==========================================================
+// 2. РОБОТА З FIREBASE
+// ==========================================================
 async function loadInjuriesFromFirebase() {
     if (!currentUser) return;
     try {
@@ -43,12 +45,12 @@ async function loadInjuriesFromFirebase() {
         displayInjuryList();
         updateAthleteStatus();
     } catch (e) { 
-        console.error("Помилка завантаження травм:", e); 
+        console.error("Помилка завантаження:", e); 
     }
 }
 
 // ==========================================================
-// ЛОГІКА КАРТИ ТРАВМ (КЛІКИ ТА МАРКЕРИ)
+// 3. ЛОГІКА КАРТИ (ВІДНОВЛЕНО КЛІКИ)
 // ==========================================================
 function setupBodyMap() {
     const mapContainer = document.getElementById('bodyMapContainer');
@@ -58,15 +60,18 @@ function setupBodyMap() {
     if (!mapContainer || !marker) return;
 
     mapContainer.addEventListener('click', function(e) {
+        // Якщо клікнули на маркер — не ставимо нову точку
         if (e.target.classList.contains('injury-marker')) return;
 
         const rect = mapContainer.getBoundingClientRect();
         const xPercent = ((e.clientX - rect.left) / rect.width) * 100;
         const yPercent = ((e.clientY - rect.top) / rect.height) * 100;
 
+        // Візуалізація вибору
         marker.style.left = `${xPercent}%`;
         marker.style.top = `${yPercent}%`;
         
+        // Запис координат у приховані поля
         document.getElementById('coordX').value = xPercent.toFixed(2);
         document.getElementById('coordY').value = yPercent.toFixed(2);
         
@@ -93,20 +98,21 @@ function renderInjuryMarkers() {
         `;
         el.style.left = `${injury.coordX}%`;
         el.style.top = `${injury.coordY}%`;
+        
+        // Колір за статусом: червоний для активних, зелений для закритих
         el.style.backgroundColor = injury.status === 'closed' ? '#50C878' : '#DA3E52';
 
         el.onclick = (e) => {
             e.stopPropagation();
             selectedInjury = injury;
             displayInjuryDetails(injury);
-            renderInjuryMarkers();
         };
         container.appendChild(el);
     });
 }
 
 // ==========================================================
-// ВІДОБРАЖЕННЯ ДЕТАЛЕЙ ТА ГРАФІКА
+// 4. ДЕТАЛІ ТА ГРАФІК
 // ==========================================================
 function displayInjuryDetails(injury) {
     const detailBox = document.getElementById('injury-list');
@@ -120,8 +126,8 @@ function displayInjuryDetails(injury) {
         <div class="injury-info-box" style="background:#111; padding:15px; border-radius:8px; border-left:4px solid #FFC72C; margin-bottom:15px;">
             <h4 style="color:#FFC72C; margin:0;">${injury.location}</h4>
             <p>Статус: <strong>${injury.status === 'active' ? 'Активна' : 'Закрита'}</strong></p>
-            <p>Біль: <span style="color:#DA3E52; font-weight:bold;">${latestPain}/10</span></p>
-            <button onclick="deleteInjury('${injury.id}')" style="background:#DA3E52; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px; margin-top:10px;">Видалити кейс</button>
+            <p>Поточний біль: <span style="color:#DA3E52; font-weight:bold;">${latestPain}/10</span></p>
+            <button onclick="deleteInjury('${injury.id}')" style="background:#DA3E52; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:4px; margin-top:10px;">Видалити</button>
         </div>
     `;
     renderPainChart(injury.painHistory || [], injury.location);
@@ -151,6 +157,7 @@ function renderPainChart(history, location) {
     });
 }
 
+// Виправлено помилку "innerHTML of null"
 function displayInjuryList() {
     const listContainer = document.getElementById('injury-list-all');
     if (!listContainer) return;
@@ -161,20 +168,22 @@ function displayInjuryList() {
     }
 
     listContainer.innerHTML = injuries.map(injury => `
-        <div class="injury-item" style="padding:8px; border-bottom:1px solid #333; cursor:pointer;" onclick="selectInjuryFromList('${injury.id}')">
+        <div class="injury-item" style="padding:8px; border-bottom:1px solid #333; cursor:pointer;" onclick="selectFromList('${injury.id}')">
             <span style="color:${injury.status === 'closed' ? '#50C878' : '#FFC72C'}">●</span> ${injury.location}
         </div>
     `).join('');
 }
 
-window.selectInjuryFromList = (id) => {
+window.selectFromList = (id) => {
     selectedInjury = injuries.find(i => i.id === id);
     displayInjuryDetails(selectedInjury);
-    renderInjuryMarkers();
 };
 
+// ==========================================================
+// 5. ЗБЕРЕЖЕННЯ
+// ==========================================================
 async function deleteInjury(id) {
-    if (!confirm("Видалити цю травму?")) return;
+    if (!confirm("Видалити цей запис?")) return;
     try {
         await db.collection(INJURY_COLLECTION).doc(id).delete();
         loadInjuriesFromFirebase();
@@ -196,6 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const pain = form.querySelector('input[name="pain"]:checked')?.value;
             const date = document.getElementById('injury-date').value;
+            
             const data = {
                 userId: currentUser.uid,
                 location: document.getElementById('injury-location').value,
@@ -216,6 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 loadInjuriesFromFirebase();
                 form.reset();
+                alert("Збережено!");
             } catch (e) { console.error(e); }
         };
     }
