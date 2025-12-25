@@ -197,7 +197,7 @@ function removeExerciseFromStatus(status, name) {
     }
 }
 
-// 4. ІНІЦІАЛІЗАЦІЯ (ТУТ ПРИВ'ЯЗКА ХРЕСТИКА)
+// 4. ІНІЦІАЛІЗАЦІЯ (ВИПРАВЛЕНО ДЛЯ ТВОГО HTML)
 document.addEventListener('DOMContentLoaded', () => {
     const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
     document.querySelectorAll('.activity-type-select').forEach(sel => {
@@ -205,17 +205,30 @@ document.addEventListener('DOMContentLoaded', () => {
         sel.addEventListener('change', updateCycleColors);
     });
 
-    // ШУКАЄМО ХРЕСТИК В HTML ТА ПРИВ'ЯЗУЄМО ЗАКРИТТЯ
-    // Ми перевіряємо декілька можливих класів для надійності
-    const closeX = document.querySelector('.close-modal') || document.querySelector('.close') || document.querySelector('#close-modal');
+    // ШУКАЄМО КРЕСТИК ЗА ПРАВИЛЬНИМ КЛАСОМ: close-modal-btn
+    const closeX = document.querySelector('.close-modal-btn'); 
     if (closeX) {
-        closeX.onclick = closeExerciseModal;
+        closeX.onclick = function() {
+            closeExerciseModal();
+        };
     }
 
+    // Закриття по кліку поза вікном (на темний фон)
     window.onclick = function(e) {
         const modal = document.getElementById('exercise-selection-modal');
         if (e.target == modal) closeExerciseModal();
     };
+
+    updateCycleColors();
+});
+
+// Сама функція закриття
+function closeExerciseModal() {
+    const modal = document.getElementById('exercise-selection-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
 
     updateCycleColors();
 });
