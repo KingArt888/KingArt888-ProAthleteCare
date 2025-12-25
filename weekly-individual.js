@@ -1,7 +1,11 @@
-// weekly-individual.js — ProAtletCare (FIXED MODAL CLOSE)
+// weekly-individual.js — ProAtletCare (FULL FINAL VERSION)
 const STORAGE_KEY = 'weeklyPlanData';
 
-// 1. ФУНКЦІЇ ЗАКРИТТЯ ТА ЗБЕРЕЖЕННЯ
+/**
+ * 1. ОСНОВНІ ФУНКЦІЇ КЕРУВАННЯ ТА ЗАКРИТТЯ
+ */
+
+// Функція закриття модалки (викликається хрестиком, кнопками або фоном)
 function closeExerciseModal() {
     const modal = document.getElementById('exercise-selection-modal');
     if (modal) {
@@ -9,6 +13,7 @@ function closeExerciseModal() {
     }
 }
 
+// Збереження даних у локальне сховище
 function saveData() {
     try {
         let data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
@@ -40,7 +45,9 @@ const templateStages = {
     'Post-Training': ['Recovery', 'FoamRolling']
 };
 
-// 2. РОЗРАХУНОК ЦИКЛУ
+/**
+ * 2. РОЗРАХУНОК ЦИКЛУ (ПІДТРИМКА ДВОХ МАТЧІВ)
+ */
 function updateCycleColors() {
     const activitySelects = document.querySelectorAll('.activity-type-select');
     const dayCells = document.querySelectorAll('#md-colors-row .cycle-day');
@@ -102,7 +109,9 @@ function updateCycleColors() {
     saveData();
 }
 
-// 3. ВПРАВИ ТА МОДАЛКА
+/**
+ * 3. ВІДОБРАЖЕННЯ ТА ВИБІР ВПРАВ
+ */
 function renderExercisesByStatus(dayIndex, status) {
     const container = document.querySelector(`.task-day-container[data-day-index="${dayIndex}"]`);
     if (!container) return;
@@ -127,7 +136,7 @@ function renderExercisesByStatus(dayIndex, status) {
                     <button type="button" style="color:#ff4d4d; background:none; border:none; cursor:pointer;" onclick="removeExerciseFromStatus('${status}', '${ex.name}')">✕</button>
                 </div>`;
         });
-        html += `<button type="button" class="add-manual-btn" style="width:100%;" onclick="openExerciseModal('${status}', '${stage}')">+ Додати</button>`;
+        html += `<button type="button" class="add-manual-btn" style="width:100%;" onclick="openExerciseModal('${status}', '${stage}')">+ Додати вправу</button>`;
     });
     html += '</div>';
     container.innerHTML = html;
@@ -160,14 +169,6 @@ function openExerciseModal(status, stage) {
             });
         }
     }
-    
-    const closeBtn = document.createElement('button');
-    closeBtn.textContent = "Готово";
-    closeBtn.className = "gold-button";
-    closeBtn.style.cssText = "width: 100%; padding: 12px; margin-top: 20px;";
-    closeBtn.onclick = closeExerciseModal;
-    list.appendChild(closeBtn);
-
     modal.style.display = 'flex';
 }
 
@@ -197,15 +198,18 @@ function removeExerciseFromStatus(status, name) {
     }
 }
 
-// 4. ІНІЦІАЛІЗАЦІЯ (ВИПРАВЛЕНО ДЛЯ ТВОГО HTML)
+/**
+ * 4. ІНІЦІАЛІЗАЦІЯ ПРИ ЗАВАНТАЖЕННІ (ОЖИВЛЯЄМО ХРЕСТИК)
+ */
 document.addEventListener('DOMContentLoaded', () => {
+    // Відновлення вибраних активностей
     const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
     document.querySelectorAll('.activity-type-select').forEach(sel => {
         if (data[sel.name]) sel.value = data[sel.name];
         sel.addEventListener('change', updateCycleColors);
     });
 
-    // ШУКАЄМО КРЕСТИК ЗА ПРАВИЛЬНИМ КЛАСОМ: close-modal-btn
+    // ОЖИВЛЯЄМО ХРЕСТИК (КЛАС close-modal-btn З ТВОГО HTML)
     const closeX = document.querySelector('.close-modal-btn'); 
     if (closeX) {
         closeX.onclick = function() {
@@ -213,21 +217,13 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // Закриття по кліку поза вікном (на темний фон)
+    // Закриття по кліку на темний фон навколо модалки
     window.onclick = function(e) {
         const modal = document.getElementById('exercise-selection-modal');
-        if (e.target == modal) closeExerciseModal();
+        if (e.target == modal) {
+            closeExerciseModal();
+        }
     };
 
     updateCycleColors();
 });
-
-// Сама функція закриття
-function closeExerciseModal() {
-    const modal = document.getElementById('exercise-selection-modal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-}
-
-
