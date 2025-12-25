@@ -1,13 +1,14 @@
-// daily-individual.js — ProAtletCare (LIBRARY-SYNCED EDITION)
+// daily-individual.js — ProAtletCare (FIXED)
 
-// 1. ВИПРАВЛЕННЯ ПОМИЛКИ IDENTIFIER ALREADY DECLARED
+// 1. ЗАХИСТ ВІД ПОВТОРНОГО ОГОЛОШЕННЯ (Виправляє помилку зі скріншоту SyntaxError)
 if (typeof STORAGE_KEY === 'undefined') {
     var STORAGE_KEY = 'weeklyPlanData';
 }
 var REPORTS_KEY = 'athleteTrainingReports';
 var YOUTUBE_EMBED_BASE = 'https://www.youtube.com/embed/';
 
-const COLOR_MAP = {
+// Локальна копія на випадок, якщо бібліотека ще не завантажилась
+const INTERNAL_COLOR_MAP = {
     'MD': { status: 'MD', colorClass: 'color-red' },
     'MD+1': { status: 'MD+1', colorClass: 'color-dark-green' }, 
     'MD+2': { status: 'MD+2', colorClass: 'color-green' }, 
@@ -21,7 +22,7 @@ const COLOR_MAP = {
 
 const STAGES = ['Pre-Training', 'Main Training', 'Post-Training'];
 
-// 2. УПРАВЛІННЯ АКОРДЕОНОМ
+// 2. УПРАВЛІННЯ АКОРДЕОНОМ (Відкриття/закриття етапів)
 function toggleStage(headerElement) {
     const content = headerElement.nextElementSibling;
     const arrow = headerElement.querySelector('.stage-arrow');
@@ -36,7 +37,7 @@ function toggleStage(headerElement) {
     }
 }
 
-// 3. СТВОРЕННЯ КАРТКИ ВПРАВИ
+// 3. СТВОРЕННЯ HTML КАРТКИ ВПРАВИ
 function createExerciseItemHTML(exercise, index) {
     const uniqueId = `ex-check-${index}`;
     let mediaHtml = exercise.videoKey 
@@ -55,7 +56,7 @@ function createExerciseItemHTML(exercise, index) {
     `;
 }
 
-// 4. ФОРМА ЗВІТУ
+// 4. ФОРМА ЗВІТУ (RPE ТА ЯКІСТЬ)
 function renderFeedbackForm() {
     const container = document.getElementById('user-feedback-container');
     if (!container) return;
@@ -66,7 +67,7 @@ function renderFeedbackForm() {
                 <h3 style="color:#d4af37; text-transform:uppercase; letter-spacing:1px; margin:0; font-size:1.1rem;">📊 Аналіз тренування</h3>
             </div>
             <div class="feedback-section" style="margin-bottom:25px; text-align:center;">
-                <label style="color:#888; display:block; margin-bottom:10px; font-size:0.75rem; text-transform:uppercase;">RPE ⚡ (1-10):</label>
+                <label style="color:#888; display:block; margin-bottom:10px; font-size:0.75rem; text-transform:uppercase;">Навантаження RPE ⚡ (1-10):</label>
                 <div class="lightning-row" style="display:flex; justify-content:center; gap:5px;">
                     ${[1,2,3,4,5,6,7,8,9,10].map(n => `
                         <div class="lightning-item">
@@ -97,7 +98,7 @@ function renderFeedbackForm() {
     `;
 }
 
-// 5. ВІДПРАВКА ЗВІТУ
+// 5. ВІДПРАВКА ЗВІТУ В FIREBASE (АБО КОНСОЛЬ)
 async function submitDailyReport() {
     const rpe = document.querySelector('input[name="rpe"]:checked')?.value;
     const quality = document.querySelector('input[name="quality"]:checked')?.value;
@@ -109,20 +110,24 @@ async function submitDailyReport() {
     }
 
     try {
-        await db.collection("athlete_reports").add({
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            rpe: parseInt(rpe),
-            quality: parseInt(quality),
-            comment: comment,
-            date: new Date().toISOString().split('T')[0]
-        });
+        // Приклад відправки в Firebase (якщо налаштовано)
+        if (typeof db !== 'undefined') {
+            await db.collection("athlete_reports").add({
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                rpe: parseInt(rpe),
+                quality: parseInt(quality),
+                comment: comment,
+                date: new Date().toISOString().split('T')[0]
+            });
+        }
+        console.log("Звіт відправлено:", { rpe, quality, comment });
         const btn = document.getElementById('submit-report-btn');
         btn.style.background = "#2ecc71";
         btn.innerHTML = "✅ ВІДПРАВЛЕНО";
     } catch (e) { alert("Помилка відправки."); }
 }
 
-// 6. ЗАВАНТАЖЕННЯ ПЛАНУ
+// 6. ГОЛОВНА ФУНКЦІЯ: ЗАВАНТАЖЕННЯ ТА ВІДОБРАЖЕННЯ ПЛАНУ
 function loadAndDisplayDailyPlan() {
     const todayIndex = (new Date().getDay() === 0) ? 6 : new Date().getDay() - 1;
     const listContainer = document.getElementById('daily-exercise-list');
@@ -133,32 +138,37 @@ function loadAndDisplayDailyPlan() {
         const savedData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
         const mdStatus = calculateTodayStatus(savedData, todayIndex);
 
+        // 6.1 Відображення статусу (MD, MD-1 тощо)
         if (statusDisplay) {
             statusDisplay.textContent = mdStatus;
-            const style = COLOR_MAP[mdStatus] || COLOR_MAP['TRAIN'];
+            // Безпечний доступ до кольорів
+            const colors = (typeof COLOR_MAP !== 'undefined') ? COLOR_MAP : INTERNAL_COLOR_MAP;
+            const style = colors[mdStatus] || colors['TRAIN'];
             statusDisplay.className = `md-status ${style.colorClass}`;
         }
 
-        // ПОРАДА ТРЕНЕРА З БІБЛІОТЕКИ
+        // 6.2 Порада тренера (Беремо з бібліотеки або ставимо дефолт)
         if (recContainer) {
-            const advice = (typeof MD_RECOMMENDATIONS !== 'undefined') 
-                ? (MD_RECOMMENDATIONS[mdStatus] || MD_RECOMMENDATIONS['TRAIN'])
-                : "Продовжуй за планом.";
+            let advice = "Виконуй вправи згідно з індивідуальним планом.";
+            if (typeof MD_RECOMMENDATIONS !== 'undefined' && MD_RECOMMENDATIONS[mdStatus]) {
+                advice = MD_RECOMMENDATIONS[mdStatus];
+            }
 
             recContainer.innerHTML = `
                 <div style="border-left:4px solid #d4af37; padding:12px; background:#111; margin-bottom:20px; border-radius:4px;">
-                    <p style="margin:0; color:#eee; font-size:0.9rem;">
-                        <strong style="color:#d4af37; text-transform:uppercase;">Порада тренера:</strong><br>
+                    <p style="margin:0; color:#eee; font-size:0.9rem; line-height:1.4;">
+                        <strong style="color:#d4af37; text-transform:uppercase; font-size:0.75rem;">Порада тренера:</strong><br>
                         ${advice}
                     </p>
                 </div>`;
         }
 
+        // 6.3 Рендеринг списку вправ
         const planKey = `status_plan_${mdStatus}`;
         const plan = savedData[planKey];
 
         if (!plan || !plan.exercises || plan.exercises.length === 0) {
-            listContainer.innerHTML = '<p style="text-align:center; color:#555;">На сьогодні вправ немає.</p>';
+            listContainer.innerHTML = '<p style="text-align:center; color:#555; padding:20px;">На сьогодні індивідуальні вправи не заплановані.</p>';
             renderFeedbackForm();
             return;
         }
@@ -183,19 +193,26 @@ function loadAndDisplayDailyPlan() {
         listContainer.innerHTML = html;
         renderFeedbackForm();
 
-    } catch (e) { console.error(e); }
+    } catch (e) { console.error("Render Error:", e); }
 }
 
+// 7. ЛОГІКА ВИЗНАЧЕННЯ СТАТУСУ (MD-4...MD+2)
 function calculateTodayStatus(data, todayIdx) {
     if (data[`activity_${todayIdx}`] === 'REST') return 'REST';
     if (data[`activity_${todayIdx}`] === 'MATCH') return 'MD';
+    
     let matchIdx = -1;
-    for (let i = 0; i < 7; i++) if (data[`activity_${i}`] === 'MATCH') matchIdx = i;
+    for (let i = 0; i < 7; i++) {
+        if (data[`activity_${i}`] === 'MATCH') { matchIdx = i; break; }
+    }
+    
     if (matchIdx === -1) return 'TRAIN';
+    
     let diff = todayIdx - matchIdx;
     if (diff === 1 || diff === 2) return `MD+${diff}`;
     if (diff >= -4 && diff <= -1) return `MD${diff}`;
     return 'TRAIN';
 }
 
+// Запуск при завантаженні сторінки
 document.addEventListener('DOMContentLoaded', loadAndDisplayDailyPlan);
