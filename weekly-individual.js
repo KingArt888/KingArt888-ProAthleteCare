@@ -1,7 +1,14 @@
-// weekly-individual.js — ProAtletCare (FULL FINAL VERSION)
+// weekly-individual.js — ProAtletCare (FIXED MODAL CLOSE)
 const STORAGE_KEY = 'weeklyPlanData';
 
-// 1. ПРІОРИТЕТНІ ФУНКЦІЇ ЗБЕРЕЖЕННЯ ТА ЗАКРИТТЯ
+// 1. ФУНКЦІЇ ЗАКРИТТЯ ТА ЗБЕРЕЖЕННЯ
+function closeExerciseModal() {
+    const modal = document.getElementById('exercise-selection-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
 function saveData() {
     try {
         let data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
@@ -10,14 +17,7 @@ function saveData() {
         });
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch (e) { 
-        console.warn("Помилка збереження:", e); 
-    }
-}
-
-function closeExerciseModal() {
-    const modal = document.getElementById('exercise-selection-modal');
-    if (modal) {
-        modal.style.display = 'none';
+        console.warn("Дані не збережено:", e); 
     }
 }
 
@@ -40,7 +40,7 @@ const templateStages = {
     'Post-Training': ['Recovery', 'FoamRolling']
 };
 
-// 2. РОЗРАХУНОК МІКРОЦИКЛУ (ПІДТРИМКА 2+ МАТЧІВ)
+// 2. РОЗРАХУНОК ЦИКЛУ
 function updateCycleColors() {
     const activitySelects = document.querySelectorAll('.activity-type-select');
     const dayCells = document.querySelectorAll('#md-colors-row .cycle-day');
@@ -102,7 +102,7 @@ function updateCycleColors() {
     saveData();
 }
 
-// 3. УПРАВЛІННЯ ВПРАВАМИ ТА МОДАЛКА
+// 3. ВПРАВИ ТА МОДАЛКА
 function renderExercisesByStatus(dayIndex, status) {
     const container = document.querySelector(`.task-day-container[data-day-index="${dayIndex}"]`);
     if (!container) return;
@@ -111,7 +111,7 @@ function renderExercisesByStatus(dayIndex, status) {
     const plan = data[`status_plan_${status}`] || { exercises: [] };
 
     if (status === 'REST') {
-        container.innerHTML = '<div style="text-align:center; padding: 20px; color: #777; font-style: italic;">☕ ВІДПОЧИНОК</div>';
+        container.innerHTML = '<div style="text-align:center; padding: 20px; color: #777;">☕ ВІДПОЧИНОК</div>';
         return;
     }
 
@@ -161,9 +161,8 @@ function openExerciseModal(status, stage) {
         }
     }
     
-    // Додаємо кнопку закриття в кінець списку для зручності
     const closeBtn = document.createElement('button');
-    closeBtn.textContent = "Зберегти та закрити";
+    closeBtn.textContent = "Готово";
     closeBtn.className = "gold-button";
     closeBtn.style.cssText = "width: 100%; padding: 12px; margin-top: 20px;";
     closeBtn.onclick = closeExerciseModal;
@@ -198,7 +197,7 @@ function removeExerciseFromStatus(status, name) {
     }
 }
 
-// 4. ІНІЦІАЛІЗАЦІЯ ТА СЛУХАЧІ (ХРЕСТИК ТУТ)
+// 4. ІНІЦІАЛІЗАЦІЯ (ТУТ ПРИВ'ЯЗКА ХРЕСТИКА)
 document.addEventListener('DOMContentLoaded', () => {
     const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
     document.querySelectorAll('.activity-type-select').forEach(sel => {
@@ -206,13 +205,13 @@ document.addEventListener('DOMContentLoaded', () => {
         sel.addEventListener('change', updateCycleColors);
     });
 
-    // ОЖИВЛЯЄМО ХРЕСТИК В МОДАЛЦІ
-    const closeX = document.querySelector('.close-modal');
+    // ШУКАЄМО ХРЕСТИК В HTML ТА ПРИВ'ЯЗУЄМО ЗАКРИТТЯ
+    // Ми перевіряємо декілька можливих класів для надійності
+    const closeX = document.querySelector('.close-modal') || document.querySelector('.close') || document.querySelector('#close-modal');
     if (closeX) {
         closeX.onclick = closeExerciseModal;
     }
 
-    // Закриття по кліку поза вікном
     window.onclick = function(e) {
         const modal = document.getElementById('exercise-selection-modal');
         if (e.target == modal) closeExerciseModal();
