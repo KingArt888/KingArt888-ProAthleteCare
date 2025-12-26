@@ -73,18 +73,30 @@
         }
     }
 
-    // 4. ГОЛОВНА ЛОГІКА (ВХІД ТА ЗБЕРЕЖЕННЯ)
-    document.addEventListener('DOMContentLoaded', () => {
-        // ОДИН блок перевірки входу
-        firebase.auth().onAuthStateChanged(user => {
-            if (user) {
-                syncWellnessFromFirebase(user.uid);
-            } else {
-                console.warn("Користувач не авторизований. Спробуйте анонімний вхід.");
-                // Можна додати автоматичний анонімний вхід:
-                // firebase.auth().signInAnonymously();
+   // --- ЛОГІКА ЗБЕРЕЖЕННЯ ТА ВХОДУ ---
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // Перевірка авторизації та АВТОМАТИЧНИЙ ВХІД
+    firebase.auth().onAuthStateChanged(async (user) => {
+        if (user) {
+            console.log("Ви увійшли як:", user.uid);
+            // Тепер, коли ми точно в системі, тягнемо дані з хмари
+            await syncWellnessFromFirebase(user.uid);
+        } else {
+            console.log("Анонімний вхід...");
+            try {
+                // Цей рядок прибере помилку CONFIGURATION_NOT_FOUND, 
+                // бо він ініціює вхід через той метод, що ти увімкнув у консолі
+                await firebase.auth().signInAnonymously();
+            } catch (error) {
+                console.error("Помилка входу:", error.message);
+                if (error.code === 'auth/operation-not-allowed') {
+                    alert("Помилка: Увімкніть 'Anonymous' у вкладці Sign-in Method в консолі Firebase!");
+                }
             }
-        });
+        }
+    });
+        
 
         const form = document.getElementById('wellness-form');
         if (form) {
