@@ -1,7 +1,7 @@
 (function() {
     const COLLECTION_NAME = 'wellness_reports';
     
-    // Твій фірмовий стиль ProAtletCare
+    // --- ВАШ ОРИГІНАЛЬНИЙ ДИЗАЙН ---
     const GOLD_COLOR = 'rgb(255, 215, 0)';
     const GOLD_AREA = 'rgba(255, 215, 0, 0.4)';
     const GREY_GRID = 'rgba(255, 255, 255, 0.1)';
@@ -46,8 +46,8 @@
             initCharts(); 
             checkDailyRestriction();
         } catch (e) {
-            console.error("Помилка завантаження:", e);
-            initCharts(); // Малюємо порожні, якщо помилка
+            console.error("Помилка завантаження даних:", e);
+            initCharts(); // Малюємо те, що є
         }
     }
 
@@ -65,14 +65,13 @@
         if (lastDate === today && button) {
             button.disabled = true;
             button.textContent = "Сьогодні вже заповнено";
-            button.style.backgroundColor = "#444";
-            button.style.cursor = "not-allowed";
+            button.classList.add('disabled-button');
             return true;
         }
         return false;
     }
 
-    // --- 3. МАЛЮВАННЯ ГРАФІКІВ (ВИПРАВЛЕНО) ---
+    // --- 3. МАЛЮВАННЯ ГРАФІКІВ (ВАШ ДИЗАЙН + ВИПРАВЛЕННЯ ПОМИЛОК) ---
     function initCharts() {
         const history = JSON.parse(localStorage.getItem('wellnessHistory') || '{}');
         const sortedDates = Object.keys(history).sort(); 
@@ -90,15 +89,16 @@
             const ctx = document.getElementById(`chart-${field}`);
             const statEl = document.getElementById(`stat-${field}`);
             
+            // Оновлюємо текст оцінки
             if (statEl) {
                 const score = latestData[field] || 0;
                 statEl.textContent = `Оцінка: ${score} / 10`;
                 statEl.style.color = score >= 7 ? 'rgb(50, 205, 50)' : (score >= 4 ? 'rgb(255, 159, 64)' : 'rgb(255, 99, 132)');
             }
 
-            if (ctx && typeof Chart !== 'undefined') {
-                // Виправлення помилки .destroy()
-                if (window[`chart_${field}`] instanceof Chart) {
+            if (ctx) {
+                // ВИПРАВЛЕННЯ Type Error: перевірка чи є метод destroy
+                if (window[`chart_${field}`] && typeof window[`chart_${field}`].destroy === 'function') {
                     window[`chart_${field}`].destroy();
                 }
                 
@@ -118,7 +118,10 @@
                         responsive: true,
                         maintainAspectRatio: false,
                         scales: {
-                            y: { min: 0, max: 10, ticks: { color: '#888', stepSize: 2 } },
+                            y: { 
+                                min: 1, max: 10, 
+                                ticks: { color: 'rgba(255,255,255,0.5)', stepSize: 2, display: true } // Повертаємо шкалу
+                            },
                             x: { display: false }
                         },
                         plugins: { legend: { display: false } }
@@ -127,10 +130,10 @@
             }
         });
 
-        // ПАВУТИННЯ
+        // ЦЕНТРАЛЬНИЙ РАДАР (ПАВУТИННЯ)
         const mainCtx = document.getElementById('wellnessChart');
-        if (mainCtx && typeof Chart !== 'undefined') {
-            if (window.wellnessChart instanceof Chart) {
+        if (mainCtx) {
+            if (window.wellnessChart && typeof window.wellnessChart.destroy === 'function') {
                 window.wellnessChart.destroy();
             }
             window.wellnessChart = new Chart(mainCtx, {
@@ -138,7 +141,7 @@
                 data: {
                     labels: Object.values(FIELD_LABELS),
                     datasets: [{
-                        label: 'Стан',
+                        label: 'Мій стан',
                         data: WELLNESS_FIELDS.map(f => latestData[f]),
                         backgroundColor: GOLD_AREA,
                         borderColor: GOLD_COLOR,
@@ -149,13 +152,13 @@
                     scales: {
                         r: {
                             min: 0, max: 10,
-                            grid: { color: 'rgba(255, 255, 255, 0.2)' },
-                            angleLines: { color: 'rgba(255, 255, 255, 0.2)' },
-                            pointLabels: { color: '#fff' },
+                            grid: { color: GREY_GRID },
+                            angleLines: { color: GREY_GRID },
+                            pointLabels: { color: 'white' },
                             ticks: { display: false }
                         }
                     },
-                    plugins: { legend: { display: false } }
+                    plugins: { legend: { labels: { color: 'white' } } }
                 }
             });
         }
@@ -163,15 +166,12 @@
 
     // --- 4. ЗАПУСК ---
     document.addEventListener('DOMContentLoaded', () => {
-        initCharts(); // Початкове малювання сітки
-        checkDailyRestriction();
+        initCharts(); // Початкове малювання
 
         firebase.auth().onAuthStateChanged(async (user) => {
             if (user) {
-                console.log("Авторизовано:", user.uid);
                 await syncWellnessFromFirebase(user.uid);
             } else {
-                console.log("Вхід...");
                 await firebase.auth().signInAnonymously();
             }
         });
@@ -183,7 +183,7 @@
                 if (checkDailyRestriction()) return;
 
                 const user = firebase.auth().currentUser;
-                if (!user) return alert("Зачекайте...");
+                if (!user) return alert("Зачекайте авторизації...");
 
                 const scores = {};
                 WELLNESS_FIELDS.forEach(f => {
@@ -191,7 +191,7 @@
                     if (val) scores[f] = parseInt(val.value, 10);
                 });
 
-                if (Object.keys(scores).length < 6) return alert("Заповніть усі пункти!");
+                if (Object.keys(scores).length < 6) return alert("Заповніть усі поля!");
 
                 try {
                     const today = getTodayDateString();
@@ -202,7 +202,6 @@
                         timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     });
                     localStorage.setItem('lastWellnessSubmissionDate', today);
-                    alert("Дані збережено!");
                     location.reload(); 
                 } catch (err) { alert(err.message); }
             });
