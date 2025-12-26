@@ -16,7 +16,6 @@
                 if (data.date && data.scores) history[data.date] = data.scores;
             });
 
-            // Зберігаємо в LocalStorage, щоб твої графіки їх побачили
             localStorage.setItem('wellnessHistory', JSON.stringify(history));
             initCharts(); 
         } catch (e) {
@@ -24,9 +23,10 @@
         }
     }
 
-    // 2. ДОПОМІЖНІ ФУНКЦІЇ (Твій оригінальний код)
+    // 2. ДОПОМІЖНІ ФУНКЦІЇ
     function getTodayDateString() {
-        return new Date().toISOString().split('T')[0];
+        const today = new Date();
+        return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     }
 
     function loadWellnessHistory() {
@@ -73,30 +73,22 @@
         }
     }
 
-   // --- ЛОГІКА ЗБЕРЕЖЕННЯ ТА ВХОДУ ---
-document.addEventListener('DOMContentLoaded', () => {
-    
-    // Перевірка авторизації та АВТОМАТИЧНИЙ ВХІД
-    firebase.auth().onAuthStateChanged(async (user) => {
-        if (user) {
-            console.log("Ви увійшли як:", user.uid);
-            // Тепер, коли ми точно в системі, тягнемо дані з хмари
-            await syncWellnessFromFirebase(user.uid);
-        } else {
-            console.log("Анонімний вхід...");
-            try {
-                // Цей рядок прибере помилку CONFIGURATION_NOT_FOUND, 
-                // бо він ініціює вхід через той метод, що ти увімкнув у консолі
-                await firebase.auth().signInAnonymously();
-            } catch (error) {
-                console.error("Помилка входу:", error.message);
-                if (error.code === 'auth/operation-not-allowed') {
-                    alert("Помилка: Увімкніть 'Anonymous' у вкладці Sign-in Method в консолі Firebase!");
+    // 4. ГОЛОВНА ЛОГІКА ТА АВТОМАТИЧНИЙ ВХІД
+    document.addEventListener('DOMContentLoaded', () => {
+        // Додаємо автоматичний анонімний вхід, щоб прибрати помилки авторизації
+        firebase.auth().onAuthStateChanged(async (user) => {
+            if (user) {
+                console.log("Успішний вхід:", user.uid);
+                await syncWellnessFromFirebase(user.uid);
+            } else {
+                console.log("Спроба анонімного входу...");
+                try {
+                    await firebase.auth().signInAnonymously();
+                } catch (error) {
+                    console.error("Помилка входу:", error.message);
                 }
             }
-        }
-    });
-        
+        });
 
         const form = document.getElementById('wellness-form');
         if (form) {
@@ -104,9 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 e.preventDefault();
                 const user = firebase.auth().currentUser;
                 
-                if (!user) {
-                    return alert("Потрібно увійти в систему! Перевірте налаштування Auth у Firebase.");
-                }
+                if (!user) return alert("Помилка авторизації. Перевірте консоль.");
 
                 const scores = {};
                 let valid = true;
@@ -115,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (input) scores[f] = parseInt(input.value, 10); else valid = false;
                 });
 
-                if (!valid) return alert("Заповніть всі точки даних!");
+                if (!valid) return alert("Будь ласка, заповніть усі 6 точок даних!");
 
                 try {
                     const today = getTodayDateString();
@@ -129,12 +119,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     const history = loadWellnessHistory();
                     history[today] = scores;
                     localStorage.setItem('wellnessHistory', JSON.stringify(history));
-                    localStorage.setItem('lastWellnessSubmissionDate', today);
                     
                     alert("Дані успішно збережено в хмару!");
                     location.reload(); 
                 } catch (err) {
-                    alert("Помилка доступу до бази: " + err.message);
+                    alert("Помилка збереження: " + err.message);
                 }
             });
         }
