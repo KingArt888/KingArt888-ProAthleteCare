@@ -4,22 +4,20 @@
 const LOAD_COLLECTION = 'training_loads';
 let currentUserId = null;
 let trainingData = [];
-let loadChart;
+let targetACWR = 1.0;
+let currentNeedleAngle = -Math.PI; // Початкова позиція стрілки (зліва)
 
-// Автоматична дата при завантаженні сторінки
 function setTodayDate() {
     const dateInput = document.getElementById('load-date');
-    if (dateInput) {
-        dateInput.value = new Date().toISOString().split('T')[0];
-    }
+    if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
 }
 
 if (typeof firebase !== 'undefined' && firebase.auth) {
     firebase.auth().onAuthStateChanged(async (user) => {
         if (user) {
             currentUserId = user.uid;
-            loadDataFromFirebase();
             setTodayDate();
+            loadDataFromFirebase();
         }
     });
 }
@@ -31,89 +29,110 @@ async function loadDataFromFirebase() {
         trainingData = [];
         snapshot.forEach(doc => trainingData.push({ id: doc.id, ...doc.data() }));
         trainingData.sort((a, b) => new Date(a.date) - new Date(b.date));
-        refreshDashboard();
+        
+        const metrics = calculateProfessionalACWR();
+        targetACWR = metrics.acwr;
+        startGaugeAnimation(); // Запуск анімації
+        renderLoadChart(metrics.acuteLoad, metrics.chronicLoad);
     } catch (e) { console.error(e); }
 }
 
-function refreshDashboard() {
-    const metrics = calculateProfessionalACWR();
-    renderNewGauge(metrics.acwr); // Новий спідометр
-    renderLoadChart(metrics.acuteLoad, metrics.chronicLoad);
+// ==========================================================
+// 2. ЗОЛОТИЙ СПІДОМЕТР (PREMIUM STYLE)
+// ==========================================================
+function drawGoldenGauge(acwr) {
+    const canvas = document.getElementById('gaugeCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const cx = canvas.width / 2;
+    const cy = canvas.height - 20;
+    const radius = 120;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 1. Малюємо шкалу (поділки)
+    for (let i = 0; i <= 20; i++) {
+        const angle = Math.PI + (i / 20) * Math.PI;
+        const xStart = cx + Math.cos(angle) * (radius - 5);
+        const yStart = cy + Math.sin(angle) * (radius - 5);
+        const xEnd = cx + Math.cos(angle) * radius;
+        const yEnd = cy + Math.sin(angle) * radius;
+
+        ctx.beginPath();
+        ctx.moveTo(xStart, yStart);
+        ctx.lineTo(xEnd, yEnd);
+        ctx.strokeStyle = i > 7 && i < 14 ? "#4CAF50" : "#FFC72C"; // Зелені ділення в центрі
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }
+
+    // 2. Розрахунок кута стрілки (плавний перехід)
+    const targetAngle = Math.PI + (Math.min(acwr, 2.0) / 2.0) * Math.PI;
+    currentNeedleAngle += (targetAngle - currentNeedleAngle) * 0.1; // Швидкість стрілки
+
+    // 3. Малюємо стрілку (Золотий меч)
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = "#FFC72C";
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + Math.cos(currentNeedleAngle) * (radius - 10), cy + Math.sin(currentNeedleAngle) * (radius - 10));
+    ctx.strokeStyle = "#FFC72C";
+    ctx.lineWidth = 4;
+    ctx.lineCap = "round";
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // 4. Центр стрілки
+    ctx.beginPath();
+    ctx.arc(cx, cy, 8, 0, Math.PI * 2);
+    ctx.fillStyle = "#FFC72C";
+    ctx.fill();
+
+    // 5. Текст значення
+    ctx.fillStyle = "#FFC72C";
+    ctx.font = "bold 32px Montserrat, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(acwr.toFixed(2), cx, cy - 40);
+    
+    if (Math.abs(targetAngle - currentNeedleAngle) > 0.01) {
+        requestAnimationFrame(() => drawGoldenGauge(acwr));
+    }
+}
+
+function startGaugeAnimation() {
+    requestAnimationFrame(() => drawGoldenGauge(targetACWR));
 }
 
 // ==========================================================
-// 2. ФОРМУЛА ТА НОВИЙ СПІДОМЕТР
+// 3. МАТЕМАТИКА ТА ФОРМА
 // ==========================================================
 function calculateProfessionalACWR() {
     if (trainingData.length < 2) return { acuteLoad: 0, chronicLoad: 0, acwr: 1.0 };
     const latest = new Date(trainingData[trainingData.length - 1].date);
-
-    const getAvg = (days) => {
+    const getAvg = (d) => {
         const cutoff = new Date(latest);
-        cutoff.setDate(latest.getDate() - days);
-        const period = trainingData.filter(d => new Date(d.date) > cutoff);
-        if (period.length === 0) return 0;
-        return period.reduce((s, d) => s + (Number(d.duration) * Number(d.rpe)), 0) / days;
+        cutoff.setDate(latest.getDate() - d);
+        const p = trainingData.filter(item => new Date(item.date) > cutoff);
+        return p.length ? p.reduce((s, i) => s + (i.duration * i.rpe), 0) / d : 0;
     };
-
     const acute = getAvg(7);
     const chronic = getAvg(28);
     return { acuteLoad: Math.round(acute), chronicLoad: Math.round(chronic), acwr: parseFloat((acute / (chronic || 1)).toFixed(2)) };
 }
 
-function renderNewGauge(val) {
-    const container = document.querySelector('.gauge-display');
-    if (!container) return;
-
-    // Очищаємо старий спідометр і вставляємо новий SVG
-    // Зелена зона (0.8 - 1.3) тепер візуально в центрі
-    const degree = Math.max(-90, Math.min(90, (val - 1) * 90)); 
-    
-    container.innerHTML = `
-        <svg viewBox="0 0 200 100" style="width:100%; height:100%;">
-            <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="#333" stroke-width="15" />
-            <path d="M20,100 A80,80 0 0,1 80,35" fill="none" stroke="#FFC72C" stroke-width="15" /> <path d="M80,35 A80,80 0 0,1 125,35" fill="none" stroke="#4CAF50" stroke-width="15" /> <path d="M125,35 A80,80 0 0,1 180,100" fill="none" stroke="#DA3E52" stroke-width="15" /> <line x1="100" y1="100" x2="100" y2="30" stroke="#FFD700" stroke-width="3" 
-                  style="transform: rotate(${degree}deg); transform-origin: 100px 100px; transition: transform 1s;" />
-            <circle cx="100" cy="100" r="5" fill="#FFD700" />
-            
-            <text x="100" y="90" text-anchor="middle" fill="#FFD700" font-size="16" font-weight="bold">${val.toFixed(2)}</text>
-        </svg>
-    `;
-    
-    const status = document.getElementById('acwr-status');
-    if (status) {
-        status.textContent = val >= 0.8 && val <= 1.3 ? "OPTIMAL ZONE" : "ADAPT LOAD";
-        status.style.color = val >= 0.8 && val <= 1.3 ? "#4CAF50" : "#FFC72C";
-    }
-}
-
-// ==========================================================
-// 3. ГРАФІК ТА ОБРОБКА ФОРМИ
-// ==========================================================
-function renderLoadChart(acute, chronic) {
-    const ctx = document.getElementById('loadChart');
-    if (!ctx) return;
-    if (loadChart) loadChart.destroy();
-    loadChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: ['4 тижні тому', '3 тижні тому', '2 тижні тому', 'Зараз'],
-            datasets: [
-                { label: 'Acute (Гостре)', data: [acute*0.8, acute*1.2, acute*0.9, acute], borderColor: '#DA3E52', fill: false },
-                { label: 'Chronic (Хронічне)', data: [chronic*0.9, chronic*0.95, chronic*0.98, chronic], borderColor: '#4CAF50', fill: false }
-            ]
-        },
-        options: { responsive: true, maintainAspectRatio: false, animation: false }
-    });
-}
-
 document.addEventListener('DOMContentLoaded', () => {
+    // Додаємо Canvas в HTML, якщо його немає
+    const container = document.querySelector('.gauge-display');
+    if (container) {
+        container.innerHTML = '<canvas id="gaugeCanvas" width="300" height="180"></canvas>';
+    }
+
     const form = document.getElementById('load-form');
     if (form) {
         form.onsubmit = async (e) => {
             e.preventDefault();
             const btn = e.submitter; btn.disabled = true;
-            const formData = {
+            const data = {
                 userId: currentUserId,
                 date: form.date.value,
                 duration: Number(form.duration.value),
@@ -122,10 +141,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
             try {
-                await db.collection(LOAD_COLLECTION).add(formData);
+                await db.collection(LOAD_COLLECTION).add(data);
                 await loadDataFromFirebase();
                 form.reset();
-                setTodayDate(); // Повертаємо сьогоднішню дату після скидання
+                setTodayDate();
             } catch (err) { console.error(err); } finally { btn.disabled = false; }
         };
     }
