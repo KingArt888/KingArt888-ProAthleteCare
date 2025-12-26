@@ -1,50 +1,38 @@
-/* --- ОСНОВНІ НАЛАШТУВАННЯ --- */
+/* --- СТРУКТУРА ТА СКРОЛ --- */
 body { overflow-x: hidden; background-color: #000; color: #fff; }
 
 .dashboard-container {
     display: flex;
-    gap: 20px;
+    gap: 30px;
     flex-wrap: wrap;
     padding: 10px;
 }
 
-.form-container { width: 350px; flex-shrink: 0; }
-.info-column { flex: 1; min-width: 400px; display: flex; flex-direction: column; gap: 20px; }
+.form-container { width: 35%; min-width: 350px; }
+.info-column { flex: 1; min-width: 450px; display: flex; flex-direction: column; gap: 30px; }
 
-/* --- СПІДОМЕТР: ЦЕНТРУВАННЯ --- */
-.stats-card {
-    background: #0d0d0d;
-    border: 1px solid #1a1a1a;
-    border-radius: 12px;
-    padding: 20px;
-    text-align: center;
+/* --- ТВОЯ ФОРМА RPE --- */
+.rpe-group {
+    display: flex; flex-direction: row-reverse; justify-content: flex-end;
+    background-color: #1a1a1a; padding: 5px; border-radius: 5px;
 }
+.rpe-group input { display: none; }
+.rpe-group label { cursor: pointer; font-size: 1.5em; width: 10%; text-align: center; color: #456545; position: relative; }
+.rpe-group label::before { content: '⚡'; }
+.rpe-group label::after { content: attr(data-rpe); position: absolute; top: -15px; left: 50%; transform: translateX(-50%); font-size: 0.6em; color: #888; }
 
-.speedometer-widget {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    width: 100%;
-    margin: 0 auto;
-}
+/* Кольори твоєї форми */
+.rpe-group input[value="1"]:checked ~ label, .rpe-group input[value="2"]:checked ~ label,
+.rpe-group input[value="3"]:checked ~ label, .rpe-group input[value="4"]:checked ~ label,
+.rpe-group input[value="5"]:checked ~ label { color: #5cb85c; }
+.rpe-group input[value="6"]:checked ~ label, .rpe-group input[value="7"]:checked ~ label,
+.rpe-group input[value="8"]:checked ~ label { color: #f0ad4e; }
+.rpe-group input[value="9"]:checked ~ label, .rpe-group input[value="10"]:checked ~ label { color: #d9534f; }
 
-.gauge-display {
-    width: 320px;
-    height: 220px;
-    display: flex;
-    justify-content: center;
-}
+/* --- ЦЕНТРУВАННЯ СПІДОМЕТРА --- */
+.stats-card { background: #0d0d0d; border-radius: 12px; padding: 20px; text-align: center; }
+.speedometer-widget { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.gauge-display { width: 320px; height: 220px; display: flex; justify-content: center; }
 
 /* --- ГРАФІКИ --- */
-.chart-card {
-    background: #0d0d0d;
-    border: 1px solid #1a1a1a;
-    border-radius: 12px;
-    padding: 20px;
-    height: 350px;
-}
-canvas { width: 100% !important; height: 100% !important; }
-
-/* Прибираємо старий сміттєвий код, якщо він лишився */
-.gauge-arc, .gauge-needle, .gauge-needle-pivot, .gauge-value-text { display: none !important; }
+.chart-card { background: #0d0d0d; border-radius: 12px; padding: 20px; height: 350px; }
