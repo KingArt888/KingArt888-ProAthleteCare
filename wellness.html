@@ -215,6 +215,7 @@
     
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
 <script>
   const firebaseConfig = {
@@ -226,14 +227,13 @@
     appId: "1:769667753086:web:c2dde1935f80596758a42f"
   };
   
-  // Ініціалізуємо додаток
-  const app = firebase.initializeApp(firebaseConfig);
-  // Створюємо змінну db, якої зараз не вистачає
+  firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore(); 
 </script>
+
     
-    <script src="wellness.js"></script>
-    <script src="navigation-common.js"></script>
+<script src="wellness.js"></script>
+<script src="navigation-common.js"></script>
 
 </body>
 
