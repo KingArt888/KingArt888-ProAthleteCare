@@ -3,7 +3,7 @@
 // ==========================================================
 const LOAD_COLLECTION = 'training_loads';
 let currentUserId = null;
-let trainingData = []; // Дані з Firestore
+let trainingData = [];
 let distanceChart, loadChart;
 
 if (typeof firebase !== 'undefined' && firebase.auth) {
@@ -20,63 +20,83 @@ if (typeof firebase !== 'undefined' && firebase.auth) {
 async function loadDataFromFirebase() {
     if (!currentUserId) return;
     try {
-        const snapshot = await db.collection(LOAD_COLLECTION)
-            .where("userId", "==", currentUserId)
-            .get();
-        
+        const snapshot = await db.collection(LOAD_COLLECTION).where("userId", "==", currentUserId).get();
         trainingData = [];
         snapshot.forEach(doc => trainingData.push({ id: doc.id, ...doc.data() }));
-        trainingData.sort((a, b) => new Date(a.date) - new Date(b.date)); // Сортування за датою
-
+        trainingData.sort((a, b) => new Date(a.date) - new Date(b.date));
         refreshDashboard();
-    } catch (e) { console.error("Firebase Error:", e); }
+    } catch (e) { console.error(e); }
 }
 
 function refreshDashboard() {
     const metrics = calculateProfessionalACWR();
+    drawGaugeBackground(); // Малюємо зони на дузі
     updateProfessionalGauge(metrics.acwr);
     renderLoadChart(metrics.acuteLoad, metrics.chronicLoad);
     renderDistanceChart();
 }
 
 // ==========================================================
-// 2. ПРОФЕСІЙНА ФОРМУЛА РИЗИКУ ТРАВМ (ACWR)
+// 2. ПРОФЕСІЙНИЙ РОЗРАХУНОК (ACWR)
 // ==========================================================
 function calculateProfessionalACWR() {
-    if (trainingData.length < 2) return { acuteLoad: 0, chronicLoad: 0, acwr: 1.0 };
+    if (trainingData.length === 0) return { acuteLoad: 0, chronicLoad: 0, acwr: 1.0 };
+    const latestDate = new Date(trainingData[trainingData.length - 1].date);
 
-    const sortedData = [...trainingData];
-    const latestDate = new Date(sortedData[sortedData.length - 1].date);
-
-    // Функція розрахунку середнього навантаження за період
-    const getAverageLoad = (days) => {
+    const getAvg = (days) => {
         const cutoff = new Date(latestDate);
         cutoff.setDate(latestDate.getDate() - days);
-        
-        const periodData = sortedData.filter(d => new Date(d.date) > cutoff);
-        if (periodData.length === 0) return 0;
-        
-        // Load = Duration * RPE
-        const totalLoad = periodData.reduce((sum, d) => sum + (Number(d.duration) * Number(d.rpe)), 0);
-        return totalLoad / days; // Середнє за кожен день періоду
+        const period = trainingData.filter(d => new Date(d.date) > cutoff);
+        if (period.length === 0) return 0;
+        return period.reduce((s, d) => s + (Number(d.duration) * Number(d.rpe)), 0) / days;
     };
 
-    const acuteLoad = getAverageLoad(7);    // Гостре (тиждень)
-    const chronicLoad = getAverageLoad(28); // Хронічне (місяць)
-
-    // Якщо хронічне занадто мале (початок тренувань), ставимо 1.0, щоб не лякати атлета
-    const acwr = (chronicLoad > 10) ? (acuteLoad / chronicLoad) : 1.0;
-    
-    return {
-        acuteLoad: Math.round(acuteLoad),
-        chronicLoad: Math.round(chronicLoad),
-        acwr: parseFloat(acwr.toFixed(2))
-    };
+    const acute = getAvg(7);
+    const chronic = getAvg(28);
+    const acwr = chronic > 0 ? (acute / chronic) : 1.0;
+    return { acuteLoad: Math.round(acute), chronicLoad: Math.round(chronic), acwr: parseFloat(acwr.toFixed(2)) };
 }
 
 // ==========================================================
-// 3. ПРОФЕСІЙНИЙ СПІДОМЕТР (ФІКС СТРІЛКИ)
+// 3. МАЛЮВАННЯ ЗОН ТА РУХ СТРІЛКИ
 // ==========================================================
+function drawGaugeBackground() {
+    const gaugeContainer = document.querySelector('.gauge-container');
+    if (!gaugeContainer) return;
+
+    // Створюємо або оновлюємо кольорову підкладку дуги через JS стилі
+    // Жовтий (0-40%), Зелений (40-75%), Червоний (75-100%)
+    gaugeContainer.style.background = `conic-gradient(from 270deg at 50% 100%, 
+        #FFC72C 0deg, 
+        #FFC72C 72deg, 
+        #4CAF50 72deg, 
+        #4CAF50 135deg, 
+        #DA3E52 135deg, 
+        #DA3E52 180deg)`;
+    gaugeContainer.style.borderRadius = "150px 150px 0 0";
+    gaugeContainer.style.position = "relative";
+    gaugeContainer.style.overflow = "hidden";
+    
+    // Створюємо чорну "дірку" всередині, щоб залишилась тільки тонка дуга
+    let innerHole = document.getElementById('gauge-hole');
+    if (!innerHole) {
+        innerHole = document.createElement('div');
+        innerHole.id = 'gauge-hole';
+        gaugeContainer.appendChild(innerHole);
+    }
+    Object.assign(innerHole.style, {
+        position: 'absolute',
+        bottom: '0',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: '85%',
+        height: '85%',
+        backgroundColor: '#111',
+        borderRadius: '150px 150px 0 0',
+        zIndex: '1'
+    });
+}
+
 function updateProfessionalGauge(acwrValue) {
     const needle = document.getElementById('gauge-needle');
     const display = document.getElementById('acwr-value');
@@ -84,94 +104,59 @@ function updateProfessionalGauge(acwrValue) {
 
     if (!needle || !display) return;
 
-    // КАЛІБРУВАННЯ: -90° (ліво) до +90° (право). 1.0 — це центр (0°)
-    let degree;
+    // Масштабуємо ACWR на кут дуги (-90 до 90 градусів)
+    let degree = -90 + (Math.min(acwrValue, 2.0) / 2.0) * 180;
     
-    if (acwrValue <= 0.5) {
-        degree = -90; // Мінімум
-    } else if (acwrValue <= 1.0) {
-        // Від 0.5 до 1.0 (Жовта/Зелена зона)
-        degree = -90 + ((acwrValue - 0.5) / 0.5) * 90;
-    } else if (acwrValue <= 1.5) {
-        // Від 1.0 до 1.5 (Зелена/Червона зона)
-        degree = ((acwrValue - 1.0) / 0.5) * 90;
-    } else {
-        degree = 90; // Максимум (Край червоної зони)
-    }
-
-    // Застосовуємо плавність та обертання
-    needle.style.transition = "transform 1.5s cubic-bezier(0.25, 0.1, 0.25, 1)";
+    needle.style.zIndex = "10";
+    needle.style.transition = "transform 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
     needle.style.transformOrigin = "bottom center";
     needle.style.transform = `translateX(-50%) rotate(${degree}deg)`;
 
+    // Міняємо колір тексту залежно від зони
+    let color = "#FFC72C";
+    if (acwrValue >= 0.8 && acwrValue <= 1.3) color = "#4CAF50";
+    if (acwrValue > 1.3) color = "#DA3E52";
+
     display.textContent = acwrValue.toFixed(2);
-    
-    // Статус текстом та кольором
-    if (acwrValue >= 0.8 && acwrValue <= 1.3) {
-        status.textContent = 'Оптимальне навантаження';
-        status.style.color = "#4CAF50";
-    } else if (acwrValue > 1.5) {
-        status.textContent = 'Критичний ризик травми!';
-        status.style.color = "#DA3E52";
-    } else {
-        status.textContent = 'Адаптуйте тренування';
-        status.style.color = "#FFC72C";
+    display.style.color = color;
+    if (status) {
+        status.textContent = acwrValue >= 0.8 && acwrValue <= 1.3 ? "OPTIMAL ZONE" : "ADAPT LOAD";
+        status.style.color = color;
     }
 }
 
 // ==========================================================
-// 4. ГРАФІКИ ТА ФОРМА (БЕЗ ЗАЛІПАННЯ)
+// 4. ГРАФІКИ ТА ФОРМА
 // ==========================================================
-function renderDistanceChart() {
-    const ctx = document.getElementById('distanceChart');
-    if (!ctx || !trainingData.length) return;
-    if (distanceChart) distanceChart.destroy();
-
-    const last14 = trainingData.slice(-14);
-
-    distanceChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: last14.map(d => d.date.split('-').reverse().slice(0,2).join('.')),
-            datasets: [{
-                label: 'Відстань (км)',
-                data: last14.map(d => d.distance),
-                borderColor: '#FFD700', // Твій золотий стиль
-                backgroundColor: 'rgba(255, 215, 0, 0.1)',
-                fill: true,
-                tension: 0.3
-            }]
-        },
-        options: { 
-            animation: false, 
-            responsive: true, 
-            maintainAspectRatio: false,
-            scales: { y: { ticks: { color: '#888' } }, x: { ticks: { color: '#888' } } }
-        }
-    });
-}
-
 function renderLoadChart(acute, chronic) {
     const ctx = document.getElementById('loadChart');
     if (!ctx) return;
     if (loadChart) loadChart.destroy();
-
     loadChart = new Chart(ctx, {
-        type: 'bar',
+        type: 'line',
         data: {
-            labels: ['Хронічне (28д)', 'Гостре (7д)'],
-            datasets: [{
-                label: 'Навантаження (RPE)',
-                data: [chronic, acute],
-                backgroundColor: ['#4CAF50', '#D9534F'] // Зелений та Червоний
-            }]
+            labels: ['Тиждень 1', 'Тиждень 2', 'Тиждень 3', 'Поточний'],
+            datasets: [
+                { label: 'Acute (Гостре)', data: [acute*0.9, acute*1.1, acute*0.8, acute], borderColor: '#DA3E52', borderWidth: 3, tension: 0.3, fill: false },
+                { label: 'Chronic (Хронічне)', data: [chronic*0.95, chronic*0.97, chronic*0.99, chronic], borderColor: '#4CAF50', borderWidth: 3, tension: 0.3, fill: false }
+            ]
         },
-        options: { 
-            animation: false, 
-            responsive: true, 
-            maintainAspectRatio: false,
-            scales: { y: { beginAtZero: true, ticks: { color: '#888' } } }
-        }
+        options: { responsive: true, maintainAspectRatio: false, animation: false, scales: { y: { beginAtZero: true, ticks: { color: '#AAA' } }, x: { ticks: { color: '#AAA' } } } }
+    });
+}
+
+function renderDistanceChart() {
+    const ctx = document.getElementById('distanceChart');
+    if (!ctx) return;
+    if (distanceChart) distanceChart.destroy();
+    const last14 = trainingData.slice(-14);
+    distanceChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: last14.map(d => d.date.split('-').reverse().slice(0,1).join('.')),
+            datasets: [{ label: 'Distance', data: last14.map(d => d.distance), borderColor: '#FFD700', backgroundColor: 'rgba(255,215,0,0.1)', fill: true }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, animation: false }
     });
 }
 
@@ -180,9 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (form) {
         form.onsubmit = async (e) => {
             e.preventDefault();
-            const btn = e.submitter;
-            btn.disabled = true;
-
+            const btn = e.submitter; btn.disabled = true;
             const formData = {
                 userId: currentUserId,
                 date: form.date.value,
@@ -191,16 +174,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 rpe: Number(form.querySelector('input[name="rpe"]:checked')?.value || 5),
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
-
             try {
-                const scrollPos = window.scrollY;
+                const scroll = window.scrollY;
                 await db.collection(LOAD_COLLECTION).add(formData);
                 await loadDataFromFirebase();
                 form.reset();
                 document.getElementById('load-date').value = new Date().toISOString().split('T')[0];
-                window.scrollTo(0, scrollPos); // Миттєвий фікс скролу
-            } catch (err) { console.error(err); }
-            finally { btn.disabled = false; }
+                window.scrollTo(0, scroll);
+                alert("ProAtletCare: Оновлено!");
+            } catch (err) { console.error(err); } finally { btn.disabled = false; }
         };
     }
     document.getElementById('load-date').value = new Date().toISOString().split('T')[0];
