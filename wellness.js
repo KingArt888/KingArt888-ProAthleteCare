@@ -1,10 +1,10 @@
 (function() {
     const COLLECTION_NAME = 'wellness_reports';
 
-    // --- СИНХРОНІЗАЦІЯ З FIREBASE ---
+    // 1. ПІДТЯГУВАННЯ ДАНИХ З FIREBASE
     async function syncWellnessFromFirebase(uid) {
         try {
-            console.log("Завантаження даних для:", uid);
+            console.log("Завантаження даних для користувача:", uid);
             const snapshot = await db.collection(COLLECTION_NAME)
                 .where("userId", "==", uid)
                 .orderBy("timestamp", "asc")
@@ -16,7 +16,7 @@
                 if (data.date && data.scores) history[data.date] = data.scores;
             });
 
-            // Оновлюємо локальну пам'ять, щоб графіки побачили дані
+            // Зберігаємо в LocalStorage, щоб твої графіки їх побачили
             localStorage.setItem('wellnessHistory', JSON.stringify(history));
             initCharts(); 
         } catch (e) {
@@ -24,10 +24,9 @@
         }
     }
 
-    // --- ВАШІ ОРИГІНАЛЬНІ ФУНКЦІЇ ---
+    // 2. ДОПОМІЖНІ ФУНКЦІЇ (Твій оригінальний код)
     function getTodayDateString() {
-        const today = new Date();
-        return today.toISOString().split('T')[0];
+        return new Date().toISOString().split('T')[0];
     }
 
     function loadWellnessHistory() {
@@ -38,7 +37,7 @@
     const WELLNESS_FIELDS = ['sleep', 'soreness', 'mood', 'water', 'stress', 'ready'];
     const FIELD_LABELS = { sleep: 'Сон', soreness: 'Біль', mood: 'Настрій', water: 'Гідратація', stress: 'Стрес', ready: 'Готовність' };
 
-    // --- МАЛЮВАННЯ ГРАФІКІВ ---
+    // 3. МАЛЮВАННЯ ГРАФІКІВ
     function initCharts() {
         const history = loadWellnessHistory();
         const sortedDates = Object.keys(history).sort(); 
@@ -46,7 +45,6 @@
 
         const latestData = history[sortedDates[sortedDates.length - 1]];
         
-        // Оновлення текстової статистики
         WELLNESS_FIELDS.forEach(field => {
             const el = document.getElementById(`stat-${field}`);
             if (el) {
@@ -75,14 +73,16 @@
         }
     }
 
-    // --- ЛОГІКА ЗБЕРЕЖЕННЯ ТА ВХОДУ ---
+    // 4. ГОЛОВНА ЛОГІКА (ВХІД ТА ЗБЕРЕЖЕННЯ)
     document.addEventListener('DOMContentLoaded', () => {
-        // Перевірка авторизації (тепер працюватиме)
+        // ОДИН блок перевірки входу
         firebase.auth().onAuthStateChanged(user => {
             if (user) {
                 syncWellnessFromFirebase(user.uid);
             } else {
-                console.warn("Користувач не авторизований");
+                console.warn("Користувач не авторизований. Спробуйте анонімний вхід.");
+                // Можна додати автоматичний анонімний вхід:
+                // firebase.auth().signInAnonymously();
             }
         });
 
@@ -91,7 +91,10 @@
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const user = firebase.auth().currentUser;
-                if (!user) return alert("Потрібно увійти в систему!");
+                
+                if (!user) {
+                    return alert("Потрібно увійти в систему! Перевірте налаштування Auth у Firebase.");
+                }
 
                 const scores = {};
                 let valid = true;
@@ -104,8 +107,6 @@
 
                 try {
                     const today = getTodayDateString();
-                    
-                    // ЗБЕРЕЖЕННЯ В FIREBASE
                     await db.collection(COLLECTION_NAME).add({
                         userId: user.uid,
                         date: today,
@@ -113,7 +114,6 @@
                         timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
-                    // Оновлення локально для миттєвого відображення
                     const history = loadWellnessHistory();
                     history[today] = scores;
                     localStorage.setItem('wellnessHistory', JSON.stringify(history));
@@ -122,7 +122,7 @@
                     alert("Дані успішно збережено в хмару!");
                     location.reload(); 
                 } catch (err) {
-                    alert("Помилка: " + err.message);
+                    alert("Помилка доступу до бази: " + err.message);
                 }
             });
         }
