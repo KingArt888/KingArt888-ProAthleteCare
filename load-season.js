@@ -1,9 +1,9 @@
 // ==========================================================
-// 1. НАЛАШТУВАННЯ ТА FIREBASE (ProAtletCare)
+// 1. КОНФІГУРАЦІЯ ТА FIREBASE
 // ==========================================================
 const LOAD_COLLECTION = 'training_loads';
 let currentUserId = null;
-let trainingData = [];
+let trainingData = []; // Дані з Firestore
 let distanceChart, loadChart;
 
 if (typeof firebase !== 'undefined' && firebase.auth) {
@@ -12,12 +12,11 @@ if (typeof firebase !== 'undefined' && firebase.auth) {
             currentUserId = user.uid;
             loadDataFromFirebase();
         } else {
-            firebase.auth().signInAnonymously().catch(e => console.error("Помилка входу:", e));
+            firebase.auth().signInAnonymously().catch(e => console.error(e));
         }
     });
 }
 
-// Завантаження даних з Firestore
 async function loadDataFromFirebase() {
     if (!currentUserId) return;
     try {
@@ -27,52 +26,46 @@ async function loadDataFromFirebase() {
         
         trainingData = [];
         snapshot.forEach(doc => trainingData.push({ id: doc.id, ...doc.data() }));
-        
-        // Сортування за датою для коректних розрахунків
-        trainingData.sort((a, b) => new Date(a.date) - new Date(b.date));
+        trainingData.sort((a, b) => new Date(a.date) - new Date(b.date)); // Сортування за датою
 
         refreshDashboard();
-    } catch (e) {
-        console.error("Помилка завантаження:", e);
-    }
+    } catch (e) { console.error("Firebase Error:", e); }
 }
 
 function refreshDashboard() {
-    const metrics = calculateACWR();
-    updateACWRGauge(metrics.acwr);
+    const metrics = calculateProfessionalACWR();
+    updateProfessionalGauge(metrics.acwr);
     renderLoadChart(metrics.acuteLoad, metrics.chronicLoad);
     renderDistanceChart();
 }
 
 // ==========================================================
-// 2. МАТЕМАТИКА НАВАНТАЖЕННЯ (Session-RPE)
+// 2. ПРОФЕСІЙНА ФОРМУЛА РИЗИКУ ТРАВМ (ACWR)
 // ==========================================================
-function calculateACWR() {
-    if (trainingData.length === 0) return { acuteLoad: 0, chronicLoad: 0, acwr: 0 };
+function calculateProfessionalACWR() {
+    if (trainingData.length < 2) return { acuteLoad: 0, chronicLoad: 0, acwr: 1.0 };
 
-    const sortedData = [...trainingData].sort((a, b) => new Date(a.date) - new Date(b.date));
+    const sortedData = [...trainingData];
     const latestDate = new Date(sortedData[sortedData.length - 1].date);
 
-    const sevenDaysAgo = new Date(latestDate);
-    sevenDaysAgo.setDate(latestDate.getDate() - 7);
-    const twentyEightDaysAgo = new Date(latestDate);
-    twentyEightDaysAgo.setDate(latestDate.getDate() - 28);
+    // Функція розрахунку середнього навантаження за період
+    const getAverageLoad = (days) => {
+        const cutoff = new Date(latestDate);
+        cutoff.setDate(latestDate.getDate() - days);
+        
+        const periodData = sortedData.filter(d => new Date(d.date) > cutoff);
+        if (periodData.length === 0) return 0;
+        
+        // Load = Duration * RPE
+        const totalLoad = periodData.reduce((sum, d) => sum + (Number(d.duration) * Number(d.rpe)), 0);
+        return totalLoad / days; // Середнє за кожен день періоду
+    };
 
-    // Розрахунок: Тривалість * RPE
-    const dataWithLoad = sortedData.map(item => ({
-        ...item,
-        load: Number(item.duration) * Number(item.rpe)
-    }));
+    const acuteLoad = getAverageLoad(7);    // Гостре (тиждень)
+    const chronicLoad = getAverageLoad(28); // Хронічне (місяць)
 
-    const acuteLoadSum = dataWithLoad.filter(item => new Date(item.date) > sevenDaysAgo)
-        .reduce((sum, item) => sum + item.load, 0);
-    const acuteLoad = acuteLoadSum / 7;
-
-    const chronicLoadSum = dataWithLoad.filter(item => new Date(item.date) > twentyEightDaysAgo)
-        .reduce((sum, item) => sum + item.load, 0);
-    const chronicLoad = chronicLoadSum / 28;
-
-    const acwr = chronicLoad > 0 ? acuteLoad / chronicLoad : 0;
+    // Якщо хронічне занадто мале (початок тренувань), ставимо 1.0, щоб не лякати атлета
+    const acwr = (chronicLoad > 10) ? (acuteLoad / chronicLoad) : 1.0;
     
     return {
         acuteLoad: Math.round(acuteLoad),
@@ -82,77 +75,78 @@ function calculateACWR() {
 }
 
 // ==========================================================
-// 3. ВІЗУАЛІЗАЦІЯ (Професійна стрілка та графіки)
+// 3. ПРОФЕСІЙНИЙ СПІДОМЕТР (ФІКС СТРІЛКИ)
 // ==========================================================
-function updateACWRGauge(acwrValue) {
+function updateProfessionalGauge(acwrValue) {
     const needle = document.getElementById('gauge-needle');
     const display = document.getElementById('acwr-value');
     const status = document.getElementById('acwr-status');
 
     if (!needle || !display) return;
 
-    // ФІКС СТРІЛКИ: Вона тепер рухається суворо по дузі (-90 до +90 градусів)
+    // КАЛІБРУВАННЯ: -90° (ліво) до +90° (право). 1.0 — це центр (0°)
     let degree;
-    if (acwrValue <= 0) {
-        degree = -90; // Початок (зліва)
+    
+    if (acwrValue <= 0.5) {
+        degree = -90; // Мінімум
     } else if (acwrValue <= 1.0) {
-        degree = -90 + (acwrValue * 90); // 1.0 — це центр (вертикально)
-    } else if (acwrValue <= 2.0) {
-        degree = (acwrValue - 1.0) * 90; // 2.0 — це крайня права точка (+90)
+        // Від 0.5 до 1.0 (Жовта/Зелена зона)
+        degree = -90 + ((acwrValue - 0.5) / 0.5) * 90;
+    } else if (acwrValue <= 1.5) {
+        // Від 1.0 до 1.5 (Зелена/Червона зона)
+        degree = ((acwrValue - 1.0) / 0.5) * 90;
     } else {
-        degree = 90; // При значенні 4.0 стрілка просто стоїть на максимумі дуги
+        degree = 90; // Максимум (Край червоної зони)
     }
 
-    // Стилізація стрілки без змін у CSS
-    needle.style.transition = "transform 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
+    // Застосовуємо плавність та обертання
+    needle.style.transition = "transform 1.5s cubic-bezier(0.25, 0.1, 0.25, 1)";
     needle.style.transformOrigin = "bottom center";
     needle.style.transform = `translateX(-50%) rotate(${degree}deg)`;
 
     display.textContent = acwrValue.toFixed(2);
     
-    // Статус
+    // Статус текстом та кольором
     if (acwrValue >= 0.8 && acwrValue <= 1.3) {
-        status.textContent = 'Оптимально (Безпечна зона)';
+        status.textContent = 'Оптимальне навантаження';
         status.style.color = "#4CAF50";
     } else if (acwrValue > 1.5) {
-        status.textContent = 'Критичне навантаження!';
+        status.textContent = 'Критичний ризик травми!';
         status.style.color = "#DA3E52";
     } else {
-        status.textContent = 'Увага: Адаптуйте навантаження';
+        status.textContent = 'Адаптуйте тренування';
         status.style.color = "#FFC72C";
     }
 }
 
+// ==========================================================
+// 4. ГРАФІКИ ТА ФОРМА (БЕЗ ЗАЛІПАННЯ)
+// ==========================================================
 function renderDistanceChart() {
     const ctx = document.getElementById('distanceChart');
-    if (!ctx) return;
+    if (!ctx || !trainingData.length) return;
     if (distanceChart) distanceChart.destroy();
 
-    const lastEntries = trainingData.slice(-14);
+    const last14 = trainingData.slice(-14);
 
     distanceChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: lastEntries.map(i => i.date.split('-').reverse().slice(0,2).join('.')),
+            labels: last14.map(d => d.date.split('-').reverse().slice(0,2).join('.')),
             datasets: [{
-                label: 'Загальна дистанція (км)',
-                data: lastEntries.map(i => i.distance),
-                borderColor: '#FFD700', // Золотий
-                backgroundColor: 'rgba(255, 215, 0, 0.2)',
-                borderWidth: 3,
-                tension: 0.3,
-                fill: true
+                label: 'Відстань (км)',
+                data: last14.map(d => d.distance),
+                borderColor: '#FFD700', // Твій золотий стиль
+                backgroundColor: 'rgba(255, 215, 0, 0.1)',
+                fill: true,
+                tension: 0.3
             }]
         },
-        options: {
-            responsive: true,
+        options: { 
+            animation: false, 
+            responsive: true, 
             maintainAspectRatio: false,
-            animation: false, // ФІКС СКРОЛУ
-            scales: {
-                x: { ticks: { color: '#AAAAAA' }, grid: { color: '#333' } },
-                y: { beginAtZero: true, ticks: { color: '#AAAAAA' }, grid: { color: '#333' } }
-            },
-            plugins: { legend: { labels: { color: '#CCC' } } }
+            scales: { y: { ticks: { color: '#888' } }, x: { ticks: { color: '#888' } } }
         }
     });
 }
@@ -163,76 +157,51 @@ function renderLoadChart(acute, chronic) {
     if (loadChart) loadChart.destroy();
 
     loadChart = new Chart(ctx, {
-        type: 'line',
+        type: 'bar',
         data: {
-            labels: ['4 тижні тому', '3 тижні тому', '2 тижні тому', 'Поточний'],
-            datasets: [
-                {
-                    label: 'Acute Load (7 днів)',
-                    data: [acute * 0.7, acute * 1.2, acute * 0.9, acute],
-                    borderColor: '#D9534F', // Червоний
-                    borderWidth: 2,
-                    tension: 0.3
-                },
-                {
-                    label: 'Chronic Load (28 днів)',
-                    data: [chronic * 0.8, chronic * 0.9, chronic * 0.95, chronic],
-                    borderColor: '#4CAF50', // Зелений
-                    borderWidth: 2,
-                    tension: 0.3
-                }
-            ]
+            labels: ['Хронічне (28д)', 'Гостре (7д)'],
+            datasets: [{
+                label: 'Навантаження (RPE)',
+                data: [chronic, acute],
+                backgroundColor: ['#4CAF50', '#D9534F'] // Зелений та Червоний
+            }]
         },
-        options: {
-            responsive: true,
+        options: { 
+            animation: false, 
+            responsive: true, 
             maintainAspectRatio: false,
-            animation: false,
-            scales: {
-                y: { ticks: { color: '#AAA' }, grid: { color: '#333' } },
-                x: { ticks: { color: '#AAA' }, grid: { color: '#333' } }
-            },
-            plugins: { legend: { labels: { color: '#CCC' } } }
+            scales: { y: { beginAtZero: true, ticks: { color: '#888' } } }
         }
     });
 }
 
-// ==========================================================
-// 4. ОБРОБКА ФОРМИ ТА ФІКС СКРОЛУ
-// ==========================================================
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('load-form');
     if (form) {
         form.onsubmit = async (e) => {
             e.preventDefault();
             const btn = e.submitter;
-            if (btn) btn.disabled = true;
+            btn.disabled = true;
 
             const formData = {
                 userId: currentUserId,
                 date: form.date.value,
-                duration: parseInt(form.duration.value),
-                distance: parseFloat(form.distance.value),
-                rpe: parseInt(form.querySelector('input[name="rpe"]:checked')?.value || 5),
+                duration: Number(form.duration.value),
+                distance: Number(form.distance.value),
+                rpe: Number(form.querySelector('input[name="rpe"]:checked')?.value || 5),
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
 
             try {
-                const scrollPos = window.scrollY; // Запам'ятовуємо скрол
+                const scrollPos = window.scrollY;
                 await db.collection(LOAD_COLLECTION).add(formData);
                 await loadDataFromFirebase();
                 form.reset();
                 document.getElementById('load-date').value = new Date().toISOString().split('T')[0];
-                window.scrollTo(0, scrollPos); // Миттєво повертаємо скрол
-                alert("ProAtletCare: Навантаження збережено!");
-            } catch (err) {
-                console.error("Помилка збереження:", err);
-            } finally {
-                if (btn) btn.disabled = false;
-            }
+                window.scrollTo(0, scrollPos); // Миттєвий фікс скролу
+            } catch (err) { console.error(err); }
+            finally { btn.disabled = false; }
         };
     }
-    
-    // Встановлення сьогоднішньої дати
-    const dateInput = document.getElementById('load-date');
-    if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+    document.getElementById('load-date').value = new Date().toISOString().split('T')[0];
 });
