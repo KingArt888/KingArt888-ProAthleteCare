@@ -1,10 +1,10 @@
 (function() {
     const COLLECTION_NAME = 'wellness_reports';
     
-    // Кольори з вашого оригінального дизайну
+    // Твій фірмовий стиль ProAtletCare
     const GOLD_COLOR = 'rgb(255, 215, 0)';
     const GOLD_AREA = 'rgba(255, 215, 0, 0.4)';
-    const GREY_GRID = '#CCCCCC';
+    const GREY_GRID = 'rgba(255, 255, 255, 0.1)';
 
     const WELLNESS_FIELDS = ['sleep', 'soreness', 'mood', 'water', 'stress', 'ready'];
     const FIELD_LABELS = {
@@ -21,7 +21,7 @@
         ready: { color: 'rgb(50, 205, 50)', area: 'rgba(50, 205, 50, 0.4)' },
     };
 
-    // --- 1. СИНХРОНІЗАЦІЯ ---
+    // --- 1. СИНХРОНІЗАЦІЯ З FIREBASE ---
     async function syncWellnessFromFirebase(uid) {
         try {
             const snapshot = await db.collection(COLLECTION_NAME)
@@ -46,7 +46,8 @@
             initCharts(); 
             checkDailyRestriction();
         } catch (e) {
-            console.error("Помилка підтягування даних:", e);
+            console.error("Помилка завантаження:", e);
+            initCharts(); // Малюємо порожні, якщо помилка
         }
     }
 
@@ -60,28 +61,31 @@
         const lastDate = localStorage.getItem('lastWellnessSubmissionDate');
         const today = getTodayDateString();
         const button = document.querySelector('.gold-button');
-        const form = document.getElementById('wellness-form');
 
         if (lastDate === today && button) {
             button.disabled = true;
-            button.textContent = "Дані на сьогодні вже записані.";
-            button.classList.add('disabled-button'); 
-            form.querySelectorAll('input').forEach(i => i.disabled = true);
+            button.textContent = "Сьогодні вже заповнено";
+            button.style.backgroundColor = "#444";
+            button.style.cursor = "not-allowed";
             return true;
         }
         return false;
     }
 
-    // --- 3. МАЛЮВАННЯ ГРАФІКІВ (ВАШ ОРИГІНАЛЬНИЙ ДИЗАЙН) ---
+    // --- 3. МАЛЮВАННЯ ГРАФІКІВ (ВИПРАВЛЕНО) ---
     function initCharts() {
         const history = JSON.parse(localStorage.getItem('wellnessHistory') || '{}');
         const sortedDates = Object.keys(history).sort(); 
-        if (sortedDates.length === 0) return;
+        
+        const chartLabels = sortedDates.length > 0 
+            ? sortedDates.map(date => date.split('-').slice(1).join('/')) 
+            : [getTodayDateString().split('-').slice(1).join('/')];
 
-        const chartLabels = sortedDates.map(date => date.split('-').slice(1).join('/'));
-        const latestData = history[sortedDates[sortedDates.length - 1]];
+        const latestData = sortedDates.length > 0 
+            ? history[sortedDates[sortedDates.length - 1]] 
+            : { sleep:0, soreness:0, mood:0, water:0, stress:0, ready:0 };
 
-        // Оновлення маленьких графіків
+        // МАЛЕНЬКІ ГРАФІКИ ДИНАМІКИ
         WELLNESS_FIELDS.forEach(field => {
             const ctx = document.getElementById(`chart-${field}`);
             const statEl = document.getElementById(`stat-${field}`);
@@ -92,14 +96,18 @@
                 statEl.style.color = score >= 7 ? 'rgb(50, 205, 50)' : (score >= 4 ? 'rgb(255, 159, 64)' : 'rgb(255, 99, 132)');
             }
 
-            if (ctx) {
-                if (window[`chart_${field}`]) window[`chart_${field}`].destroy();
+            if (ctx && typeof Chart !== 'undefined') {
+                // Виправлення помилки .destroy()
+                if (window[`chart_${field}`] instanceof Chart) {
+                    window[`chart_${field}`].destroy();
+                }
+                
                 window[`chart_${field}`] = new Chart(ctx, {
                     type: 'line',
                     data: {
                         labels: chartLabels,
                         datasets: [{
-                            data: sortedDates.map(d => history[d][field]),
+                            data: sortedDates.length > 0 ? sortedDates.map(d => history[d][field]) : [0],
                             borderColor: colorsMap[field].color,
                             backgroundColor: colorsMap[field].area,
                             fill: true,
@@ -110,7 +118,7 @@
                         responsive: true,
                         maintainAspectRatio: false,
                         scales: {
-                            y: { min: 1, max: 10, ticks: { color: 'white', stepSize: 2 } },
+                            y: { min: 0, max: 10, ticks: { color: '#888', stepSize: 2 } },
                             x: { display: false }
                         },
                         plugins: { legend: { display: false } }
@@ -121,14 +129,16 @@
 
         // ПАВУТИННЯ
         const mainCtx = document.getElementById('wellnessChart');
-        if (mainCtx) {
-            if (window.wellnessChart) window.wellnessChart.destroy();
+        if (mainCtx && typeof Chart !== 'undefined') {
+            if (window.wellnessChart instanceof Chart) {
+                window.wellnessChart.destroy();
+            }
             window.wellnessChart = new Chart(mainCtx, {
                 type: 'radar',
                 data: {
                     labels: Object.values(FIELD_LABELS),
                     datasets: [{
-                        label: 'Мій стан',
+                        label: 'Стан',
                         data: WELLNESS_FIELDS.map(f => latestData[f]),
                         backgroundColor: GOLD_AREA,
                         borderColor: GOLD_COLOR,
@@ -139,13 +149,13 @@
                     scales: {
                         r: {
                             min: 0, max: 10,
-                            grid: { color: GREY_GRID },
-                            angleLines: { color: GREY_GRID },
-                            pointLabels: { color: 'white' },
+                            grid: { color: 'rgba(255, 255, 255, 0.2)' },
+                            angleLines: { color: 'rgba(255, 255, 255, 0.2)' },
+                            pointLabels: { color: '#fff' },
                             ticks: { display: false }
                         }
                     },
-                    plugins: { legend: { labels: { color: 'white' } } }
+                    plugins: { legend: { display: false } }
                 }
             });
         }
@@ -153,12 +163,15 @@
 
     // --- 4. ЗАПУСК ---
     document.addEventListener('DOMContentLoaded', () => {
+        initCharts(); // Початкове малювання сітки
         checkDailyRestriction();
 
         firebase.auth().onAuthStateChanged(async (user) => {
             if (user) {
+                console.log("Авторизовано:", user.uid);
                 await syncWellnessFromFirebase(user.uid);
             } else {
+                console.log("Вхід...");
                 await firebase.auth().signInAnonymously();
             }
         });
@@ -167,8 +180,10 @@
         if (form) {
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
+                if (checkDailyRestriction()) return;
+
                 const user = firebase.auth().currentUser;
-                if (!user || checkDailyRestriction()) return;
+                if (!user) return alert("Зачекайте...");
 
                 const scores = {};
                 WELLNESS_FIELDS.forEach(f => {
@@ -176,7 +191,7 @@
                     if (val) scores[f] = parseInt(val.value, 10);
                 });
 
-                if (Object.keys(scores).length < 6) return alert("Заповніть усі поля!");
+                if (Object.keys(scores).length < 6) return alert("Заповніть усі пункти!");
 
                 try {
                     const today = getTodayDateString();
@@ -187,8 +202,8 @@
                         timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     });
                     localStorage.setItem('lastWellnessSubmissionDate', today);
-                    alert("Збережено!");
-                    location.reload();
+                    alert("Дані збережено!");
+                    location.reload(); 
                 } catch (err) { alert(err.message); }
             });
         }
