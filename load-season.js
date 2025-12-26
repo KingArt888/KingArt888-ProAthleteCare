@@ -1,115 +1,109 @@
-const LOAD_COLLECTION = 'training_loads';
-let currentUserId = null;
-let trainingData = [];
-let targetACWR = 0.0;
-let currentNeedleAngle = -Math.PI;
-let charts = {};
+// load-season.js
+let dailyLoadData = [];
+let loadChart = null;
 
-// 1. Auth
-if (typeof firebase !== 'undefined' && firebase.auth) {
-    firebase.auth().onAuthStateChanged(user => {
-        if (user) {
-            currentUserId = user.uid;
-            document.getElementById('load-date').value = new Date().toISOString().split('T')[0];
-            loadData();
-        } else {
-            firebase.auth().signInAnonymously();
-        }
-    });
-}
+// ФУНКЦІЯ ПЕРЕРАХУНКУ ACWR ТА ОНОВЛЕННЯ ШКАЛИ
+function updateACWRVisualization(acwr) {
+    const marker = document.getElementById('acwr-marker');
+    const valueDisplay = document.getElementById('acwr-value');
+    const statusDisplay = document.getElementById('acwr-status');
 
-// 2. Data Logic
-async function loadData() {
-    if (!currentUserId) return;
-    const snap = await db.collection(LOAD_COLLECTION).where("userId", "==", currentUserId).get();
-    trainingData = snap.docs.map(doc => doc.data()).sort((a,b) => new Date(a.date) - new Date(b.date));
-    const m = calculateMetrics();
-    targetACWR = m.acwr;
-    requestAnimationFrame(drawGauge);
-    renderCharts(m);
-}
+    valueDisplay.textContent = acwr.toFixed(2);
 
-function calculateMetrics() {
-    if (trainingData.length === 0) return { acwr: 0, acute: 0, chronic: 0, dists: [0,0,0,0,0,0,0] };
-    const latest = new Date(trainingData[trainingData.length-1].date);
-    const getAvg = (days) => {
-        const cutoff = new Date(latest);
-        cutoff.setDate(latest.getDate() - days);
-        const filtered = trainingData.filter(d => new Date(d.date) > cutoff);
-        return (filtered.reduce((sum, d) => sum + (Number(d.duration) * Number(d.rpe)), 0) / days) || 0;
-    };
-    const last7Days = [0,0,0,0,0,0,0];
-    trainingData.slice(-7).forEach((d, i) => { last7Days[i] = d.distance || 0; });
-    return { acwr: parseFloat((getAvg(7) / (getAvg(28) || 1)).toFixed(2)), acute: Math.round(getAvg(7)), chronic: Math.round(getAvg(28)), dists: last7Days };
-}
+    // Розрахунок позиції маркера (0.0 - 2.0 = 0% - 100%)
+    let percent = (acwr / 2.0) * 100;
+    if (percent > 100) percent = 100;
+    marker.style.left = `${percent}%`;
 
-// 3. Canvas Gauge
-function drawGauge() {
-    const container = document.getElementById('acwr-gauge-display');
-    if (!container) return;
-    if (!document.getElementById('gaugeCanvas')) container.innerHTML = '<canvas id="gaugeCanvas" width="320" height="220"></canvas>';
-    const canvas = document.getElementById('gaugeCanvas');
-    const ctx = canvas.getContext('2d');
-    const cx = 160, cy = 150, radius = 95;
-    ctx.clearRect(0, 0, 320, 220);
-
-    let color = "#FFC72C";
-    if (targetACWR >= 0.8 && targetACWR <= 1.3) color = "#4CAF50";
-    else if (targetACWR > 1.3) color = "#FF4444";
-
-    // Scale
-    for (let i = 0; i <= 20; i++) {
-        const angle = Math.PI + (i / 20) * Math.PI;
-        ctx.beginPath();
-        ctx.strokeStyle = i > 13 ? "#FF4444" : (i >= 8 ? "#4CAF50" : "#FFC72C");
-        ctx.lineWidth = i % 5 === 0 ? 4 : 2;
-        ctx.moveTo(cx + Math.cos(angle) * (radius - 5), cy + Math.sin(angle) * (radius - 5));
-        ctx.lineTo(cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius);
-        ctx.stroke();
+    // Статуси
+    statusDisplay.className = '';
+    if (acwr < 0.8) {
+        statusDisplay.textContent = "Underloading (Відновлення)";
+        statusDisplay.classList.add('status-warn');
+    } else if (acwr <= 1.3) {
+        statusDisplay.textContent = "Sweet Spot (Оптимально)";
+        statusDisplay.classList.add('status-safe');
+    } else {
+        statusDisplay.textContent = "High Risk (Перевантаження)";
+        statusDisplay.classList.add('status-danger');
     }
-
-    // Needle Animation
-    const targetAngle = Math.PI + (Math.min(targetACWR, 2.0) / 2.0) * Math.PI;
-    currentNeedleAngle += (targetAngle - currentNeedleAngle) * 0.08;
-    ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 3;
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx + Math.cos(currentNeedleAngle) * 85, cy + Math.sin(currentNeedleAngle) * 85);
-    ctx.stroke();
-
-    // Value
-    ctx.textAlign = "center"; ctx.fillStyle = "#888"; ctx.font = "10px Montserrat"; ctx.fillText("INDEX ACWR", cx, cy + 30);
-    ctx.fillStyle = color; ctx.font = "bold 24px Orbitron"; ctx.fillText(targetACWR.toFixed(2), cx, cy + 55);
-
-    document.getElementById('acwr-status').textContent = targetACWR > 1.3 ? "DANGER" : (targetACWR >= 0.8 ? "SAFE" : "ADAPTATION");
-    document.getElementById('acwr-status').style.color = color;
-    if (Math.abs(targetAngle - currentNeedleAngle) > 0.001) requestAnimationFrame(drawGauge);
 }
 
-// 4. Charts
-function renderCharts(m) {
-    if (charts.load) charts.load.destroy();
-    charts.load = new Chart(document.getElementById('loadChart'), {
-        type: 'line',
-        data: { labels: ['Day -3', 'Day -2', 'Day -1', 'Today'], datasets: [{ label: 'Acute', data: [m.acute*0.9, m.acute*1.1, m.acute], borderColor: '#FF4444' }, { label: 'Chronic', data: [m.chronic, m.chronic, m.chronic], borderColor: '#4CAF50' }] },
-        options: { responsive: true, maintainAspectRatio: false }
-    });
-    if (charts.dist) charts.dist.destroy();
-    charts.dist = new Chart(document.getElementById('distanceChart'), {
-        type: 'bar',
-        data: { labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], datasets: [{ label: 'Distance (km)', data: m.dists, backgroundColor: '#FFC72C' }] },
-        options: { responsive: true, maintainAspectRatio: false }
+// ЗАВАНТАЖЕННЯ ДАНИХ З FIREBASE (Real-time)
+function initFirebaseData() {
+    const q = window.fb.query(window.fb.collection(window.fb.db, "dailyLoad"), window.fb.orderBy("date", "asc"));
+    
+    window.fb.onSnapshot(q, (snapshot) => {
+        dailyLoadData = [];
+        snapshot.forEach((doc) => {
+            dailyLoadData.push(doc.data());
+        });
+        
+        // Після отримання даних оновлюємо все
+        calculateAndRender();
     });
 }
 
-// 5. Submit Form
-document.getElementById('load-form').onsubmit = async (e) => {
+// ЗБЕРЕЖЕННЯ В FIREBASE
+async function handleFormSubmit(e) {
     e.preventDefault();
-    const rpe = e.target.querySelector('input[name="rpe"]:checked')?.value;
-    if (!rpe) return alert("Оберіть RPE!");
-    await db.collection(LOAD_COLLECTION).add({
-        userId: currentUserId, date: e.target.date.value, duration: Number(e.target.duration.value),
-        distance: Number(e.target.distance.value), rpe: Number(rpe), timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    const form = e.target;
+    const status = document.getElementById('form-status');
+
+    const entry = {
+        date: form.elements['date'].value,
+        duration: parseInt(form.elements['duration'].value),
+        distance: parseFloat(form.elements['distance'].value),
+        rpe: parseInt(form.querySelector('input[name="rpe"]:checked')?.value || 5),
+        load: parseInt(form.elements['duration'].value) * parseInt(form.querySelector('input[name="rpe"]:checked')?.value || 5)
+    };
+
+    try {
+        await window.fb.addDoc(window.fb.collection(window.fb.db, "dailyLoad"), entry);
+        form.reset();
+        status.textContent = "Успішно збережено в хмару!";
+        status.style.color = "#4CAF50";
+    } catch (err) {
+        status.textContent = "Помилка Firebase: " + err.message;
+        status.style.color = "#D9534F";
+    }
+}
+
+// МАТЕМАТИКА ТА ГРАФІКИ
+function calculateAndRender() {
+    if (dailyLoadData.length === 0) return;
+
+    // Розрахунок останнього ACWR (спрощено для прикладу)
+    // В реальності тут має бути формула Acute (7 днів) / Chronic (28 днів)
+    const totalLoad = dailyLoadData.reduce((sum, item) => sum + item.load, 0);
+    const avgLoad = totalLoad / dailyLoadData.length;
+    const currentACWR = dailyLoadData[dailyLoadData.length-1].load / (avgLoad || 1);
+
+    updateACWRVisualization(currentACWR);
+    renderCharts();
+}
+
+function renderCharts() {
+    const ctx = document.getElementById('loadChart').getContext('2d');
+    if (loadChart) loadChart.destroy();
+
+    loadChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dailyLoadData.map(d => d.date),
+            datasets: [{
+                label: 'Session Load',
+                data: dailyLoadData.map(d => d.load),
+                borderColor: '#FFD700',
+                backgroundColor: 'rgba(255, 215, 0, 0.1)',
+                fill: true
+            }]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } }
     });
-    e.target.reset();
-    loadData();
-};
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    initFirebaseData();
+    document.getElementById('load-entry-form').addEventListener('submit', handleFormSubmit);
+});
