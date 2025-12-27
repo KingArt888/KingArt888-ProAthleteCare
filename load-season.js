@@ -3,9 +3,9 @@
     let dailyLoadData = [];
     let distanceChart, loadChart;
 
-    // --- 1. ІНІЦІАЛІЗАЦІЯ ТА АВТО-ДАТА ---
+    // --- 1. ІНІЦІАЛІЗАЦІЯ ---
     document.addEventListener('DOMContentLoaded', () => {
-        // Встановлюємо сьогоднішню дату відразу
+        // Автоматична дата (сьогодні)
         const dateInput = document.getElementById('load-date') || document.querySelector('input[type="date"]');
         if (dateInput) {
             dateInput.value = new Date().toISOString().split('T')[0];
@@ -17,40 +17,10 @@
         });
 
         const form = document.getElementById('load-form');
-        if (form) {
-            form.addEventListener('submit', handleFormSubmit);
-        }
+        if (form) form.addEventListener('submit', handleFormSubmit);
     });
 
-    // --- 2. СИНХРОНІЗАЦІЯ З FIREBASE ---
-    async function syncLoadFromFirebase(uid) {
-        try {
-            const snapshot = await db.collection(COLLECTION_NAME)
-                .where("userId", "==", uid)
-                .orderBy("date", "asc")
-                .get();
-
-            const firebaseData = [];
-            snapshot.forEach(doc => firebaseData.push(doc.data()));
-            dailyLoadData = firebaseData.length > 0 ? firebaseData : getDemoData();
-            refreshUI();
-        } catch (e) {
-            console.error("Помилка Firebase:", e);
-            dailyLoadData = getDemoData();
-            refreshUI();
-        }
-    }
-
-    function refreshUI() {
-        const { acuteLoad, chronicLoad, acwr } = calculateACWR();
-        updateACWRGauge(acwr); 
-        if (typeof Chart !== 'undefined') {
-            renderDistanceChart();
-            renderLoadChart(acuteLoad, chronicLoad);
-        }
-    }
-
-    // --- 3. ЕЛІТНИЙ СПІДОМЕТР (Керування стилями через JS) ---
+    // --- 2. РОБОТА СПІДОМЕТРА (МАКСИМАЛЬНА ТОЧНІСТЬ) ---
     function updateACWRGauge(acwrValue) {
         const needle = document.getElementById('gauge-needle');
         const display = document.getElementById('acwr-value');
@@ -59,22 +29,23 @@
 
         if (!needle || !display || !statusText) return;
 
-        // ВІЗУАЛЬНА ШКАЛА (Малюємо зони прямо в коді)
+        // ПРИМУСОВЕ СТВОРЕННЯ ШКАЛИ (якщо CSS не працює)
         if (gaugeTrack) {
             gaugeTrack.style.background = `conic-gradient(
                 from 270deg,
-                #f1c40f 0deg, #f1c40f 45deg,    /* Жовтий: 0.0 - 0.8 */
-                #2ecc71 45deg, #2ecc71 135deg,  /* Зелений: 0.8 - 1.3 */
-                #e74c3c 135deg, #e74c3c 180deg, /* Червоний: 1.3+ */
+                #f1c40f 0deg, #f1c40f 45deg,    /* 0.0 - 0.8: Недотрен */
+                #2ecc71 45deg, #2ecc71 135deg,  /* 0.8 - 1.3: Оптимально */
+                #e74c3c 135deg, #e74c3c 180deg, /* 1.3+: Ризик травм */
                 transparent 180deg
             )`;
-            gaugeTrack.style.borderRadius = "50%";
+            gaugeTrack.style.borderRadius = "500px 500px 0 0"; // Форма півкола
+            gaugeTrack.style.borderBottom = "none";
         }
 
+        // Розрахунок кута: стрілка ходить від -90 до +90 градусів
         let degree = -90; 
         let status = '';
         
-        // Масштабування стрілки (від -90 до +90 градусів)
         if (acwrValue < 0.8) {
             degree = -90 + (acwrValue / 0.8) * 45; 
             status = 'НЕДОТРЕНОВАНІСТЬ';
@@ -89,25 +60,45 @@
             statusText.style.color = '#e74c3c';
         }
 
-        // Обмежуємо стрілку, щоб не вилітала за межі
+        // Жорстке обмеження стрілки (не далі 90 градусів)
         const finalDegree = Math.min(90, Math.max(-90, degree));
 
-        // Ефект плавного ходу дорогої машини
-        needle.style.transition = "transform 2s cubic-bezier(0.1, 0, 0.1, 1)";
+        // Налаштування стрілки (Центрування та плавний рух)
+        needle.style.position = "absolute";
+        needle.style.bottom = "0";
+        needle.style.left = "50%";
+        needle.style.transformOrigin = "bottom center";
+        needle.style.transition = "transform 2s cubic-bezier(0.4, 0, 0.2, 1)";
         needle.style.transform = `translateX(-50%) rotate(${finalDegree}deg)`;
-        needle.style.backgroundColor = "#FFD700"; // Золота стрілка під стиль сайту
+        needle.style.backgroundColor = "#FFD700"; // Золото для ProAtletCare
         
         display.textContent = acwrValue.toFixed(2);
         statusText.textContent = status;
-        statusText.style.fontWeight = "800";
+        statusText.style.fontWeight = "bold";
     }
 
-    // --- 4. ГРАФІКИ ТА РОЗРАХУНКИ ---
+    // --- 3. FIREBASE ТА РОЗРАХУНКИ ---
+    async function syncLoadFromFirebase(uid) {
+        try {
+            const snapshot = await db.collection(COLLECTION_NAME)
+                .where("userId", "==", uid)
+                .orderBy("date", "asc")
+                .get();
+
+            const firebaseData = [];
+            snapshot.forEach(doc => firebaseData.push(doc.data()));
+            dailyLoadData = firebaseData.length > 0 ? firebaseData : getDemoData();
+            refreshUI();
+        } catch (e) {
+            dailyLoadData = getDemoData();
+            refreshUI();
+        }
+    }
+
     function calculateACWR() {
         if (dailyLoadData.length === 0) return { acuteLoad: 0, chronicLoad: 0, acwr: 0 };
         const sorted = [...dailyLoadData].sort((a, b) => new Date(a.date) - new Date(b.date));
-        const last = sorted[sorted.length - 1];
-        const lastDate = new Date(last.date);
+        const lastDate = new Date(sorted[sorted.length - 1].date);
 
         const getLoad = (days) => {
             const start = new Date(lastDate);
@@ -122,25 +113,27 @@
         return { acuteLoad: acute, chronicLoad: chronic, acwr: chronic > 0 ? acute / chronic : 0 };
     }
 
+    function refreshUI() {
+        const { acuteLoad, chronicLoad, acwr } = calculateACWR();
+        updateACWRGauge(acwr); 
+        if (typeof Chart !== 'undefined') {
+            renderDistanceChart();
+            renderLoadChart(acuteLoad, chronicLoad);
+        }
+    }
+
+    // --- 4. ГРАФІКИ ---
     function renderDistanceChart() {
         const ctx = document.getElementById('distanceChart');
         if (!ctx) return;
         if (distanceChart) distanceChart.destroy();
-        
         const labels = dailyLoadData.slice(-7).map(d => d.date);
         const data = dailyLoadData.slice(-7).map(d => d.distance);
-
         distanceChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
-                datasets: [{
-                    label: 'Дистанція (км)',
-                    data: data,
-                    borderColor: '#FFD700', // Золото
-                    backgroundColor: 'rgba(255, 215, 0, 0.1)',
-                    fill: true, tension: 0.4, borderWidth: 3
-                }]
+                datasets: [{ label: 'Дистанція', data: data, borderColor: '#FFD700', fill: true, tension: 0.4 }]
             }
         });
     }
@@ -152,10 +145,10 @@
         loadChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: ['Минулий період', 'Зараз'],
+                labels: ['Минулий тиждень', 'Поточний'],
                 datasets: [
-                    { label: 'Acute', data: [acute * 0.9, acute], borderColor: '#e74c3c', borderWidth: 3, tension: 0.3 },
-                    { label: 'Chronic', data: [chronic * 0.95, chronic], borderColor: '#2ecc71', borderWidth: 3, tension: 0.3 }
+                    { label: 'Acute', data: [acute*0.8, acute], borderColor: '#e74c3c' },
+                    { label: 'Chronic', data: [chronic*0.9, chronic], borderColor: '#2ecc71' }
                 ]
             }
         });
@@ -179,6 +172,6 @@
     }
 
     function getDemoData() {
-        return [{ date: '2025-12-27', duration: 60, rpe: 7, distance: 10 }];
+        return [{ date: '2025-12-27', duration: 60, rpe: 7, distance: 5 }];
     }
 })();
