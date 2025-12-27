@@ -2,25 +2,25 @@ const INJURY_COLLECTION = 'injuries';
 let currentUserId = null;
 let injuries = [];
 let selectedId = null; 
+let activeLocationFilter = null; 
 let painChartInstance = null;
-let activeLocationFilter = null;
 
 const RED_MARKER = '#DA3E52'; 
 const GOLD_COLOR = '#FFC72C'; 
 
 const getToday = () => new Date().toISOString().split('T')[0];
 
-if (typeof firebase !== 'undefined' && firebase.auth) {
-    firebase.auth().onAuthStateChanged(async (user) => {
-        if (user) {
-            currentUserId = user.uid;
-            loadInjuriesFromFirebase();
-        } else {
-            firebase.auth().signInAnonymously();
-        }
-    });
-}
+// 1. АВТОРИЗАЦІЯ
+firebase.auth().onAuthStateChanged(async (user) => {
+    if (user) {
+        currentUserId = user.uid;
+        loadInjuriesFromFirebase();
+    } else {
+        firebase.auth().signInAnonymously();
+    }
+});
 
+// 2. ЗАВАНТАЖЕННЯ
 async function loadInjuriesFromFirebase() {
     if (!currentUserId) return;
     try {
@@ -31,18 +31,13 @@ async function loadInjuriesFromFirebase() {
         injuries = [];
         snapshot.forEach(doc => {
             const data = doc.data();
-            // Якщо запис старий, створюємо йому початкову історію
             if (!data.history) {
-                data.history = [{
-                    date: data.date || getToday(),
-                    pain: data.pain || 0,
-                    notes: data.notes || ""
-                }];
+                data.history = [{ date: data.date || getToday(), pain: data.pain || 0, notes: data.notes || "" }];
             }
             injuries.push({ id: doc.id, ...data });
         });
         refreshUI();
-    } catch (e) { console.error("Помилка:", e); }
+    } catch (e) { console.error("Load error:", e); }
 }
 
 function refreshUI() {
@@ -51,7 +46,7 @@ function refreshUI() {
     updatePainChart();
 }
 
-// ТОЧКИ НА МАПІ
+// 3. ТОЧКИ НА МАПІ
 function renderPoints() {
     const container = document.getElementById('bodyMapContainer');
     if (!container) return;
@@ -60,34 +55,33 @@ function renderPoints() {
     injuries.forEach(inj => {
         const el = document.createElement('div');
         el.className = 'injury-marker';
-        
         const lastEntry = inj.history[inj.history.length - 1];
-        const markerColor = parseInt(lastEntry.pain) === 0 ? GOLD_COLOR : RED_MARKER;
-
+        const isHealed = parseInt(lastEntry.pain) === 0;
+        
         el.style.cssText = `
             position: absolute; width: 14px; height: 14px; 
             border-radius: 50%; border: 2px solid white; 
-            background-color: ${markerColor}; 
+            background-color: ${isHealed ? GOLD_COLOR : RED_MARKER}; 
             left: ${inj.coordX}%; top: ${inj.coordY}%; transform: translate(-50%, -50%);
             z-index: 100; cursor: pointer;
+            box-shadow: 0 0 8px ${isHealed ? GOLD_COLOR : RED_MARKER};
         `;
         
         el.onclick = (e) => { 
             e.stopPropagation(); 
-            activeLocationFilter = inj.id; // Тепер фільтр показує історію САМЕ ЦІЄЇ точки
+            activeLocationFilter = inj.id; 
             refreshUI();
         };
         container.appendChild(el);
     });
 }
 
-// ГРАФІК (ІНДИВІДУАЛЬНИЙ ДЛЯ КОЖНОЇ ТРАВМИ)
+// 4. ГРАФІК (ДИНАМІКА)
 function updatePainChart() {
     const ctx = document.getElementById('painChart');
     if (!ctx) return;
     if (painChartInstance) painChartInstance.destroy();
 
-    // Беремо дані тільки для активної травми
     const selectedInjury = injuries.find(i => i.id === activeLocationFilter);
     if (!selectedInjury) return;
 
@@ -119,7 +113,18 @@ function updatePainChart() {
     });
 }
 
-// СПИСОК (ВІДОБРАЖАЄ ІСТОРІЮ ОБРАНОЇ ТРАВМИ)
+// 5. ВИДАЛЕННЯ ТРАВМИ
+async function deleteInjury(id) {
+    if (confirm("Видалити цю травму та всю її історію?")) {
+        try {
+            await db.collection(INJURY_COLLECTION).doc(id).delete();
+            activeLocationFilter = null;
+            loadInjuriesFromFirebase();
+        } catch (e) { alert("Помилка видалення"); }
+    }
+}
+
+// 6. СПИСОК
 function renderInjuryList() {
     const listElement = document.getElementById('injury-list');
     if (!listElement) return;
@@ -129,46 +134,46 @@ function renderInjuryList() {
         const historyRev = [...inj.history].reverse();
 
         listElement.innerHTML = `
-            <div style="background: #FFC72C; color: #000; padding: 10px; border-radius: 5px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
-                <strong>📍 ${inj.location}</strong>
-                <button onclick="activeLocationFilter=null; refreshUI();" style="background:#000; color:#fff; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Закрити</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h3 style="color:gold; margin:0;">📍 ${inj.location}</h3>
+                <button onclick="activeLocationFilter=null; refreshUI();" style="background:#333; color:white; border:none; padding:5px; border-radius:4px; cursor:pointer;">Назад</button>
             </div>
-            ${historyRev.map(h => `
-                <div style="background: #111; padding: 10px; border-radius: 8px; margin-bottom: 5px; border-left: 4px solid ${parseInt(h.pain) === 0 ? GOLD_COLOR : RED_MARKER};">
-                    <div style="display: flex; justify-content: space-between; font-size: 0.85em;">
-                        <span style="color: #888;">${h.date}</span>
-                        <span style="color: gold;">Біль: ${h.pain}</span>
+            <div style="max-height: 180px; overflow-y: auto;">
+                ${historyRev.map(h => `
+                    <div style="background:#111; padding:8px; border-radius:5px; margin-bottom:5px; border-left:3px solid ${parseInt(h.pain) === 0 ? GOLD_COLOR : RED_MARKER};">
+                        <div style="display:flex; justify-content:space-between; font-size:0.8em;">
+                            <span>${h.date}</span>
+                            <span style="color:gold;">Біль: ${h.pain}</span>
+                        </div>
+                        <div style="font-size:0.85em; color:#ccc;">${h.notes || ''}</div>
                     </div>
-                    <div style="color: #ccc; margin-top: 5px; font-size: 0.9em;">${h.notes || 'Без опису'}</div>
-                </div>
-            `).join('')}
-            <button onclick="openUpdateForm('${inj.id}')" style="width: 100%; padding: 12px; background: gold; color: black; border: none; border-radius: 5px; margin-top: 10px; cursor: pointer; font-weight: bold;">
-                + ДОДАТИ НОВУ ДАТУ В ЦЮ ІСТОРІЮ
-            </button>
+                `).join('')}
+            </div>
+            <button onclick="openUpdateMode('${inj.id}')" style="width:100%; padding:10px; background:gold; border:none; border-radius:5px; font-weight:bold; margin-top:10px; cursor:pointer;">+ ДОДАТИ ЗАПИС</button>
+            <button onclick="deleteInjury('${inj.id}')" style="width:100%; padding:8px; background:none; border:1px solid #DA3E52; color:#DA3E52; border-radius:5px; margin-top:8px; cursor:pointer; font-size:0.8em;">ВИДАЛИТИ ВСЮ ТРАВМУ</button>
         `;
     } else {
         listElement.innerHTML = injuries.map(inj => {
             const last = inj.history[inj.history.length - 1];
             return `
-                <div onclick="activeLocationFilter='${inj.id}'; refreshUI();" style="background: #1a1a1a; padding: 15px; border-radius: 10px; margin-bottom: 10px; cursor: pointer; border-left: 5px solid ${parseInt(last.pain) === 0 ? GOLD_COLOR : RED_MARKER};">
-                    <div style="font-weight: bold; color: gold;">${inj.location}</div>
-                    <div style="font-size: 0.8em; color: #888;">Останній стан: ${last.date} (Біль: ${last.pain})</div>
+                <div onclick="activeLocationFilter='${inj.id}'; refreshUI();" style="background:#1a1a1a; padding:12px; border-radius:8px; margin-bottom:10px; cursor:pointer; border-left:4px solid ${parseInt(last.pain) === 0 ? GOLD_COLOR : RED_MARKER}; position:relative;">
+                    <div style="color:gold; font-weight:bold;">${inj.location}</div>
+                    <div style="font-size:0.8em; color:#888;">${last.date} | Біль: ${last.pain}</div>
                 </div>
             `;
-        }).join('') || '<p class="placeholder-text">Оберіть точку на тілі...</p>';
+        }).join('') || '<p>Клікніть на мапу...</p>';
     }
 }
 
-// ВІДКРИТТЯ ФОРМИ
-window.openUpdateForm = (id) => {
-    selectedId = id; 
+// 7. ФОРМА
+window.openUpdateMode = (id) => {
+    selectedId = id;
     const inj = injuries.find(i => i.id === id);
     document.getElementById('notes-section').style.display = 'block';
     document.getElementById('injury-location').value = inj.location;
     document.getElementById('injury-location').disabled = true; 
     document.getElementById('injury-date').value = getToday();
     document.getElementById('injury-notes').value = "";
-    document.getElementById('save-injury-button').textContent = "Зберегти оновлення";
     window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
@@ -181,48 +186,37 @@ document.addEventListener('DOMContentLoaded', () => {
         const rect = map.getBoundingClientRect();
         const x = ((e.clientX - rect.left) / rect.width) * 100;
         const y = ((e.clientY - rect.top) / rect.height) * 100;
-        
-        marker.style.display = 'block';
-        marker.style.left = x + '%';
-        marker.style.top = y + '%';
-        
+        marker.style.left = x + '%'; marker.style.top = y + '%';
         document.getElementById('coordX').value = x.toFixed(2);
         document.getElementById('coordY').value = y.toFixed(2);
-        
-        selectedId = null; // Нова травма
+        selectedId = null;
         document.getElementById('injury-location').disabled = false;
         document.getElementById('injury-form').reset();
         document.getElementById('injury-date').value = getToday();
         document.getElementById('notes-section').style.display = 'block';
-        document.getElementById('save-injury-button').textContent = "Створити нову травму";
     };
 
     document.getElementById('injury-form').onsubmit = async (e) => {
         e.preventDefault();
-        
-        const newEntry = {
+        const updateData = {
             date: document.getElementById('injury-date').value,
             pain: parseInt(document.querySelector('input[name="pain"]:checked')?.value || 0),
             notes: document.getElementById('injury-notes').value
         };
-
         try {
             if (selectedId) {
-                // Додаємо запис саме в ту травму, яку ми відкрили
                 await db.collection(INJURY_COLLECTION).doc(selectedId).update({
-                    history: firebase.firestore.FieldValue.arrayUnion(newEntry)
+                    history: firebase.firestore.FieldValue.arrayUnion(updateData)
                 });
             } else {
-                // Створюємо абсолютно новий об'єкт
                 await db.collection(INJURY_COLLECTION).add({
                     userId: currentUserId,
                     location: document.getElementById('injury-location').value,
                     coordX: document.getElementById('coordX').value,
                     coordY: document.getElementById('coordY').value,
-                    history: [newEntry]
+                    history: [updateData]
                 });
             }
-            alert("ProAtletCare: Оновлено!");
             loadInjuriesFromFirebase();
             document.getElementById('notes-section').style.display = 'none';
         } catch (err) { alert(err.message); }
