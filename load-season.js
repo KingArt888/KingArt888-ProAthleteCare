@@ -1,203 +1,239 @@
-(function() {
-    const COLLECTION_NAME = 'load_season_reports';
-    let dailyLoadData = [];
-    let distanceChart = null;
-    let loadChart = null;
+const INJURY_COLLECTION = 'injuries';
+let currentUserId = null;
+let injuries = [];
+let selectedId = null; 
+let painChartInstance = null;
+let activeLocationFilter = null;
 
-    // --- 1. ІНІЦІАЛІЗАЦІЯ ТА АВТО-ДАТА ---
-    document.addEventListener('DOMContentLoaded', () => {
-        // Встановлюємо сьогоднішню дату автоматично
-        const dateInput = document.getElementById('load-date') || document.querySelector('input[type="date"]');
-        if (dateInput) {
-            dateInput.value = new Date().toISOString().split('T')[0];
-        }
+const RED_MARKER = '#DA3E52'; 
+const GOLD_COLOR = '#FFC72C'; 
 
-        // Авторизація та завантаження даних
-        firebase.auth().onAuthStateChanged(async (user) => {
-            if (user) {
-                await syncLoadFromFirebase(user.uid);
-            } else {
-                // Анонімний вхід для виконання правил Firebase (auth != null)
-                await firebase.auth().signInAnonymously().catch(console.error);
-            }
-        });
+const getToday = () => new Date().toISOString().split('T')[0];
 
-        const form = document.getElementById('load-form');
-        if (form) form.addEventListener('submit', handleFormSubmit);
-    });
-
-    // --- 2. ПРЕМІАЛЬНИЙ СПІДОМЕТР (Dashboard Style) ---
-    function updateACWRGauge(acwrValue) {
-        const needle = document.querySelector('.gauge-needle'); // З вашого CSS
-        const display = document.getElementById('acwr-value'); // З вашого CSS
-        const gaugeArc = document.querySelector('.gauge-arc');
-        const statusBox = document.querySelector('.gauge-status-box');
-
-        if (!needle || !display || !gaugeArc) return;
-
-        // Малюємо цифрову шкалу навколо стрілки
-        if (!gaugeArc.querySelector('.gauge-labels-container')) {
-            const labelsContainer = document.createElement('div');
-            labelsContainer.className = 'gauge-labels-container';
-            labelsContainer.style.cssText = 'position:absolute; width:100%; height:100%; top:0; left:0; pointer-events:none;';
-            
-            const points = [
-                { val: 0, lab: '0' },
-                { val: 0.8, lab: '0.8' },
-                { val: 1.3, lab: '1.3' },
-                { val: 2.0, lab: '2.0+' }
-            ];
-
-            points.forEach(p => {
-                const angle = -180 + (p.val <= 0.8 ? (p.val / 0.8) * 45 : 
-                              p.val <= 1.3 ? 45 + ((p.val - 0.8) / 0.5) * 90 : 
-                              135 + ((p.val - 1.3) / 0.7) * 45);
-                
-                const labelWrap = document.createElement('div');
-                labelWrap.style.cssText = `position:absolute; bottom:10px; left:50%; width:2px; height:135px; background:rgba(255,255,255,0.2); transform-origin:bottom center; transform:translateX(-50%) rotate(${angle}deg);`;
-                
-                const labelText = document.createElement('span');
-                labelText.innerText = p.lab;
-                labelText.style.cssText = `position:absolute; top:-20px; left:50%; transform:translateX(-50%) rotate(${-angle}deg); color:#888; font-size:11px; font-weight:bold;`;
-                
-                labelWrap.appendChild(labelText);
-                labelsContainer.appendChild(labelWrap);
-            });
-            gaugeArc.appendChild(labelsContainer);
-        }
-
-        // Логіка кута: -180 (ліво) до 0 (право) згідно з вашим CSS
-        let degree = -180;
-        let statusText = '';
-        let statusClass = '';
-
-        if (acwrValue < 0.8) {
-            degree = -180 + (acwrValue / 0.8) * 45;
-            statusText = 'НЕДОТРЕНОВАНІСТЬ';
-            statusClass = 'status-warning';
-        } else if (acwrValue <= 1.3) {
-            degree = -135 + ((acwrValue - 0.8) / 0.5) * 90;
-            statusText = 'ОПТИМАЛЬНА ФОРМА';
-            statusClass = 'status-safe';
+// 1. АВТОРИЗАЦИЯ
+if (typeof firebase !== 'undefined' && firebase.auth) {
+    firebase.auth().onAuthStateChanged(async (user) => {
+        if (user) {
+            currentUserId = user.uid;
+            loadInjuriesFromFirebase();
         } else {
-            degree = -45 + ((acwrValue - 1.3) / 0.7) * 45;
-            statusText = 'РИЗИК ТРАВМИ';
-            statusClass = 'status-danger';
+            firebase.auth().signInAnonymously();
         }
+    });
+}
 
-        // Обмеження стрілки
-        const finalDegree = Math.min(0, Math.max(-180, degree));
+// 2. ЗАГРУЗКА ДАННЫХ И ПРЕОБРАЗОВАНИЕ В ИСТОРИЮ
+async function loadInjuriesFromFirebase() {
+    if (!currentUserId) return;
+    try {
+        const snapshot = await db.collection(INJURY_COLLECTION)
+            .where("userId", "==", currentUserId)
+            .get();
         
-        // Анімація стрілки та значення
-        needle.style.transform = `translateX(-50%) rotate(${finalDegree}deg)`;
-        display.textContent = acwrValue.toFixed(2);
+        injuries = [];
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            // Если записи старые (без массива history), создаем его
+            if (!data.history) {
+                data.history = [{
+                    date: data.date || getToday(),
+                    pain: data.pain || 0,
+                    notes: data.notes || ""
+                }];
+            }
+            injuries.push({ id: doc.id, ...data });
+        });
+        refreshUI();
+    } catch (e) { console.error("Ошибка загрузки:", e); }
+}
+
+function refreshUI() {
+    renderPoints();
+    renderInjuryList();
+    updatePainChart();
+}
+
+// 3. ТОЧКИ НА ТЕЛЕ
+function renderPoints() {
+    const container = document.getElementById('bodyMapContainer');
+    if (!container) return;
+    container.querySelectorAll('.injury-marker').forEach(m => m.remove());
+
+    injuries.forEach(inj => {
+        if (!inj.coordX || !inj.coordY) return;
+
+        const el = document.createElement('div');
+        el.className = 'injury-marker';
         
-        // Колір цифри під стрілкою залежно від зони
-        display.style.color = (acwrValue > 1.3) ? '#d9534f' : (acwrValue >= 0.8 ? '#5cb85c' : '#f0ad4e');
+        // Последняя запись в истории определяет цвет точки
+        const lastEntry = inj.history[inj.history.length - 1];
+        const isHealed = parseInt(lastEntry.pain) === 0;
+        const markerColor = isHealed ? GOLD_COLOR : RED_MARKER;
 
-        if (statusBox) {
-            statusBox.innerHTML = `<span class="${statusClass}">${statusText}</span>`;
-        }
-    }
-
-    // --- 3. ГРАФІКИ (Стиль ProAtletCare) ---
-    function renderCharts(acute, chronic) {
-        const ctxD = document.getElementById('distanceChart');
-        const ctxL = document.getElementById('loadChart');
-
-        if (ctxD) {
-            if (distanceChart) distanceChart.destroy();
-            distanceChart = new Chart(ctxD, {
-                type: 'line',
-                data: {
-                    labels: dailyLoadData.slice(-7).map(d => d.date.split('-').reverse().slice(0,2).join('.')),
-                    datasets: [{
-                        label: 'Дистанція (км)',
-                        data: dailyLoadData.slice(-7).map(d => d.distance),
-                        borderColor: '#FFC72C', // Золото з вашого CSS
-                        backgroundColor: 'rgba(255, 199, 44, 0.1)',
-                        fill: true, tension: 0.4, borderWidth: 3
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-        }
-
-        if (ctxL) {
-            if (loadChart) loadChart.destroy();
-            loadChart = new Chart(ctxL, {
-                type: 'line',
-                data: {
-                    labels: ['Минулий період', 'Поточний період'],
-                    datasets: [
-                        { label: 'Acute Load', data: [acute*0.85, acute], borderColor: '#d9534f', borderWidth: 3, tension: 0.3 },
-                        { label: 'Chronic Load', data: [chronic*0.95, chronic], borderColor: '#5cb85c', borderWidth: 3, tension: 0.3 }
-                    ]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-        }
-    }
-
-    // --- 4. FIREBASE ТА РОЗРАХУНКИ ---
-    async function syncLoadFromFirebase(uid) {
-        try {
-            const snapshot = await db.collection(COLLECTION_NAME)
-                .where("userId", "==", uid)
-                .orderBy("date", "asc")
-                .get();
-            
-            dailyLoadData = [];
-            snapshot.forEach(doc => dailyLoadData.push(doc.data()));
-            
-            if (dailyLoadData.length === 0) dailyLoadData = getDemoData();
-
-            const { acute, chronic, acwr } = calculateMetrics();
-            updateACWRGauge(acwr);
-            renderCharts(acute, chronic);
-        } catch (e) {
-            console.error("Синхронізація не вдалася:", e);
-        }
-    }
-
-    function calculateMetrics() {
-        if (dailyLoadData.length === 0) return { acute: 0, chronic: 0, acwr: 0 };
-        const sorted = [...dailyLoadData].sort((a, b) => new Date(a.date) - new Date(b.date));
-        const lastDate = new Date(sorted[sorted.length - 1].date);
-
-        const getAvg = (days) => {
-            const start = new Date(lastDate);
-            start.setDate(lastDate.getDate() - days);
-            const period = sorted.filter(d => new Date(d.date) > start);
-            const total = period.reduce((s, d) => s + (d.duration * (d.rpe || 0)), 0);
-            return total / days;
+        el.style.cssText = `
+            position: absolute; width: 14px; height: 14px; 
+            border-radius: 50%; border: 2px solid white; 
+            background-color: ${markerColor}; 
+            box-shadow: 0 0 10px ${markerColor};
+            left: ${inj.coordX}%; top: ${inj.coordY}%; transform: translate(-50%, -50%);
+            z-index: 100; cursor: pointer;
+        `;
+        
+        el.onclick = (e) => { 
+            e.stopPropagation(); 
+            activeLocationFilter = inj.id; // Фокус на этой травме
+            refreshUI();
         };
+        container.appendChild(el);
+    });
+}
 
-        const acute = getAvg(7);
-        const chronic = getAvg(28);
-        return { acute, chronic, acwr: chronic > 0 ? acute / chronic : 0 };
+// 4. ГРАФИК КОНТРОЛЯ БОЛИ (МНОГО ТОЧЕК)
+function updatePainChart() {
+    const ctx = document.getElementById('painChart');
+    if (!ctx) return;
+    if (painChartInstance) painChartInstance.destroy();
+
+    const selectedInjury = injuries.find(i => i.id === activeLocationFilter);
+    if (!selectedInjury) return;
+
+    // Сортируем историю по датам для правильной линии графика
+    const history = [...selectedInjury.history].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    painChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: history.map(h => h.date), // Все даты (сколько бы их ни было)
+            datasets: [{
+                label: `Динамика восстановления: ${selectedInjury.location}`,
+                data: history.map(h => h.pain), // Все значения боли
+                borderColor: GOLD_COLOR,
+                backgroundColor: 'rgba(255, 199, 44, 0.1)',
+                tension: 0.3,
+                fill: true,
+                pointRadius: 6,
+                pointBackgroundColor: history.map(h => parseInt(h.pain) === 0 ? GOLD_COLOR : RED_MARKER)
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { min: 0, max: 10, ticks: { color: '#fff' } },
+                x: { ticks: { color: '#888' } }
+            },
+            plugins: { legend: { labels: { color: '#fff' } } }
+        }
+    });
+}
+
+// 5. СПИСОК ИСТОРИИ
+function renderInjuryList() {
+    const listElement = document.getElementById('injury-list');
+    if (!listElement) return;
+
+    if (activeLocationFilter) {
+        const inj = injuries.find(i => i.id === activeLocationFilter);
+        const historyRev = [...inj.history].reverse(); // Последние записи сверху
+
+        listElement.innerHTML = `
+            <div style="color: #FFC72C; font-weight: bold; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                <span>📍 ${inj.location}</span>
+                <button onclick="activeLocationFilter=null; refreshUI();" style="background:#333; color:#fff; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">Назад</button>
+            </div>
+            ${historyRev.map(h => `
+                <div style="background: #111; padding: 10px; border-radius: 5px; margin-bottom: 5px; border-left: 3px solid ${parseInt(h.pain) === 0 ? GOLD_COLOR : RED_MARKER};">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8em; color: #888;">
+                        <span>${h.date}</span>
+                        <span style="color: gold; font-weight:bold;">Боль: ${h.pain}/10</span>
+                    </div>
+                    <div style="color: #ccc; margin-top: 5px;">${h.notes || 'Без описания'}</div>
+                </div>
+            `).join('')}
+            <button onclick="openUpdateForm('${inj.id}')" style="width: 100%; padding: 12px; background: #FFC72C; color: black; border: none; border-radius: 5px; margin-top: 10px; cursor: pointer; font-weight: bold;">
+                + ЗАПИСАТЬ НОВОЕ СОСТОЯНИЕ
+            </button>
+        `;
+    } else {
+        listElement.innerHTML = injuries.map(inj => {
+            const last = inj.history[inj.history.length - 1];
+            return `
+                <div onclick="activeLocationFilter='${inj.id}'; refreshUI();" style="background: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 10px; cursor: pointer; border-left: 5px solid ${parseInt(last.pain) === 0 ? GOLD_COLOR : RED_MARKER};">
+                    <div style="font-weight: bold; color: gold;">${inj.location}</div>
+                    <div style="font-size: 0.8em; color: #888;">Последнее обновление: ${last.date}</div>
+                    <div style="margin-top: 5px;">Текущая боль: <strong>${last.pain}/10</strong></div>
+                </div>
+            `;
+        }).join('') || '<p class="placeholder-text">Кликните на силуэт, чтобы добавить травму.</p>';
     }
+}
 
-    async function handleFormSubmit(e) {
+// 6. УПРАВЛЕНИЕ ФОРМОЙ
+window.openUpdateForm = (id) => {
+    selectedId = id;
+    const inj = injuries.find(i => i.id === id);
+    document.getElementById('notes-section').style.display = 'block';
+    document.getElementById('injury-location').value = inj.location;
+    document.getElementById('injury-location').disabled = true; // Название не меняем
+    document.getElementById('injury-date').value = getToday();
+    document.getElementById('injury-notes').value = "";
+    document.getElementById('save-injury-button').textContent = "Сохранить в историю";
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    const map = document.getElementById('bodyMapContainer');
+    const marker = document.getElementById('click-marker');
+
+    map.onclick = (e) => {
+        if (e.target.classList.contains('injury-marker')) return;
+        const rect = map.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+        
+        marker.style.display = 'block';
+        marker.style.left = x + '%';
+        marker.style.top = y + '%';
+        
+        document.getElementById('coordX').value = x.toFixed(2);
+        document.getElementById('coordY').value = y.toFixed(2);
+        
+        selectedId = null; 
+        document.getElementById('injury-location').disabled = false;
+        document.getElementById('injury-form').reset();
+        document.getElementById('injury-date').value = getToday();
+        document.getElementById('notes-section').style.display = 'block';
+        document.getElementById('save-injury-button').textContent = "Зафиксировать новую травму";
+    };
+
+    document.getElementById('injury-form').onsubmit = async (e) => {
         e.preventDefault();
-        const user = firebase.auth().currentUser;
-        if (!user) return;
         
-        const form = e.target;
-        const data = {
-            userId: user.uid,
-            date: form.elements['date'].value,
-            duration: parseInt(form.elements['duration'].value),
-            distance: parseFloat(form.elements['distance'].value),
-            rpe: parseInt(form.querySelector('input[name="rpe"]:checked')?.value || 0),
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        const newEntry = {
+            date: document.getElementById('injury-date').value,
+            pain: parseInt(document.querySelector('input[name="pain"]:checked')?.value || 0),
+            notes: document.getElementById('injury-notes').value
         };
 
-        await db.collection(COLLECTION_NAME).doc(`${user.uid}_${data.date}`).set(data);
-        await syncLoadFromFirebase(user.uid);
-    }
-
-    function getDemoData() {
-        return [{ date: new Date().toISOString().split('T')[0], duration: 60, rpe: 7, distance: 5 }];
-    }
-})();
+        try {
+            if (selectedId) {
+                // Добавляем точку в историю существующей травмы
+                await db.collection(INJURY_COLLECTION).doc(selectedId).update({
+                    history: firebase.firestore.FieldValue.arrayUnion(newEntry)
+                });
+            } else {
+                // Новая травма
+                await db.collection(INJURY_COLLECTION).add({
+                    userId: currentUserId,
+                    location: document.getElementById('injury-location').value,
+                    coordX: document.getElementById('coordX').value,
+                    coordY: document.getElementById('coordY').value,
+                    history: [newEntry]
+                });
+            }
+            alert("Состояние обновлено!");
+            loadInjuriesFromFirebase();
+            document.getElementById('notes-section').style.display = 'none';
+        } catch (err) { alert(err.message); }
+    };
+});
