@@ -4,15 +4,16 @@ let loadChart = null;
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('load-date').valueAsDate = new Date();
 
-    // Слухаємо базу даних Firebase
     db.collection("dailyLoad").orderBy("date", "asc")
     .onSnapshot((snapshot) => {
         dailyLoadData = [];
         snapshot.forEach(doc => dailyLoadData.push(doc.data()));
         updateDashboard();
+    }, (error) => {
+        console.error("Firebase Permission Error:", error);
+        document.getElementById('acwr-status').innerText = "Помилка доступу";
     });
 
-    // Збереження форми
     document.getElementById('load-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const rpe = document.querySelector('input[name="rpe"]:checked')?.value;
@@ -28,37 +29,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             await db.collection("dailyLoad").add(entry);
-            document.getElementById('form-status').innerText = "Синхронізовано! ✅";
             e.target.reset();
             document.getElementById('load-date').valueAsDate = new Date();
-        } catch (err) {
-            document.getElementById('form-status').innerText = "Помилка Firebase ❌";
-        }
+        } catch (err) { console.error(err); }
     });
 });
 
 function updateDashboard() {
     if (dailyLoadData.length === 0) return;
-
     const acwr = calculateACWR();
     
-    // Рух стрілки
+    document.getElementById('acwr-value').innerText = acwr.toFixed(2);
     const needle = document.getElementById('gauge-needle');
-    const valueText = document.getElementById('acwr-value');
     
-    // 1.0 ACWR = 0 градусів (центр), 0.0 = -90, 2.0 = +90
-    let degrees = (acwr * 90) - 90;
-    if (degrees > 95) degrees = 95;
-    if (degrees < -95) degrees = -95;
-
+    // 1.0 = 0deg, 4.0 = 90deg (як на фото)
+    let degrees = (acwr - 1) * 30; 
+    degrees = Math.max(-90, Math.min(90, degrees));
     needle.style.transform = `translateX(-50%) rotate(${degrees}deg)`;
-    valueText.innerText = acwr.toFixed(2);
 
-    // Статус
     const st = document.getElementById('acwr-status');
-    if (acwr < 0.8) { st.innerText = "Underloading"; st.className = "status-warn"; }
-    else if (acwr <= 1.3) { st.innerText = "Safe Zone"; st.className = "status-safe"; }
-    else { st.innerText = "High Risk!"; st.className = "status-danger"; }
+    st.innerText = acwr > 1.3 ? "DANGER" : (acwr < 0.8 ? "WARNING" : "SAFE");
+    st.style.color = acwr > 1.3 ? "#d9534f" : "#5cb85c";
+    document.getElementById('acwr-value').style.color = acwr > 1.3 ? "#d9534f" : "#5cb85c";
 
     renderChart();
 }
@@ -73,14 +65,13 @@ function calculateACWR() {
 function renderChart() {
     const ctx = document.getElementById('loadChart').getContext('2d');
     if (loadChart) loadChart.destroy();
-    
     const last14 = dailyLoadData.slice(-14);
     loadChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: last14.map(d => d.date.split('-').slice(1).join('.')),
             datasets: [{
-                label: 'Load',
+                label: 'Навантаження',
                 data: last14.map(d => d.load),
                 borderColor: '#FFD700',
                 backgroundColor: 'rgba(255, 215, 0, 0.1)',
@@ -88,10 +79,6 @@ function renderChart() {
                 tension: 0.4
             }]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: { y: { beginAtZero: true } }
-        }
+        options: { responsive: true, maintainAspectRatio: false }
     });
 }
