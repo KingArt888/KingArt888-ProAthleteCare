@@ -116,6 +116,24 @@
     <footer>
         &copy; 2025 ProAthleteCare. 
     </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyD1EP8iLSCVNZgkZKSSbMJa_4gS5VmqfKc",
+        authDomain: "proathletecare-8eaba.firebaseapp.com",
+        projectId: "proathletecare-8eaba",
+        storageBucket: "proathletecare-8eaba.firebasestorage.app",
+        messagingSenderId: "769667753086",
+        appId: "1:769667753086:web:c2dde1935f80596758a42f"
+      };
+  
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore(); 
+    </script>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="load-season.js"></script>
