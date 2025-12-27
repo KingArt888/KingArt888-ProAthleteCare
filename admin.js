@@ -29,7 +29,7 @@ function getStatusEmoji(type, value) {
         </div>`;
 }
 
-// 2. Функції взаємодії (Чат та Програма)
+// 2. Функції взаємодії (Чат, Програма та План)
 window.openChat = function(uid, name) {
     const msg = prompt(`Повідомлення для ${name}:`);
     if (msg) {
@@ -52,6 +52,7 @@ window.editProgram = function(uid, name) {
     }
 };
 
+// 3. Завантаження моніторингу
 async function loadGlobalMonitor() {
     const tbody = document.getElementById('athletes-tbody');
     if (!tbody) return;
@@ -80,7 +81,7 @@ async function loadGlobalMonitor() {
             }
         });
 
-        // Аналіз травм та динаміки (БЕЗ ЕМОДЗІ в тексті)
+        // Аналіз травм
         injuriesSnap.forEach(doc => {
             const data = doc.data();
             const uid = data.userId;
@@ -121,21 +122,6 @@ async function loadGlobalMonitor() {
 
         let athleteList = Object.values(athletesMap);
 
-        // Тимчасові атлети для перевірки (видаліть, коли база заповниться)
-        const demoAthletes = [
-            {
-                uid: "d1", name: "Олександр", club: "Rugby UA", photo: "https://i.pravatar.cc/150?u=11",
-                injuryStatus: { label: 'ПОКРАЩЕННЯ', color: '#00ff00', pain: 2, bodyPart: 'Праве коліно' },
-                wellness: { sleep: 9, stress: 2, soreness: 3, ready: 8 }
-            },
-            {
-                uid: "d2", name: "Дмитро", club: "FC Shakhtar", photo: "https://i.pravatar.cc/150?u=12",
-                injuryStatus: { label: 'ПОГІРШЕННЯ', color: '#ff4d4d', pain: 8, bodyPart: 'Ахіл' },
-                wellness: { sleep: 4, stress: 9, soreness: 8, ready: 2 }
-            }
-        ];
-        athleteList = [...athleteList, ...demoAthletes];
-
         // Рендер таблиці
         tbody.innerHTML = athleteList.map(athlete => {
             const stat = athlete.injuryStatus;
@@ -164,9 +150,11 @@ async function loadGlobalMonitor() {
                     <td style="text-align: center;">${getStatusEmoji('ready', athlete.wellness.ready)}</td>
                     <td style="text-align: right; padding-right: 15px;">
                         <div style="display: flex; gap: 6px; justify-content: flex-end;">
-                            <a href="injury.html?userId=${athlete.uid}" title="Аналіз" style="background: #FFC72C; color: #000; padding: 7px; border-radius: 4px; text-decoration: none; font-size: 0.9em;">📊</a>
-                            <button onclick="openChat('${athlete.uid}', '${athlete.name}')" style="background: #111; color: #FFC72C; border: 1px solid #FFC72C; padding: 7px; border-radius: 4px; cursor: pointer;">✉️</button>
-                            <button onclick="editProgram('${athlete.uid}', '${athlete.name}')" style="background: #000; color: #FFC72C; border: 1px solid #FFC72C; padding: 7px; border-radius: 4px; cursor: pointer;">🏋️</button>
+                            <a href="weekly-individual.html?userId=${athlete.uid}" title="План на тиждень" style="background: #111; color: #FFC72C; border: 1px solid #FFC72C; padding: 7px; border-radius: 4px; text-decoration: none; font-size: 0.9em;">📅</a>
+                            
+                            <a href="injury.html?userId=${athlete.uid}" title="Аналіз травм" style="background: #FFC72C; color: #000; padding: 7px; border-radius: 4px; text-decoration: none; font-size: 0.9em;">📊</a>
+                            <button onclick="openChat('${athlete.uid}', '${athlete.name}')" title="Чат" style="background: #111; color: #FFC72C; border: 1px solid #FFC72C; padding: 7px; border-radius: 4px; cursor: pointer;">✉️</button>
+                            <button onclick="editProgram('${athlete.uid}', '${athlete.name}')" title="Коригування" style="background: #000; color: #FFC72C; border: 1px solid #FFC72C; padding: 7px; border-radius: 4px; cursor: pointer;">🏋️</button>
                         </div>
                     </td>
                 </tr>`;
