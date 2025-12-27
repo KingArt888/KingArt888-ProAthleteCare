@@ -1,6 +1,6 @@
-// daily-individual.js — ПОВНА СИНХРОНІЗАЦІЯ З ТВОЇМ WEEKLY
+// daily-individual.js — ПОВНА СИНХРОНІЗАЦІЯ З WEEKLY
 
-// 1. ІДЕНТИФІКАЦІЯ ТИЖНЯ (Точно як у твоєму Weekly)
+// 1. Точна копія функції з твого weekly-individual.js
 function getWeekID() {
     const d = new Date();
     const day = d.getDay();
@@ -9,117 +9,74 @@ function getWeekID() {
     return monday.toISOString().split('T')[0];
 }
 
-const currentWeekId = getWeekID();
-
 async function loadDailyPlan() {
     const listContainer = document.getElementById('daily-exercise-list');
     const statusDisplay = document.getElementById('md-status-display');
+    const currentWeekId = getWeekID();
 
     firebase.auth().onAuthStateChanged(async (user) => {
-        if (!user) {
-            console.log("Користувач не залогінений");
-            return;
-        }
+        if (!user) return;
 
-        // Використовуємо UID поточного атлета
         const uid = user.uid;
+        // Формуємо ID документа точно як у Weekly
         const docPath = `${uid}_${currentWeekId}`;
-        
-        console.log("Daily Individual: Завантаження для", docPath);
+        console.log("Шукаємо план за шляхом:", docPath);
 
         try {
-            // Зчитуємо саме той документ, який створив Weekly Individual
             const doc = await db.collection('weekly_plans').doc(docPath).get();
             
             if (!doc.exists) {
-                listContainer.innerHTML = '<p style="text-align:center; color:#888; padding:20px;">План на цей тиждень ще не опублікований тренером.</p>';
+                listContainer.innerHTML = '<p style="text-align:center; color:#888;">План на цей тиждень не знайдено в базі.</p>';
                 return;
             }
 
-            const data = doc.data().planData;
-            // Поточний індекс дня (0-Пн, 6-Нд)
+            const fbData = doc.data().planData;
             const todayIdx = (new Date().getDay() === 0) ? 6 : new Date().getDay() - 1;
 
-            // Визначаємо статус дня на сьогодні (MD, TRAIN, REST)
-            const mdStatus = calculateStatusFromWeekly(data, todayIdx);
+            // ВИПРАВЛЕНО: Використовуємо day_ (як у weekly), а не activity_
+            const mdStatus = calculateStatusFromWeekly(fbData, todayIdx);
             
             if (statusDisplay) {
                 statusDisplay.textContent = mdStatus;
-                statusDisplay.className = `md-status ${getStatusColorClass(mdStatus)}`;
+                statusDisplay.className = `md-status color-dark-grey`;
             }
 
-            // Отримуємо вправи саме для цього статусу
             const planKey = `status_plan_${mdStatus}`;
-            const plan = data[planKey];
+            const plan = fbData[planKey];
 
             if (!plan || !plan.exercises || plan.exercises.length === 0) {
-                listContainer.innerHTML = `<div style="text-align:center; padding:30px; color:#888;">На сьогодні (${mdStatus}) вправи не заплановані.</div>`;
+                listContainer.innerHTML = `<p style="text-align:center; padding:20px;">На сьогодні (${mdStatus}) вправ немає.</p>`;
             } else {
-                renderDailyExercises(plan.exercises, listContainer);
+                listContainer.innerHTML = plan.exercises.map(ex => `
+                    <div style="background:#111; padding:15px; border-radius:8px; margin-bottom:10px; border-left:4px solid #d4af37;">
+                        <h4 style="margin:0; color:#fff;">${ex.name}</h4>
+                        <p style="color:#aaa; font-size:0.85rem;">${ex.description || ''}</p>
+                        ${ex.videoKey ? `<iframe src="https://www.youtube.com/embed/${ex.videoKey}" style="width:100%; aspect-ratio:16/9; border:0; margin-top:10px;"></iframe>` : ''}
+                    </div>
+                `).join('');
             }
-
         } catch (e) {
-            console.error("Помилка завантаження:", e);
-            listContainer.innerHTML = '<p style="color:red; text-align:center;">Помилка синхронізації з хмарою.</p>';
+            console.error("Помилка:", e);
         }
     });
 }
 
-// Функція розрахунку статусу (ідентична логіці Weekly)
 function calculateStatusFromWeekly(data, todayIdx) {
-    // Перевіряємо типи днів за ключами day_0, day_1...
+    // Змінено на day_ для синхронізації з weekly-individual.js
     if (data[`day_${todayIdx}`] === 'REST') return 'REST';
     if (data[`day_${todayIdx}`] === 'MATCH') return 'MD';
     
-    let matchIndices = [];
+    let matchIdx = -1;
     for (let i = 0; i < 7; i++) {
-        if (data[`day_${i}`] === 'MATCH') matchIndices.push(i);
+        if (data[`day_${i}`] === 'MATCH') matchIdx = i;
     }
     
-    if (matchIndices.length === 0) return 'TRAIN';
+    if (matchIdx === -1) return 'TRAIN';
     
-    let minDiff = Infinity;
-    let bestStatus = 'TRAIN';
-
-    matchIndices.forEach(mIdx => {
-        // Перевіряємо в межах поточного, минулого та наступного тижнів
-        for (let offset of [-7, 0, 7]) {
-            let diff = todayIdx - (mIdx + offset);
-            if ((diff === 1 || diff === 2) || (diff >= -4 && diff <= -1)) {
-                if (Math.abs(diff) < Math.abs(minDiff)) {
-                    minDiff = diff;
-                    bestStatus = diff > 0 ? `MD+${diff}` : `MD${diff}`;
-                }
-            }
-        }
-    });
-    return bestStatus;
-}
-
-function getStatusColorClass(status) {
-    const map = { 'MD': 'color-red', 'REST': 'color-neutral', 'TRAIN': 'color-dark-grey' };
-    return map[status] || 'color-green'; // Для MD-1, MD+1 тощо
-}
-
-function renderDailyExercises(exercises, container) {
-    const stages = ['Pre-Training', 'Main Training', 'Post-Training'];
-    container.innerHTML = stages.map(stage => {
-        const stageExs = exercises.filter(ex => ex.stage === stage);
-        if (stageExs.length === 0) return '';
-        return `
-            <div style="margin-bottom:25px;">
-                <div style="color:#d4af37; font-size:0.75rem; text-transform:uppercase; border-bottom:1px solid #333; padding-bottom:5px; margin-bottom:12px; font-weight:bold;">${stage}</div>
-                ${stageExs.map(ex => `
-                    <div style="background:#111; padding:15px; border-radius:8px; margin-bottom:12px; border-left:4px solid #d4af37;">
-                        <h4 style="margin:0; color:#fff; font-size:1.1rem;">${ex.name}</h4>
-                        ${ex.videoKey ? `
-                        <div style="margin-top:12px; position:relative; padding-bottom:56.25%; height:0; border-radius:6px; overflow:hidden; background:#000;">
-                            <iframe src="https://www.youtube.com/embed/${ex.videoKey}" style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;" allowfullscreen></iframe>
-                        </div>` : ''}
-                    </div>
-                `).join('')}
-            </div>`;
-    }).join('');
+    let diff = todayIdx - matchIdx;
+    if (diff === 1 || diff === 2) return `MD+${diff}`;
+    if (diff >= -4 && diff <= -1) return `MD${diff}`;
+    return 'TRAIN';
 }
 
 document.addEventListener('DOMContentLoaded', loadDailyPlan);
