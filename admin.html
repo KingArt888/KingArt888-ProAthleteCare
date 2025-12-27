@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProAtletCare - Admin Panel</title>
+    <link rel="stylesheet" href="style.css"> <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .admin-container { padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .athlete-card { 
+            background: #1a1a1a; border-left: 5px solid #FFC72C; 
+            padding: 20px; margin-bottom: 15px; border-radius: 10px; cursor: pointer;
+            transition: 0.3s; display: flex; justify-content: space-between; align-items: center;
+        }
+        .athlete-card:hover { background: #252525; transform: translateX(10px); }
+        .status-badge { padding: 5px 10px; border-radius: 20px; font-size: 0.8em; font-weight: bold; }
+        .status-recovering { background: #DA3E52; color: white; }
+        .status-healthy { background: #FFC72C; color: black; }
+        #athlete-detail-view { display: none; margin-top: 30px; border-top: 1px solid #333; padding-top: 20px; }
+    </style>
+</head>
+<body class="dark-theme">
+    <div class="admin-container">
+        <h1 style="color: #FFC72C;">Кабінет Тренера ProAtletCare</h1>
+        <p style="color: #888;">Моніторинг стану всіх атлетів</p>
+
+        <div id="athletes-list">
+            <p>Завантаження списку атлетів...</p>
+        </div>
+
+        <div id="athlete-detail-view">
+            <button onclick="closeDetails()" class="gold-button" style="width: auto; padding: 5px 20px;">← Назад до списку</button>
+            <h2 id="current-athlete-name" style="color: gold; margin-top: 20px;"></h2>
+            
+            <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+                <div id="bodyMapContainer" style="position: relative; width: 300px;">
+                    <img src="body-silhouette.png" alt="Body" style="width: 100%;">
+                    </div>
+                
+                <div style="flex: 1; min-width: 300px;">
+                    <div class="chart-card" style="height: 300px; background: #111; padding: 15px; border-radius: 10px;">
+                        <canvas id="painChartAdmin"></canvas>
+                    </div>
+                    <div id="athlete-history-admin" style="margin-top: 20px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>
