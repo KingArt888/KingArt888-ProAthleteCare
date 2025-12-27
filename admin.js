@@ -2,6 +2,7 @@ const USERS_COL = 'users';
 const INJURIES_COL = 'injuries';
 const WELLNESS_COL = 'wellness_reports';
 
+// 1. Тематичні іконки з кольором
 function getStatusEmoji(type, value) {
     if (value === '-' || value === undefined) return '<span style="opacity: 0.2;">➖</span>';
     const val = parseInt(value);
@@ -37,6 +38,7 @@ async function loadGlobalMonitor() {
 
         const athletesMap = {};
 
+        // Спочатку створюємо об'єкти для всіх користувачів
         usersSnap.forEach(doc => {
             const data = doc.data();
             if (data.role !== 'admin') {
@@ -51,7 +53,7 @@ async function loadGlobalMonitor() {
             }
         });
 
-        // ЛОГІКА ДИНАМІКИ БОЛЮ
+        // ПЕРЕВІРКА ДИНАМІКИ БОЛЮ
         injuriesSnap.forEach(doc => {
             const data = doc.data();
             const uid = data.userId;
@@ -63,7 +65,6 @@ async function loadGlobalMonitor() {
                     if (lastPain === 0) {
                         athletesMap[uid].injuryStatus = { label: 'ЗДОРОВИЙ', color: '#00ff00', pain: 0 };
                     } else {
-                        // Якщо є попередній запис, порівнюємо
                         let trend = 'СТАБІЛЬНО';
                         let trendColor = '#FFC72C'; // Жовтий
 
@@ -71,26 +72,23 @@ async function loadGlobalMonitor() {
                             const prevPain = parseInt(history[history.length - 2].pain) || 0;
                             if (lastPain < prevPain) {
                                 trend = 'ПОКРАЩЕННЯ 📈';
-                                trendColor = '#00ff00'; // Зелений
+                                trendColor = '#00ff00';
                             } else if (lastPain > prevPain) {
                                 trend = 'ПОГІРШЕННЯ 📉';
-                                trendColor = '#ff4d4d'; // Червоний
+                                trendColor = '#ff4d4d';
                             }
                         } else {
                             trend = 'НОВА ТРАВМА';
                             trendColor = '#ff4d4d';
                         }
                         
-                        athletesMap[uid].injuryStatus = { 
-                            label: trend, 
-                            color: trendColor, 
-                            pain: lastPain 
-                        };
+                        athletesMap[uid].injuryStatus = { label: trend, color: trendColor, pain: lastPain };
                     }
                 }
             }
         });
 
+        // Wellness дані
         wellnessSnap.forEach(doc => {
             const data = doc.data();
             const uid = data.userId;
@@ -104,7 +102,13 @@ async function loadGlobalMonitor() {
             }
         });
 
-        let athleteList = Object.values(athletesMap);
+        // --- ВИПРАВЛЕННЯ ПОМИЛКИ ІНІЦІАЛІЗАЦІЇ ---
+        const athleteList = Object.values(athletesMap);
+
+        if (athleteList.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #888; padding: 20px;">Атлетів не знайдено</td></tr>';
+            return;
+        }
 
         tbody.innerHTML = athleteList.map(athlete => {
             const stat = athlete.injuryStatus;
@@ -139,7 +143,8 @@ async function loadGlobalMonitor() {
         }).join('');
 
     } catch (error) {
-        console.error("Помилка:", error);
+        console.error("Помилка завантаження адмінки:", error);
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #ff4d4d; padding: 20px;">Помилка: ${error.message}</td></tr>`;
     }
 }
 
