@@ -1,22 +1,9 @@
-// Константи для колекцій (згідно з вашою структурою)
-const USERS_COL = 'users';
-const INJURIES_COL = 'injuries';
-const WELLNESS_COL = 'wellness_reports'; // назва з вашого останнього скрипта
-
-// Межі "тривоги" (Thresholds)
-const ALERTS = {
-    sleep: { min: 6 },
-    stress: { max: 7 },
-    soreness: { max: 7 },
-    ready: { min: 5 }
-};
-
 async function loadGlobalMonitor() {
     const tbody = document.getElementById('athletes-tbody');
     if (!tbody) return;
 
     try {
-        // 1. Отримуємо дані з усіх необхідних колекцій
+        // 1. Отримуємо дані
         const [usersSnap, injuriesSnap, wellnessSnap] = await Promise.all([
             db.collection(USERS_COL).get(),
             db.collection(INJURIES_COL).get(),
@@ -42,17 +29,15 @@ async function loadGlobalMonitor() {
             }
         });
 
-        // 3. Обробляємо травми (максимальний біль та кількість активних)
+        // 3. Обробляємо травми
         injuriesSnap.forEach(doc => {
             const data = doc.data();
             const uid = data.userId;
-            
             if (athletesMap[uid]) {
                 const history = data.painHistory || data.history || [];
                 if (history.length > 0) {
                     const latestEntry = history[history.length - 1];
                     const painVal = parseInt(latestEntry.pain) || 0;
-                    
                     if (painVal > athletesMap[uid].maxPain) {
                         athletesMap[uid].maxPain = painVal;
                     }
@@ -63,7 +48,7 @@ async function loadGlobalMonitor() {
             }
         });
 
-        // 4. Додаємо Wellness (тільки останній звіт для кожного)
+        // 4. Додаємо Wellness
         wellnessSnap.forEach(doc => {
             const data = doc.data();
             const uid = data.userId;
@@ -77,32 +62,21 @@ async function loadGlobalMonitor() {
             }
         });
 
-        // 5. Функція для перевірки на "червону зону"
-        const getAlertClass = (field, value) => {
-            if (value === '-') return '';
-            const val = parseInt(value);
-            const rule = ALERTS[field];
-            if (!rule) return '';
-            if (rule.min && val < rule.min) return 'critical-cell';
-            if (rule.max && val > rule.max) return 'critical-cell';
-            return '';
-        };
+        // 5. Формуємо масив (БЕЗ ПОВТОРНОГО ОГОЛОШЕННЯ)
+        let athleteList = Object.values(athletesMap);
 
-        // Додайте це для тесту всередині loadGlobalMonitor
-        const testAthlete = {
+        // Додаємо тест-атлета для перевірки відображення
+        athleteList.push({
             uid: "test_id",
-            name: "Тестовий Атлет",
+            name: "Артем (Тест)",
             photo: "https://via.placeholder.com/40",
             club: "ProAtletCare FC",
-            age: "25",
+            age: "30",
             activeInjuries: 1,
-            wellness: { sleep: 8, stress: 3, soreness: 2, ready: 9 }
-        };
-        athleteList.push(testAthlete);
+            wellness: { sleep: 5, stress: 8, soreness: 4, ready: 4 }
+        });
 
-        // 6. Формуємо HTML таблиці
-        const athleteList = Object.values(athletesMap);
-        
+        // 6. Рендер HTML
         if (athleteList.length === 0) {
             tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 30px;">Атлетів не знайдено.</td></tr>';
             return;
@@ -144,13 +118,3 @@ async function loadGlobalMonitor() {
         tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #DA3E52;">Помилка: ${error.message}</td></tr>`;
     }
 }
-
-// Запуск із перевіркою авторизації
-firebase.auth().onAuthStateChanged(async (user) => {
-    if (user) {
-        // Тут можна додати перевірку на роль admin, як ми обговорювали раніше
-        loadGlobalMonitor();
-    } else {
-        window.location.href = "auth.html";
-    }
-});
