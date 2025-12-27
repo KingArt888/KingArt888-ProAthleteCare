@@ -213,7 +213,7 @@ function renderInjuryList() {
                     </div>
                 `).join('')}
             </div>
-            <button onclick="openUpdateMode('${inj.id}')" style="width:100%; padding:10px; background:gold; border:none; border-radius:5px; font-weight:bold; margin-top:10px; cursor:pointer; color:black;">+ Оновити травму</button>
+            <button onclick="openUpdateMode('${inj.id}')" style="width:100%; padding:10px; background:gold; border:none; border-radius:5px; font-weight:bold; margin-top:10px; cursor:pointer; color:black;">+ ОНОВИТИ ТРАВМУ</button>
             <button onclick="deleteFullInjury('${inj.id}')" style="width:100%; padding:8px; background:none; border:1px solid #DA3E52; color:#DA3E52; border-radius:5px; margin-top:8px; cursor:pointer; font-size:0.8em;">ВИДАЛИТИ ВСЮ ТРАВМУ</button>
         `;
     } else {
