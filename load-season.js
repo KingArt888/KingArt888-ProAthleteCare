@@ -50,9 +50,8 @@
     =============================== */
     function updateAll() {
 
-        if (dailyData.length < 7) {
+        if (dailyData.length === 0) {
             updateGauge(0.5);
-            renderDistanceChart();
             return;
         }
 
@@ -60,12 +59,12 @@
         const latestACWR = acwrSeries[acwrSeries.length - 1];
 
         updateGauge(latestACWR);
-        renderACWRChart(acwrSeries);
+        renderLoadChart();
         renderDistanceChart();
     }
 
     /* ===============================
-       ACWR CALCULATION
+       LOAD CALCULATIONS
     =============================== */
     function sessionLoad(d) {
         return (d.duration || 0) * (d.rpe || 0);
@@ -118,12 +117,12 @@
     }
 
     /* ===============================
-       ACWR CHART
+       LOAD CHART (ACUTE vs CHRONIC)
     =============================== */
-    function renderACWRChart(acwrSeries) {
+    function renderLoadChart() {
 
         const ctx = document.getElementById('loadChart');
-        if (!ctx) return;
+        if (!ctx || dailyData.length < 2) return;
 
         if (loadChart) loadChart.destroy();
 
@@ -131,52 +130,41 @@
             d.date.split('-').reverse().slice(0, 2).join('.')
         );
 
+        const acuteSeries = dailyData.map((_, i) =>
+            avgLoad(dailyData, 7, i)
+        );
+
+        const chronicSeries = dailyData.map((_, i) =>
+            avgLoad(dailyData, 28, i)
+        );
+
         loadChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels,
-                datasets: [{
-                    label: 'ACWR',
-                    data: acwrSeries,
-                    borderWidth: 3,
-                    tension: 0.35
-                }]
+                datasets: [
+                    {
+                        label: 'Acute Load (7 днів)',
+                        data: acuteSeries,
+                        borderWidth: 3,
+                        tension: 0.35
+                    },
+                    {
+                        label: 'Chronic Load (28 днів)',
+                        data: chronicSeries,
+                        borderWidth: 3,
+                        tension: 0.35
+                    }
+                ]
             },
             options: {
                 responsive: true,
                 scales: {
                     y: {
-                        min: 0,
-                        max: 2,
-                        title: { display: true, text: 'ACWR' }
-                    }
-                },
-                plugins: {
-                    annotation: {
-                        annotations: {
-                            safe: {
-                                type: 'box',
-                                yMin: 0.8,
-                                yMax: 1.3,
-                                backgroundColor: 'rgba(92,184,92,0.15)'
-                            },
-                            warnLow: {
-                                type: 'box',
-                                yMin: 0.6,
-                                yMax: 0.8,
-                                backgroundColor: 'rgba(240,173,78,0.15)'
-                            },
-                            warnHigh: {
-                                type: 'box',
-                                yMin: 1.3,
-                                yMax: 1.5,
-                                backgroundColor: 'rgba(240,173,78,0.15)'
-                            },
-                            danger: {
-                                type: 'box',
-                                yMin: 1.5,
-                                backgroundColor: 'rgba(217,83,79,0.15)'
-                            }
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Session Load (duration × RPE)'
                         }
                     }
                 }
@@ -201,7 +189,7 @@
                     d.date.split('-').reverse().slice(0, 2).join('.')
                 ),
                 datasets: [{
-                    label: 'Км',
+                    label: 'Дистанція (км)',
                     data: dailyData.slice(-7).map(d => d.distance || 0),
                     borderWidth: 3,
                     tension: 0.3
