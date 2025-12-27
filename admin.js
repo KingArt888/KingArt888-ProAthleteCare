@@ -1,9 +1,14 @@
+// Константи для колекцій
+const USERS_COL = 'users';
+const INJURIES_COL = 'injuries';
+const WELLNESS_COL = 'wellness_reports';
+
 async function loadGlobalMonitor() {
     const tbody = document.getElementById('athletes-tbody');
     if (!tbody) return;
 
     try {
-        // 1. Отримуємо дані
+        // 1. Отримуємо дані з усіх необхідних колекцій одночасно
         const [usersSnap, injuriesSnap, wellnessSnap] = await Promise.all([
             db.collection(USERS_COL).get(),
             db.collection(INJURIES_COL).get(),
@@ -12,9 +17,10 @@ async function loadGlobalMonitor() {
 
         const athletesMap = {};
 
-        // 2. Створюємо список атлетів на основі профілів
+        // 2. Створюємо список атлетів на основі профілів (колекція users)
         usersSnap.forEach(doc => {
             const data = doc.data();
+            // Фільтруємо, щоб не показувати адміна в таблиці моніторингу
             if (data.role !== 'admin') {
                 athletesMap[doc.id] = {
                     uid: doc.id,
@@ -33,11 +39,13 @@ async function loadGlobalMonitor() {
         injuriesSnap.forEach(doc => {
             const data = doc.data();
             const uid = data.userId;
+            
             if (athletesMap[uid]) {
                 const history = data.painHistory || data.history || [];
                 if (history.length > 0) {
                     const latestEntry = history[history.length - 1];
                     const painVal = parseInt(latestEntry.pain) || 0;
+                    
                     if (painVal > athletesMap[uid].maxPain) {
                         athletesMap[uid].maxPain = painVal;
                     }
@@ -48,7 +56,7 @@ async function loadGlobalMonitor() {
             }
         });
 
-        // 4. Додаємо Wellness
+        // 4. Додаємо Wellness (беремо лише останній звіт для кожного юзера)
         wellnessSnap.forEach(doc => {
             const data = doc.data();
             const uid = data.userId;
@@ -62,10 +70,10 @@ async function loadGlobalMonitor() {
             }
         });
 
-        // 5. Формуємо масив (БЕЗ ПОВТОРНОГО ОГОЛОШЕННЯ)
+        // 5. Формуємо фінальний масив для відображення (ВИПРАВЛЕНО ПОРЯДОК)
         let athleteList = Object.values(athletesMap);
 
-        // Додаємо тест-атлета для перевірки відображення
+        // Додаємо тестового атлета, щоб ви побачили результат, поки база порожня
         athleteList.push({
             uid: "test_id",
             name: "Артем (Тест)",
@@ -76,7 +84,7 @@ async function loadGlobalMonitor() {
             wellness: { sleep: 5, stress: 8, soreness: 4, ready: 4 }
         });
 
-        // 6. Рендер HTML
+        // 6. Рендер таблиці
         if (athleteList.length === 0) {
             tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 30px;">Атлетів не знайдено.</td></tr>';
             return;
@@ -102,10 +110,10 @@ async function loadGlobalMonitor() {
                             ${isInjured ? 'Травма ('+athlete.activeInjuries+')' : 'Здоровий 💪'}
                         </span>
                     </td>
-                    <td class="${getAlertClass('sleep', w.sleep)}">${w.sleep}</td>
-                    <td class="${getAlertClass('stress', w.stress)}">${w.stress}</td>
-                    <td class="${getAlertClass('soreness', w.soreness)}">${w.soreness}</td>
-                    <td class="${getAlertClass('ready', w.ready)}">${w.ready}</td>
+                    <td>${w.sleep}</td>
+                    <td>${w.stress}</td>
+                    <td>${w.soreness}</td>
+                    <td>${w.ready}</td>
                     <td style="text-align: right;">
                         <a href="injury.html?userId=${athlete.uid}" class="btn-analyze">АНАЛІЗ</a>
                     </td>
@@ -114,7 +122,18 @@ async function loadGlobalMonitor() {
         }).join('');
 
     } catch (error) {
+        // Ловимо помилки доступу або мережі
         console.error("Помилка завантаження адмінки:", error);
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #DA3E52;">Помилка: ${error.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #DA3E52; padding: 20px;">Помилка: ${error.message}</td></tr>`;
     }
 }
+
+// Запуск при завантаженні сторінки
+firebase.auth().onAuthStateChanged(async (user) => {
+    if (user) {
+        console.log("Адмін авторизований:", user.uid);
+        loadGlobalMonitor();
+    } else {
+        window.location.href = "auth.html";
+    }
+});
