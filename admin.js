@@ -2,7 +2,7 @@ const USERS_COL = 'users';
 const INJURIES_COL = 'injuries';
 const WELLNESS_COL = 'wellness_reports';
 
-// 1. Тематичні іконки з кольором
+// 1. Функція для кольорових значків
 function getStatusEmoji(type, value) {
     if (value === '-' || value === undefined) return '<span style="opacity: 0.2;">➖</span>';
     const val = parseInt(value);
@@ -29,6 +29,9 @@ async function loadGlobalMonitor() {
     const tbody = document.getElementById('athletes-tbody');
     if (!tbody) return;
 
+    // Очищаємо перед завантаженням
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">Завантаження...</td></tr>';
+
     try {
         const [usersSnap, injuriesSnap, wellnessSnap] = await Promise.all([
             db.collection(USERS_COL).get(),
@@ -38,14 +41,14 @@ async function loadGlobalMonitor() {
 
         const athletesMap = {};
 
-        // Спочатку створюємо об'єкти для всіх користувачів
+        // Крок 1: Створюємо базу атлетів
         usersSnap.forEach(doc => {
             const data = doc.data();
             if (data.role !== 'admin') {
                 athletesMap[doc.id] = {
                     uid: doc.id,
                     name: data.name || "Атлет",
-                    photo: data.photoURL || "https://ui-avatars.com/api/?name=Athlete&background=FFC72C&color=000",
+                    photo: data.photoURL || `https://ui-avatars.com/api/?name=${data.name || 'A'}&background=FFC72C&color=000`,
                     club: data.club || "ProAtletCare",
                     injuryStatus: { label: 'ЗДОРОВИЙ', color: '#00ff00', pain: 0 },
                     wellness: { sleep: '-', stress: '-', soreness: '-', ready: '-' }
@@ -53,7 +56,7 @@ async function loadGlobalMonitor() {
             }
         });
 
-        // ПЕРЕВІРКА ДИНАМІКИ БОЛЮ
+        // Крок 2: Динаміка болю
         injuriesSnap.forEach(doc => {
             const data = doc.data();
             const uid = data.userId;
@@ -66,7 +69,7 @@ async function loadGlobalMonitor() {
                         athletesMap[uid].injuryStatus = { label: 'ЗДОРОВИЙ', color: '#00ff00', pain: 0 };
                     } else {
                         let trend = 'СТАБІЛЬНО';
-                        let trendColor = '#FFC72C'; // Жовтий
+                        let trendColor = '#FFC72C';
 
                         if (history.length > 1) {
                             const prevPain = parseInt(history[history.length - 2].pain) || 0;
@@ -81,14 +84,13 @@ async function loadGlobalMonitor() {
                             trend = 'НОВА ТРАВМА';
                             trendColor = '#ff4d4d';
                         }
-                        
                         athletesMap[uid].injuryStatus = { label: trend, color: trendColor, pain: lastPain };
                     }
                 }
             }
         });
 
-        // Wellness дані
+        // Крок 3: Wellness
         wellnessSnap.forEach(doc => {
             const data = doc.data();
             const uid = data.userId;
@@ -102,14 +104,15 @@ async function loadGlobalMonitor() {
             }
         });
 
-        // --- ВИПРАВЛЕННЯ ПОМИЛКИ ІНІЦІАЛІЗАЦІЇ ---
+        // Крок 4: Перетворюємо в масив (ВИПРАВЛЕНО ReferenceError)
         const athleteList = Object.values(athletesMap);
 
         if (athleteList.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #888; padding: 20px;">Атлетів не знайдено</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #888; padding: 20px;">Поки немає зареєстрованих атлетів</td></tr>';
             return;
         }
 
+        // Крок 5: Рендер таблиці
         tbody.innerHTML = athleteList.map(athlete => {
             const stat = athlete.injuryStatus;
             const w = athlete.wellness;
@@ -143,11 +146,12 @@ async function loadGlobalMonitor() {
         }).join('');
 
     } catch (error) {
-        console.error("Помилка завантаження адмінки:", error);
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #ff4d4d; padding: 20px;">Помилка: ${error.message}</td></tr>`;
+        console.error("Помилка:", error);
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #ff4d4d; padding: 20px;">Помилка завантаження: ${error.message}</td></tr>`;
     }
 }
 
+// Запуск
 firebase.auth().onAuthStateChanged((user) => {
     if (user) loadGlobalMonitor();
     else window.location.href = "auth.html";
