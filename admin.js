@@ -88,6 +88,18 @@ async function loadGlobalMonitor() {
             return '';
         };
 
+        // Додайте це для тесту всередині loadGlobalMonitor
+        const testAthlete = {
+            uid: "test_id",
+            name: "Тестовий Атлет",
+            photo: "https://via.placeholder.com/40",
+            club: "ProAtletCare FC",
+            age: "25",
+            activeInjuries: 1,
+            wellness: { sleep: 8, stress: 3, soreness: 2, ready: 9 }
+        };
+        athleteList.push(testAthlete);
+
         // 6. Формуємо HTML таблиці
         const athleteList = Object.values(athletesMap);
         
