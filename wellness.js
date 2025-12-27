@@ -28,6 +28,20 @@
     const urlParams = new URLSearchParams(window.location.search);
     const viewUserId = urlParams.get('userId');
 
+    firebase.auth().onAuthStateChanged(async (user) => {
+    if (user) {
+        // Визначаємо, з чиїм ID працювати
+        currentUserId = viewUserId || user.uid;
+        
+        // ДОДАЙТЕ ЦЕЙ РЯДОК:
+        console.log("Wellness Control: Працюємо з ID:", currentUserId);
+        
+        await syncWellnessFromFirebase(currentUserId);
+    } else {
+        await firebase.auth().signInAnonymously();
+    }
+});
+
     async function syncWellnessFromFirebase(uid) {
         if (!window.db) return;
         try {
