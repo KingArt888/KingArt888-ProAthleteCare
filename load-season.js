@@ -1,17 +1,19 @@
 let dailyLoadData = [];
 let loadChart = null;
+let distChart = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('load-date').valueAsDate = new Date();
 
+    // Слухаємо дані з Firebase
     db.collection("dailyLoad").orderBy("date", "asc")
     .onSnapshot((snapshot) => {
         dailyLoadData = [];
         snapshot.forEach(doc => dailyLoadData.push(doc.data()));
         updateDashboard();
     }, (error) => {
-        console.error("Firebase Permission Error:", error);
-        document.getElementById('acwr-status').innerText = "Помилка доступу";
+        console.error("Помилка Firebase:", error);
+        document.getElementById('acwr-status').innerText = "Потрібно налаштувати Rules в Firebase!";
     });
 
     document.getElementById('load-form').addEventListener('submit', async (e) => {
@@ -31,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
             await db.collection("dailyLoad").add(entry);
             e.target.reset();
             document.getElementById('load-date').valueAsDate = new Date();
-        } catch (err) { console.error(err); }
+        } catch (err) { alert("Помилка запису: " + err.message); }
     });
 });
 
@@ -42,17 +44,16 @@ function updateDashboard() {
     document.getElementById('acwr-value').innerText = acwr.toFixed(2);
     const needle = document.getElementById('gauge-needle');
     
-    // 1.0 = 0deg, 4.0 = 90deg (як на фото)
-    let degrees = (acwr - 1) * 30; 
+    // Рух стрілки: 0.0 -> -90deg, 1.0 -> 0deg, 2.0+ -> 90deg
+    let degrees = (acwr - 1) * 60;
     degrees = Math.max(-90, Math.min(90, degrees));
-    needle.style.transform = `translateX(-50%) rotate(${degrees}deg)`;
+    needle.style.transform = `translateX(-50%) rotate(${degrees}deg) `;
 
     const st = document.getElementById('acwr-status');
     st.innerText = acwr > 1.3 ? "DANGER" : (acwr < 0.8 ? "WARNING" : "SAFE");
     st.style.color = acwr > 1.3 ? "#d9534f" : "#5cb85c";
-    document.getElementById('acwr-value').style.color = acwr > 1.3 ? "#d9534f" : "#5cb85c";
 
-    renderChart();
+    renderCharts();
 }
 
 function calculateACWR() {
@@ -62,22 +63,27 @@ function calculateACWR() {
     return chronic > 0 ? (acute / chronic) : 1.0;
 }
 
-function renderChart() {
-    const ctx = document.getElementById('loadChart').getContext('2d');
+function renderCharts() {
+    // Графік навантаження
+    const ctxL = document.getElementById('loadChart').getContext('2d');
     if (loadChart) loadChart.destroy();
-    const last14 = dailyLoadData.slice(-14);
-    loadChart = new Chart(ctx, {
+    loadChart = new Chart(ctxL, {
         type: 'line',
         data: {
-            labels: last14.map(d => d.date.split('-').slice(1).join('.')),
-            datasets: [{
-                label: 'Навантаження',
-                data: last14.map(d => d.load),
-                borderColor: '#FFD700',
-                backgroundColor: 'rgba(255, 215, 0, 0.1)',
-                fill: true,
-                tension: 0.4
-            }]
+            labels: dailyLoadData.slice(-14).map(d => d.date),
+            datasets: [{ label: 'Load', data: dailyLoadData.slice(-14).map(d => d.load), borderColor: '#FFD700', fill: false }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    // Графік дистанції
+    const ctxD = document.getElementById('distanceChart').getContext('2d');
+    if (distChart) distChart.destroy();
+    distChart = new Chart(ctxD, {
+        type: 'bar',
+        data: {
+            labels: dailyLoadData.slice(-14).map(d => d.date),
+            datasets: [{ label: 'Distance (km)', data: dailyLoadData.slice(-14).map(d => d.distance), backgroundColor: '#5cb85c' }]
         },
         options: { responsive: true, maintainAspectRatio: false }
     });
