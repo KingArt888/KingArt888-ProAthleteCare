@@ -1,4 +1,4 @@
-// Константи колекцій
+// Назви колекцій у Firebase
 const INJURIES_COL = 'injuries';
 const WELLNESS_COL = 'wellness';
 
@@ -6,7 +6,7 @@ async function loadGlobalMonitor() {
     const tbody = document.getElementById('athletes-tbody');
     
     try {
-        // 1. Отримуємо всі дані з Firebase
+        // 1. Отримуємо всі дані з Firebase одночасно
         const [injuriesSnap, wellnessSnap] = await Promise.all([
             db.collection(INJURIES_COL).get(),
             db.collection(WELLNESS_COL).get()
@@ -14,7 +14,7 @@ async function loadGlobalMonitor() {
 
         const athletesMap = {};
 
-        // 2. Групуємо травми по користувачам
+        // 2. Обробляємо травми
         injuriesSnap.forEach(doc => {
             const data = doc.data();
             const uid = data.userId;
@@ -28,21 +28,22 @@ async function loadGlobalMonitor() {
                 };
             }
 
-            // Шукаємо найвищий біль серед усіх травм атлета
-            if (data.history && data.history.length > 0) {
-                const latestEntry = data.history[data.history.length - 1];
-                const painLevel = parseInt(latestEntry.pain) || 0;
+            // Логіка як у вашому injury.js: перевіряємо останній запис у painHistory
+            if (data.painHistory && data.painHistory.length > 0) {
+                const latestEntry = data.painHistory[data.painHistory.length - 1];
+                const painVal = parseInt(latestEntry.pain) || 0;
                 
-                if (painLevel > athletesMap[uid].maxPain) {
-                    athletesMap[uid].maxPain = painLevel;
+                if (painVal > athletesMap[uid].maxPain) {
+                    athletesMap[uid].maxPain = painVal;
                 }
-                if (painLevel > 0) {
+                // Якщо статус не 'closed', вважаємо травму активною
+                if (data.status !== 'closed') {
                     athletesMap[uid].activeInjuries++;
                 }
             }
         });
 
-        // 3. Додаємо дані Wellness
+        // 3. Додаємо дані Wellness (Сон, Стрес, Втома)
         wellnessSnap.forEach(doc => {
             const data = doc.data();
             if (athletesMap[data.userId]) {
@@ -54,37 +55,31 @@ async function loadGlobalMonitor() {
             }
         });
 
-        // 4. Генерація HTML
-        const rows = Object.values(athletesMap).map(athlete => {
-            const statusClass = athlete.activeInjuries > 0 ? 'status-recovering' : 'status-healthy';
-            const statusText = athlete.activeInjuries > 0 ? `Відновлення (${athlete.activeInjuries})` : 'Здоровий';
-            
-            // Підсвітка критичних значень
-            const sleepClass = (athlete.wellness.sleep < 3 && athlete.wellness.sleep !== '-') ? 'critical' : '';
-            const stressClass = (athlete.wellness.stress > 4) ? 'critical' : '';
+        // 4. Формуємо таблицю
+        const athleteList = Object.values(athletesMap);
+        
+        if (athleteList.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">База даних порожня.</td></tr>';
+            return;
+        }
 
+        tbody.innerHTML = athleteList.map(athlete => {
+            const isHealthy = athlete.activeInjuries === 0;
             return `
                 <tr>
-                    <td><strong style="color: #FFC72C;">ID:</strong> ${athlete.id.substring(0, 8)}...</td>
-                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    <td><strong style="color: #FFC72C;">Атлет:</strong> ${athlete.id.substring(0, 6)}...</td>
+                    <td>
+                        <span class="status-badge ${isHealthy ? 'status-healthy' : 'status-recovering'}">
+                            ${isHealthy ? 'Здоровий 💪' : 'Відновлення 🩹'}
+                        </span>
+                    </td>
                     <td style="font-weight: bold; color: ${athlete.maxPain > 4 ? '#DA3E52' : '#fff'}">
                         ${athlete.maxPain} / 10
                     </td>
-                    <td>
-                        <div class="wellness-cell">
-                            <div class="wellness-item">
-                                <span class="wellness-label">Сон</span>
-                                <span class="${sleepClass}">${athlete.wellness.sleep}</span>
-                            </div>
-                            <div class="wellness-item">
-                                <span class="wellness-label">Стрес</span>
-                                <span class="${stressClass}">${athlete.wellness.stress}</span>
-                            </div>
-                            <div class="wellness-item">
-                                <span class="wellness-label">Втома</span>
-                                <span>${athlete.wellness.fatigue}</span>
-                            </div>
-                        </div>
+                    <td class="wellness-info">
+                        Сон: <span class="wellness-val">${athlete.wellness.sleep}</span> | 
+                        Стрес: <span class="wellness-val">${athlete.wellness.stress}</span> | 
+                        Втома: <span class="wellness-val">${athlete.wellness.fatigue}</span>
                     </td>
                     <td>
                         <a href="injury.html?userId=${athlete.id}" class="btn-analyze">АНАЛІЗ</a>
@@ -93,13 +88,11 @@ async function loadGlobalMonitor() {
             `;
         }).join('');
 
-        tbody.innerHTML = rows || '<tr><td colspan="5" style="text-align: center;">Атлетів не знайдено</td></tr>';
-
     } catch (error) {
         console.error("Помилка завантаження адмінки:", error);
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #DA3E52;">Помилка доступу до бази: ${error.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #DA3E52;">Помилка Firebase: Перевірте консоль браузера.</td></tr>`;
     }
 }
 
-// Запуск при завантаженні сторінки
+// Запуск при завантаженні
 document.addEventListener('DOMContentLoaded', loadGlobalMonitor);
