@@ -1,8 +1,8 @@
-// weekly-individual.js — ProAtletCare (Firebase Adapted)
+// weekly-individual.js — ProAtletCare (Cloud & Logic Sync)
 const STORAGE_KEY = 'weeklyPlanData';
 let currentUserId = null;
 
-// Генеруємо ID тижня (понеділок), щоб дані зберігалися в календарі окремо
+// Генеруємо унікальний ID тижня для бази даних
 function getWeekID() {
     const d = new Date();
     const day = d.getDay();
@@ -27,10 +27,10 @@ async function loadWeeklyPlanFromFirebase(uid) {
                 if (data[sel.name]) sel.value = data[sel.name];
             });
         }
-        // Викликаємо розрахунок кольорів ТІЛЬКИ після завантаження даних
+        // Викликаємо оновлення інтерфейсу тільки після завантаження даних
         updateCycleColors();
     } catch (e) {
-        console.error("Помилка завантаження:", e);
+        console.error("Firebase load error:", e);
     }
 }
 
@@ -38,7 +38,7 @@ async function syncToFirebase() {
     if (!currentUserId) return;
     const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
     
-    // Зберігаємо вибір активностей (Activity) у той самий об'єкт
+    // Додаємо поточні стани селекторів у об'єкт збереження
     document.querySelectorAll('.activity-type-select').forEach(sel => {
         data[sel.name] = sel.value;
     });
@@ -50,14 +50,13 @@ async function syncToFirebase() {
             planData: data,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
-        console.log("Дані синхронізовано");
     } catch (e) {
-        console.error("Помилка запису:", e);
+        console.error("Firebase sync error:", e);
     }
 }
 
 /**
- * 2. ЛОГІКА ЦИКЛІВ (ТВОЯ БАЗОВА ЛОГІКА)
+ * 2. ЛОГІКА ЦИКЛІВ ТА ВІДОБРАЖЕННЯ
  */
 const COLOR_MAP = {
     'MD': { status: 'MD', colorClass: 'color-red' },
@@ -88,8 +87,12 @@ function updateCycleColors() {
         matchIndices.forEach(mIdx => {
             for (let offset of [-7, 0, 7]) {
                 let diff = i - (mIdx + offset);
-                if (diff === 1 || diff === 2) { if (Math.abs(diff) < Math.abs(minDiff)) { minDiff = diff; bestStatus = `MD+${diff}`; } }
-                else if (diff >= -4 && diff <= -1) { if (Math.abs(diff) < Math.abs(minDiff)) { minDiff = diff; bestStatus = `MD${diff}`; } }
+                if (diff === 1 || diff === 2) { 
+                    if (Math.abs(diff) < Math.abs(minDiff)) { minDiff = diff; bestStatus = `MD+${diff}`; } 
+                }
+                else if (diff >= -4 && diff <= -1) { 
+                    if (Math.abs(diff) < Math.abs(minDiff)) { minDiff = diff; bestStatus = `MD${diff}`; } 
+                }
             }
         });
         dayStatuses[i] = bestStatus;
@@ -115,24 +118,78 @@ function updateCycleColors() {
     });
 }
 
-/**
- * 3. РОБОТА З ВПРАВАМИ ТА МОДАЛКОЮ
- */
-window.addExerciseToStatus = function(btn, name, stage, category) {
-    const status = window.currentAddStatus;
-    const exTemplate = EXERCISE_LIBRARY[stage][category].exercises.find(e => e.name === name);
-    if (exTemplate) {
-        let data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-        const key = `status_plan_${status}`;
-        if (!data[key]) data[key] = { exercises: [] };
-        data[key].exercises.push({ ...exTemplate, stage, category });
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-        updateCycleColors();
-        syncToFirebase(); // Відразу в хмару
-        btn.textContent = "✔";
-        btn.style.background = "#28a745";
-        btn.disabled = true;
+function renderExercisesByStatus(dayIndex, status) {
+    const container = document.querySelector(`.task-day-container[data-day-index="${dayIndex}"]`);
+    if (!container) return;
+
+    const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    const plan = data[`status_plan_${status}`] || { exercises: [] };
+
+    if (status === 'REST') {
+        container.innerHTML = '<div style="text-align:center; padding: 20px; color: #777;">☕ ВІДПОЧИНОК</div>';
+        return;
     }
+
+    let html = '<div class="generated-exercises-list">';
+    const stages = ['Pre-Training', 'Main Training', 'Post-Training'];
+    
+    stages.forEach(stage => {
+        const stageExs = plan.exercises.filter(ex => ex.stage === stage);
+        html += `<div class="stage-label">${stage}</div>`;
+        stageExs.forEach(ex => {
+            html += `
+                <div class="exercise-item">
+                    <span>${ex.name}</span>
+                    <button type="button" class="remove-ex-btn" onclick="removeExerciseFromStatus('${status}', '${ex.name}')">✕</button>
+                </div>`;
+        });
+        html += `<button type="button" class="add-manual-btn" onclick="openExerciseModal('${status}', '${stage}')">+ Додати</button>`;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+/**
+ * 3. ІНІЦІАЛІЗАЦІЯ
+ */
+document.addEventListener('DOMContentLoaded', () => {
+    // Перевірка Auth та отримання userId
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+        firebase.auth().onAuthStateChanged(async (user) => {
+            if (user) {
+                const urlParams = new URLSearchParams(window.location.search);
+                currentUserId = urlParams.get('userId') || user.uid;
+                await loadWeeklyPlanFromFirebase(currentUserId);
+            }
+        });
+    }
+
+    // Слухачі для селекторів
+    document.querySelectorAll('.activity-type-select').forEach(sel => {
+        sel.addEventListener('change', () => {
+            updateCycleColors();
+            syncToFirebase();
+        });
+    });
+
+    // Форма збереження
+    const form = document.getElementById('weekly-plan-form');
+    if (form) {
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            await syncToFirebase();
+            alert("Тижневий план збережено!");
+        };
+    }
+});
+
+// Глобальні функції для вікна вибору (викликаються з HTML кнопок)
+window.openExerciseModal = function(status, stage) {
+    window.currentAddStatus = status;
+    window.currentAddStage = stage;
+    const modal = document.getElementById('exercise-selection-modal');
+    // ... логіка відкриття як у твоєму файлі
+    modal.style.display = 'flex';
 };
 
 window.removeExerciseFromStatus = function(status, name) {
@@ -145,42 +202,3 @@ window.removeExerciseFromStatus = function(status, name) {
         syncToFirebase();
     }
 };
-
-// ... (Тут залишаються твої функції renderExercisesByStatus та openExerciseModal без змін)
-
-/**
- * 4. ІНІЦІАЛІЗАЦІЯ ТА AUTH
- */
-firebase.auth().onAuthStateChanged(async (user) => {
-    if (user) {
-        const urlParams = new URLSearchParams(window.location.search);
-        currentUserId = urlParams.get('userId') || user.uid; // Пріоритет ID з URL для тренера
-        await loadWeeklyPlanFromFirebase(currentUserId);
-    } else {
-        // Якщо немає Auth, пробуємо анонімно, щоб не було помилок
-        firebase.auth().signInAnonymously();
-    }
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-    const form = document.getElementById('weekly-plan-form');
-    if (form) {
-        form.onsubmit = async (e) => {
-            e.preventDefault();
-            await syncToFirebase();
-            alert("План збережено!");
-        };
-    }
-
-    // Слухач змін селекторів (MD/REST/TRAIN)
-    document.querySelectorAll('.activity-type-select').forEach(sel => {
-        sel.addEventListener('change', () => {
-            updateCycleColors();
-            syncToFirebase();
-        });
-    });
-
-    // Хрестик модалки
-    const closeX = document.querySelector('.close-modal-btn'); 
-    if (closeX) closeX.onclick = () => document.getElementById('exercise-selection-modal').style.display = 'none';
-});
