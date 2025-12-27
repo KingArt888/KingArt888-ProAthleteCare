@@ -1,8 +1,8 @@
-// weekly-individual.js — ProAtletCare (БЕЗ ЗМІН ДИЗАЙНУ + FIREBASE)
+// weekly-individual.js — ProAtletCare (FULL INTEGRATED VERSION)
 const STORAGE_KEY = 'weeklyPlanData';
 let currentUserId = null;
 
-// Генеруємо ID тижня для бази даних
+// 1. ІДЕНТИФІКАЦІЯ ТИЖНЯ (Понеділок)
 function getWeekID() {
     const d = new Date();
     const day = d.getDay();
@@ -13,7 +13,25 @@ function getWeekID() {
 const currentWeekId = getWeekID();
 
 /**
- * 1. FIREBASE СИНХРОНІЗАЦІЯ (БЕЗПЕЧНА)
+ * 2. FIREBASE AUTH ІНІЦІАЛІЗАЦІЯ
+ */
+firebase.auth().onAuthStateChanged(async (user) => {
+    if (user) {
+        const urlParams = new URLSearchParams(window.location.search);
+        // Визначаємо ID (пріоритет URL параметр userId, потім поточний юзер)
+        currentUserId = urlParams.get('userId') || user.uid;
+        
+        console.log("Weekly Individual: Працюємо з ID:", currentUserId);
+        
+        // Завантажуємо дані з хмари при старті
+        await loadFromFirebase(currentUserId);
+    } else {
+        await firebase.auth().signInAnonymously();
+    }
+});
+
+/**
+ * 3. ФУНКЦІЇ СИНХРОНІЗАЦІЇ
  */
 async function loadFromFirebase(uid) {
     try {
@@ -22,17 +40,22 @@ async function loadFromFirebase(uid) {
             const data = doc.data().planData || {};
             localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
             
+            // Відновлення вибраних селекторів (MATCH/TRAIN/REST)
             document.querySelectorAll('.activity-type-select').forEach(sel => {
                 if (data[sel.name]) sel.value = data[sel.name];
             });
         }
         updateCycleColors();
-    } catch (e) { console.error("Помилка завантаження:", e); }
+    } catch (e) {
+        console.error("Помилка завантаження з Firebase:", e);
+    }
 }
 
 async function syncToFirebase() {
     if (!currentUserId) return;
     const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    
+    // Оновлюємо типи днів перед відправкою
     document.querySelectorAll('.activity-type-select').forEach(sel => {
         data[sel.name] = sel.value;
     });
@@ -44,11 +67,14 @@ async function syncToFirebase() {
             planData: data,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
-    } catch (e) { console.error("Помилка синхронізації:", e); }
+        console.log("Синхронізовано з Firebase");
+    } catch (e) {
+        console.error("Помилка запису в Firebase:", e);
+    }
 }
 
 /**
- * 2. ТВОЯ ОРИГІНАЛЬНА ЛОГІКА ЦИКЛІВ (COLOR_MAP)
+ * 4. ТВОЯ ОРИГІНАЛЬНА ЛОГІКА ДИЗАЙНУ ТА ЦИКЛІВ
  */
 const COLOR_MAP = {
     'MD': { status: 'MD', colorClass: 'color-red' },
@@ -109,9 +135,6 @@ function updateCycleColors() {
     });
 }
 
-/**
- * 3. ВІДОБРАЖЕННЯ ТА ВИБІР ВПРАВ (ПОВЕРНУТО ЯК БУЛО)
- */
 function renderExercisesByStatus(dayIndex, status) {
     const container = document.querySelector(`.task-day-container[data-day-index="${dayIndex}"]`);
     if (!container) return;
@@ -120,27 +143,30 @@ function renderExercisesByStatus(dayIndex, status) {
     const plan = data[`status_plan_${status}`] || { exercises: [] };
 
     if (status === 'REST') {
-        container.innerHTML = '<div class="rest-message">☕ ВІДПОЧИНОК</div>';
+        container.innerHTML = '<div style="text-align:center; padding:20px; color:#777;">☕ ВІДПОЧИНОК</div>';
         return;
     }
 
     let html = '<div class="generated-exercises-list">';
     ['Pre-Training', 'Main Training', 'Post-Training'].forEach(stage => {
         const stageExs = plan.exercises.filter(ex => ex.stage === stage);
-        html += `<div class="stage-header-small">${stage}</div>`;
+        html += `<div class="stage-label" style="font-size:0.7rem; color:#d4af37; margin-top:10px;">${stage}</div>`;
         stageExs.forEach(ex => {
             html += `
-                <div class="exercise-row">
-                    <span>${ex.name}</span>
-                    <button type="button" class="remove-btn" onclick="removeExerciseFromStatus('${status}', '${ex.name}')">✕</button>
+                <div class="exercise-item" style="display:flex; justify-content:space-between; background:#111; margin:2px 0; padding:5px;">
+                    <span style="font-size:0.8rem;">${ex.name}</span>
+                    <button type="button" onclick="removeExerciseFromStatus('${status}', '${ex.name}')" style="color:red; background:none; border:none; cursor:pointer;">✕</button>
                 </div>`;
         });
-        html += `<button type="button" class="add-exercise-btn" onclick="openExerciseModal('${status}', '${stage}')">+ Додати</button>`;
+        html += `<button type="button" class="add-manual-btn" onclick="openExerciseModal('${status}', '${stage}')" style="width:100%; border:1px dashed #444; background:none; color:#aaa; margin-top:5px; cursor:pointer;">+ Додати</button>`;
     });
     html += '</div>';
     container.innerHTML = html;
 }
 
+/**
+ * 5. ВИБІР ВПРАВ З EXERCISE_LIBRARY
+ */
 window.openExerciseModal = function(status, stage) {
     window.currentAddStatus = status;
     window.currentAddStage = stage;
@@ -149,23 +175,21 @@ window.openExerciseModal = function(status, stage) {
     if (!modal || !list) return;
 
     list.innerHTML = '';
-    const stageData = EXERCISE_LIBRARY[stage]; // Беремо дані з твоєї бібліотеки
+    const stageData = EXERCISE_LIBRARY[stage];
     
     if (stageData) {
         for (const categoryName in stageData) {
             const category = stageData[categoryName];
-            
-            // Заголовок категорії (Mobility, Strength тощо)
             const catHeader = document.createElement('div');
-            catHeader.className = "category-modal-title";
+            catHeader.style.color = "#d4af37"; catHeader.style.marginTop = "15px"; catHeader.style.fontWeight = "bold";
             catHeader.textContent = categoryName;
             list.appendChild(catHeader);
 
             category.exercises.forEach(ex => {
                 const item = document.createElement('div');
-                item.className = "exercise-modal-item";
+                item.style.display = "flex"; item.style.justifyContent = "space-between"; item.style.padding = "8px 0"; item.style.borderBottom = "1px solid #222";
                 item.innerHTML = `
-                    <span>${ex.name}</span>
+                    <span style="font-size:0.9rem;">${ex.name}</span>
                     <button class="gold-button btn-small" onclick="addExerciseToStatus(this, '${ex.name}', '${stage}', '${categoryName}')">Вибрати</button>
                 `;
                 list.appendChild(item);
@@ -187,11 +211,9 @@ window.addExerciseToStatus = function(btn, name, stage, category) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         
         updateCycleColors();
-        syncToFirebase();
+        syncToFirebase(); // <--- СИНХРОНІЗАЦІЯ
         
-        btn.textContent = "✔";
-        btn.disabled = true;
-        btn.classList.add('selected');
+        btn.textContent = "✔"; btn.disabled = true;
     }
 };
 
@@ -202,37 +224,28 @@ window.removeExerciseFromStatus = function(status, name) {
         data[key].exercises = data[key].exercises.filter(e => e.name !== name);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         updateCycleColors();
-        syncToFirebase();
+        syncToFirebase(); // <--- СИНХРОНІЗАЦІЯ
     }
 };
 
+function closeExerciseModal() {
+    const modal = document.getElementById('exercise-selection-modal');
+    if (modal) modal.style.display = 'none';
+}
+
 /**
- * 4. ІНІЦІАЛІЗАЦІЯ
+ * 6. СЛУХАЧІ ТА СТАРТ
  */
 document.addEventListener('DOMContentLoaded', () => {
-    // Закриття модалки
+    // Закриття модалки на хрестик
     const closeX = document.querySelector('.close-modal-btn');
-    if (closeX) closeX.onclick = () => document.getElementById('exercise-selection-modal').style.display = 'none';
+    if (closeX) closeX.onclick = closeExerciseModal;
 
-    // Слухачі на селектори
+    // Зміна типу дня
     document.querySelectorAll('.activity-type-select').forEach(sel => {
         sel.addEventListener('change', () => {
             updateCycleColors();
             syncToFirebase();
         });
     });
-
-    // Перевірка Auth
-    const authInterval = setInterval(() => {
-        if (typeof firebase !== 'undefined' && firebase.auth) {
-            clearInterval(authInterval);
-            firebase.auth().onAuthStateChanged(async (user) => {
-                if (user) {
-                    const params = new URLSearchParams(window.location.search);
-                    currentUserId = params.get('userId') || user.uid;
-                    await loadFromFirebase(currentUserId);
-                }
-            });
-        }
-    }, 500);
 });
