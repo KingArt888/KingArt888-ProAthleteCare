@@ -1,11 +1,11 @@
 (function() {
-    // ВАЖЛИВО: Назва має суворо збігатися з вашими Firebase Rules!
+    // Назва колекції має суворо збігатися з вашими Firebase Rules
     const COLLECTION_NAME = 'load_season_reports';
     
     let dailyLoadData = [];
     let distanceChart, loadChart;
 
-    // --- СИНХРОНІЗАЦІЯ З FIREBASE ---
+    // --- 1. СИНХРОНІЗАЦІЯ З FIREBASE ---
     async function syncLoadFromFirebase(uid) {
         try {
             const snapshot = await db.collection(COLLECTION_NAME)
@@ -16,12 +16,12 @@
             const firebaseData = [];
             snapshot.forEach(doc => firebaseData.push(doc.data()));
             
-            // Якщо в базі порожньо — використовуємо ваші демо-дані
+            // Якщо в базі порожньо — показуємо демо-дані, щоб графіки не були пустими
             dailyLoadData = firebaseData.length > 0 ? firebaseData : getInitialDemoData();
             
             refreshUI();
         } catch (e) {
-            console.error("Помилка синхронізації Load Season:", e);
+            console.error("Помилка синхронізації:", e);
             dailyLoadData = getInitialDemoData();
             refreshUI();
         }
@@ -29,7 +29,6 @@
 
     function refreshUI() {
         const { acuteLoad, chronicLoad, acwr } = calculateACWR();
-        // Тепер функція викликається всередині IIFE, помилки "not defined" не буде
         updateACWRGauge(acwr); 
         if (typeof Chart !== 'undefined') {
             renderDistanceChart();
@@ -37,7 +36,7 @@
         }
     }
 
-    // --- ЛОГІКА ОБЧИСЛЕНЬ (ВАША ОРИГІНАЛЬНА) ---
+    // --- 2. ЛОГІКА ОБЧИСЛЕНЬ ---
     function calculateSessionRPE(duration, rpe) {
         return duration * rpe;
     }
@@ -77,29 +76,39 @@
         };
     }
 
-    // --- ПРЕМІАЛЬНИЙ ДИЗАЙН (ЛІНІЇ ТА СПІДОМЕТР) ---
+    // --- 3. ПРЕМІАЛЬНИЙ UI (СПІДОМЕТР ТА ГРАФІКИ) ---
+    
     function updateACWRGauge(acwrValue) {
         const needle = document.getElementById('gauge-needle');
         const display = document.getElementById('acwr-value');
         const statusText = document.getElementById('acwr-status');
         if (!needle || !display || !statusText) return;
 
-        let degree = -90;
-        let status = 'Детренування';
-        let statusClass = 'status-warning';
-
-        if (acwrValue >= 0.8 && acwrValue <= 1.3) {
-            degree = -50 + ((acwrValue - 0.8) / 0.5) * 100;
-            status = 'Безпечна зона (Оптимально)'; statusClass = 'status-safe';
-        } else if (acwrValue > 1.3) {
-            degree = 50 + ((acwrValue - 1.3) / 0.7) * 40;
-            status = 'Ризик травми'; statusClass = 'status-danger';
-        }
+        let degree = -90; 
+        let status = '';
         
-        needle.style.transform = `translateX(-50%) rotate(${Math.min(90, Math.max(-90, degree))}deg)`;
+        // Кольорова логіка "Спорткар":
+        if (acwrValue < 0.8) {
+            // ЖОВТА ЗОНА - Недотренованість
+            degree = -90 + (acwrValue / 0.8) * 40; 
+            status = 'Недотренованість';
+            statusText.style.color = '#f1c40f'; 
+        } else if (acwrValue >= 0.8 && acwrValue <= 1.3) {
+            // ЗЕЛЕНА ЗОНА - Оптимально
+            degree = -50 + ((acwrValue - 0.8) / 0.5) * 100;
+            status = 'Хороша динаміка';
+            statusText.style.color = '#2ecc71';
+        } else {
+            // ЧЕРВОНА ЗОНА - Ризик травм
+            degree = 50 + ((acwrValue - 1.3) / 0.7) * 40;
+            status = 'Ризик травм';
+            statusText.style.color = '#e74c3c';
+        }
+
+        const finalDegree = Math.min(90, Math.max(-90, degree));
+        needle.style.transform = `translateX(-50%) rotate(${finalDegree}deg)`;
         display.textContent = acwrValue.toFixed(2);
         statusText.textContent = status;
-        statusText.className = statusClass;
     }
 
     function renderDistanceChart() {
@@ -144,7 +153,6 @@
         const ctx = document.getElementById('loadChart');
         if (!ctx) return;
 
-        // ПОВЕРНУТО: Вигляд преміальними лініями
         const demoLabels = ['4 тижні тому', '3 тижні тому', '2 тижні тому', 'Поточний'];
         const demoAcute = [500, 650, 800, acuteLoad];
         const demoChronic = [600, 620, 700, chronicLoad];
@@ -178,8 +186,14 @@
         ];
     }
 
-    // --- ІНІЦІАЛІЗАЦІЯ ---
+    // --- 4. ІНІЦІАЛІЗАЦІЯ ПРИ ЗАВАНТАЖЕННІ ---
     document.addEventListener('DOMContentLoaded', () => {
+        // ВСТАНОВЛЕННЯ СЬОГОДНІШНЬОЇ ДАТИ
+        const dateInput = document.getElementById('load-date') || document.querySelector('input[type="date"]');
+        if (dateInput) {
+            dateInput.value = new Date().toISOString().split('T')[0];
+        }
+
         firebase.auth().onAuthStateChanged(async (user) => {
             if (user) {
                 await syncLoadFromFirebase(user.uid);
@@ -193,7 +207,7 @@
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const user = firebase.auth().currentUser;
-                if (!user) return alert("Авторизація...");
+                if (!user) return alert("Потрібна авторизація...");
 
                 const data = {
                     userId: user.uid,
@@ -206,9 +220,10 @@
 
                 try {
                     await db.collection(COLLECTION_NAME).doc(`${user.uid}_${data.date}`).set(data);
-                    document.getElementById('form-status').textContent = "Успішно збережено!";
+                    const status = document.getElementById('form-status');
+                    if (status) status.textContent = "Дані збережено у хмарі!";
                     await syncLoadFromFirebase(user.uid);
-                } catch (err) { alert("Помилка доступу: Перевірте правила Firebase!"); }
+                } catch (err) { alert("Помилка Firebase: Перевірте правила (Rules)"); }
             });
         }
     });
