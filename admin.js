@@ -2,9 +2,8 @@ const USERS_COL = 'users';
 const INJURIES_COL = 'injuries';
 const WELLNESS_COL = 'wellness_reports';
 
-// 1. Кольорові індикатори Wellness
 function getStatusEmoji(type, value) {
-    if (value === '-' || value === undefined) return '<span style="opacity: 0.2;">➖</span>';
+    if (value === '-' || value === undefined || value === null) return '<span style="opacity: 0.2;">➖</span>';
     const val = parseInt(value);
     let color = '#00ff00';
     let emoji = '';
@@ -24,35 +23,11 @@ function getStatusEmoji(type, value) {
     }
     return `
         <div style="display: inline-flex; flex-direction: column; align-items: center; justify-content: center; 
-                    width: 42px; height: 42px; border-radius: 10px; background: ${color}15; border: 1px solid ${color}44;">
-            <span style="font-size: 1.4em; filter: drop-shadow(0 0 2px ${color});">${emoji}</span>
+                    width: 38px; height: 38px; border-radius: 8px; background: ${color}15; border: 1px solid ${color}44;">
+            <span style="font-size: 1.2em; filter: drop-shadow(0 0 2px ${color});">${emoji}</span>
         </div>`;
 }
 
-// 2. Функції взаємодії (Чат, Програма та План)
-window.openChat = function(uid, name) {
-    const msg = prompt(`Повідомлення для ${name}:`);
-    if (msg) {
-        db.collection('messages').add({
-            to: uid,
-            text: msg,
-            sender: 'admin',
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        }).then(() => alert("Відправлено!"));
-    }
-};
-
-window.editProgram = function(uid, name) {
-    const adj = prompt(`Коригування програми для ${name}:`, "Зменшити навантаження на...");
-    if (adj) {
-        db.collection('training_plans').doc(uid).set({
-            adjustments: adj,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true }).then(() => alert("Програму оновлено!"));
-    }
-};
-
-// 3. Завантаження моніторингу
 async function loadGlobalMonitor() {
     const tbody = document.getElementById('athletes-tbody');
     if (!tbody) return;
@@ -61,12 +36,12 @@ async function loadGlobalMonitor() {
         const [usersSnap, injuriesSnap, wellnessSnap] = await Promise.all([
             db.collection(USERS_COL).get(),
             db.collection(INJURIES_COL).get(),
-            db.collection(WELLNESS_COL).orderBy('timestamp', 'desc').get()
+            db.collection(WELLNESS_COL).orderBy('timestamp', 'desc').limit(50).get()
         ]);
 
         const athletesMap = {};
 
-        // Завантаження користувачів
+        // 1. Завантажуємо реальних атлетів з бази
         usersSnap.forEach(doc => {
             const data = doc.data();
             if (data.role !== 'admin') {
@@ -81,80 +56,82 @@ async function loadGlobalMonitor() {
             }
         });
 
-        // Аналіз травм
+        // 2. ДОДАЄМО 5 ТИМЧАСОВИХ АТЛЕТІВ (DEMO DATA)
+        const demoAthletes = {
+            "demo_1": { uid: "demo_1", name: "Артем Кулик", club: "Paphos FC", photo: "https://i.pravatar.cc/150?u=1", 
+                        injuryStatus: { label: 'ЗДОРОВИЙ', color: '#00ff00', pain: 0 }, wellness: { sleep: 9, stress: 2, soreness: 1, ready: 10 } },
+            "demo_2": { uid: "demo_2", name: "Іван Петренко", club: "Shakhtar", photo: "https://i.pravatar.cc/150?u=2", 
+                        injuryStatus: { label: 'УВАГА', color: '#FFC72C', pain: 4, bodyPart: 'Пах' }, wellness: { sleep: 6, stress: 5, soreness: 6, ready: 5 } },
+            "demo_3": { uid: "demo_3", name: "Максим Білий", club: "Dynamo", photo: "https://i.pravatar.cc/150?u=3", 
+                        injuryStatus: { label: 'ТРАВМА', color: '#ff4d4d', pain: 8, bodyPart: 'Ахілл' }, wellness: { sleep: 4, stress: 8, soreness: 9, ready: 2 } },
+            "demo_4": { uid: "demo_4", name: "Дмитро Вовк", club: "Fit/Box EMS", photo: "https://i.pravatar.cc/150?u=4", 
+                        injuryStatus: { label: 'ЗДОРОВИЙ', color: '#00ff00', pain: 0 }, wellness: { sleep: 8, stress: 3, soreness: 2, ready: 8 } },
+            "demo_5": { uid: "demo_5", name: "Олег Скала", club: "Rugby Paphos", photo: "https://i.pravatar.cc/150?u=5", 
+                        injuryStatus: { label: 'ПОКРАЩЕННЯ', color: '#00ff00', pain: 2, bodyPart: 'Коліно' }, wellness: { sleep: 7, stress: 4, soreness: 5, ready: 7 } }
+        };
+        Object.assign(athletesMap, demoAthletes);
+
+        // 3. Обробка реальних травм з бази
         injuriesSnap.forEach(doc => {
             const data = doc.data();
-            const uid = data.userId;
-            if (athletesMap[uid] && data.status !== 'closed') {
-                const history = data.painHistory || data.history || [];
-                if (history.length > 0) {
-                    const lastPain = parseInt(history[history.length - 1].pain) || 0;
-                    if (lastPain === 0) {
-                        athletesMap[uid].injuryStatus = { label: 'ЗДОРОВИЙ', color: '#00ff00', pain: 0, bodyPart: '' };
-                    } else {
-                        let trend = 'СТАБІЛЬНО';
-                        let trendColor = '#FFC72C';
-                        if (history.length > 1) {
-                            const prevPain = parseInt(history[history.length - 2].pain) || 0;
-                            if (lastPain < prevPain) { trend = 'ПОКРАЩЕННЯ'; trendColor = '#00ff00'; }
-                            else if (lastPain > prevPain) { trend = 'ПОГІРШЕННЯ'; trendColor = '#ff4d4d'; }
-                        } else { trend = 'НОВА ТРАВМА'; trendColor = '#ff4d4d'; }
-                        
-                        athletesMap[uid].injuryStatus = { 
-                            label: trend, color: trendColor, pain: lastPain,
-                            bodyPart: data.bodyPart || data.type || 'Травма' 
-                        };
-                    }
+            if (athletesMap[data.userId] && data.status !== 'closed') {
+                const history = data.painHistory || [];
+                const lastPain = history.length > 0 ? parseInt(history[history.length - 1].pain) : 0;
+                if (lastPain > 0) {
+                    athletesMap[data.userId].injuryStatus = { label: 'УВАГА', color: '#FFC72C', pain: lastPain, bodyPart: data.bodyPart || 'Травма' };
                 }
             }
         });
 
-        // Wellness дані
+        // 4. Обробка реального Wellness
         wellnessSnap.forEach(doc => {
             const data = doc.data();
-            const uid = data.userId;
-            if (athletesMap[uid] && athletesMap[uid].wellness.sleep === '-') {
-                athletesMap[uid].wellness = {
-                    sleep: data.scores?.sleep, stress: data.scores?.stress, soreness: data.scores?.soreness, ready: data.scores?.ready
+            if (athletesMap[data.userId] && athletesMap[data.userId].wellness.sleep === '-') {
+                athletesMap[data.userId].wellness = {
+                    sleep: data.scores?.sleep, stress: data.scores?.stress, 
+                    soreness: data.scores?.soreness, ready: data.scores?.ready
                 };
             }
         });
 
-        let athleteList = Object.values(athletesMap);
-
-        // Рендер таблиці
-        tbody.innerHTML = athleteList.map(athlete => {
+        // 5. РЕНДЕР ТАБЛИЦІ
+        tbody.innerHTML = Object.values(athletesMap).map(athlete => {
             const stat = athlete.injuryStatus;
             return `
                 <tr style="border-bottom: 1px solid #222;">
-                    <td style="padding: 15px 10px;">
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <img src="${athlete.photo}" style="width: 42px; height: 42px; border-radius: 50%; border: 1px solid #FFC72C; object-fit: cover;">
+                    <td style="padding: 12px 10px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <img src="${athlete.photo}" style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid #FFC72C; object-fit: cover;">
                             <div>
-                                <div style="font-weight: bold; color: #FFC72C; font-size: 0.95em;">${athlete.name}</div>
-                                <div style="font-size: 0.75em; color: #888;">${athlete.club}</div>
+                                <div style="font-weight: bold; color: #FFC72C; font-size: 0.9em;">${athlete.name}</div>
+                                <div style="font-size: 0.7em; color: #888;">${athlete.club}</div>
                             </div>
                         </div>
                     </td>
                     <td>
-                        <div style="font-size: 0.75em; padding: 6px; border-radius: 6px; text-align: center; min-width: 120px;
+                        <div style="font-size: 0.7em; padding: 5px; border-radius: 5px; text-align: center; min-width: 100px;
                             background: ${stat.color}15; color: ${stat.color}; border: 1px solid ${stat.color}44;">
                             <div style="font-weight: bold; text-transform: uppercase;">${stat.label}</div>
-                            ${stat.pain > 0 ? `<div style="color: #fff; margin-top: 3px; font-weight: bold;">${stat.bodyPart}</div>` : ''}
-                            ${stat.pain > 0 ? `<div style="opacity: 0.7; font-size: 0.9em;">Біль: ${stat.pain}</div>` : ''}
+                            ${stat.pain > 0 ? `<div style="font-size: 0.8em; color: #fff; margin-top:2px;">${stat.bodyPart} (${stat.pain})</div>` : ''}
                         </div>
                     </td>
                     <td style="text-align: center;">${getStatusEmoji('sleep', athlete.wellness.sleep)}</td>
                     <td style="text-align: center;">${getStatusEmoji('stress', athlete.wellness.stress)}</td>
                     <td style="text-align: center;">${getStatusEmoji('soreness', athlete.wellness.soreness)}</td>
                     <td style="text-align: center;">${getStatusEmoji('ready', athlete.wellness.ready)}</td>
-                    <td style="text-align: right; padding-right: 15px;">
-                        <div style="display: flex; gap: 6px; justify-content: flex-end;">
-                            <a href="weekly-individual.html?userId=${athlete.uid}" title="План на тиждень" style="background: #111; color: #FFC72C; border: 1px solid #FFC72C; padding: 7px; border-radius: 4px; text-decoration: none; font-size: 0.9em;">📅</a>
+                    <td style="text-align: right; padding-right: 10px;">
+                        <div style="display: flex; gap: 4px; justify-content: flex-end;">
+                            <a href="weekly-individual.html?userId=${athlete.uid}" title="План" 
+                               style="background: #111; color: #FFC72C; border: 1px solid #FFC72C; padding: 6px 8px; border-radius: 4px; text-decoration: none; font-size: 0.9em;">📅</a>
                             
-                            <a href="injury.html?userId=${athlete.uid}" title="Аналіз травм" style="background: #FFC72C; color: #000; padding: 7px; border-radius: 4px; text-decoration: none; font-size: 0.9em;">📊</a>
-                            <button onclick="openChat('${athlete.uid}', '${athlete.name}')" title="Чат" style="background: #111; color: #FFC72C; border: 1px solid #FFC72C; padding: 7px; border-radius: 4px; cursor: pointer;">✉️</button>
-                            <button onclick="editProgram('${athlete.uid}', '${athlete.name}')" title="Коригування" style="background: #000; color: #FFC72C; border: 1px solid #FFC72C; padding: 7px; border-radius: 4px; cursor: pointer;">🏋️</button>
+                            <a href="injury.html?userId=${athlete.uid}" title="Аналіз" 
+                               style="background: #FFC72C; color: #000; padding: 6px 8px; border-radius: 4px; text-decoration: none; font-size: 0.9em;">📊</a>
+                            
+                            <button onclick="openChat('${athlete.uid}', '${athlete.name}')" 
+                                    style="background: #111; color: #FFC72C; border: 1px solid #FFC72C; padding: 6px; border-radius: 4px; cursor: pointer;">✉️</button>
+                            
+                            <button onclick="editProgram('${athlete.uid}', '${athlete.name}')" 
+                                    style="background: #000; color: #FFC72C; border: 1px solid #FFC72C; padding: 6px; border-radius: 4px; cursor: pointer;">🏋️</button>
                         </div>
                     </td>
                 </tr>`;
