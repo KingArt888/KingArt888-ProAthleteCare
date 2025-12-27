@@ -21,50 +21,42 @@
     });
 
     // --- ОНОВЛЕНА ФУНКЦІЯ СПІДОМЕТРА ---
-    function updateACWRGauge(acwrValue) {
-        const needle = document.querySelector('.gauge-needle');
-        const display = document.getElementById('acwr-value');
-        const statusDisplay = document.getElementById('acwr-status');
+   function updateACWRGauge(acwr) {
+    const needle = document.querySelector('.gauge-needle');
+    const valueEl = document.getElementById('acwr-value');
+    const statusEl = document.getElementById('acwr-status');
 
-        if (!needle || !display) return;
+    if (!needle) return;
 
-        // Твій CSS використовує систему, де 0deg — це вертикально вгору.
-        // Щоб стрілка ходила від лівого краю до правого по дузі:
-        // -90deg (ліво) | 0deg (центр) | +90deg (право)
-        
-        let degree = -90; 
-        if (acwrValue <= 0.8) {
-            degree = -90 + (acwrValue / 0.8) * 45; // Рух від -90 до -45
-        } else if (acwrValue <= 1.3) {
-            degree = -45 + ((acwrValue - 0.8) / 0.5) * 90; // Рух від -45 до +45
-        } else {
-            degree = 45 + ((acwrValue - 1.3) / 0.7) * 45; // Рух від +45 до +90
-        }
+    // clamp ACWR
+    const min = 0.5;
+    const max = 2.0;
+    const safeAcwr = Math.max(min, Math.min(max, acwr));
 
-        // Обмеження, щоб стрілка не виходила за межі візуальної шкали
-        const finalDegree = Math.min(95, Math.max(-95, degree));
+    // linear map → degrees
+    const degree = ((safeAcwr - min) / (max - min)) * 180 - 90;
 
-        // ВАЖЛИВО: додаємо translateX(-50%), щоб зберегти центрування з твого CSS
-        needle.style.transform = `translateX(-50%) rotate(${finalDegree}deg)`;
-        
-        display.textContent = acwrValue.toFixed(2);
+    needle.style.transform = `translateX(-50%) rotate(${degree}deg)`;
+    valueEl.textContent = acwr.toFixed(2);
 
-        if (statusDisplay) {
-            if (acwrValue < 0.8) {
-                statusDisplay.textContent = 'НЕДОТРЕНОВАНІСТЬ';
-                statusDisplay.className = 'status-warning';
-                display.style.color = '#f0ad4e';
-            } else if (acwrValue <= 1.3) {
-                statusDisplay.textContent = 'ОПТИМАЛЬНА ФОРМА';
-                statusDisplay.className = 'status-safe';
-                display.style.color = '#5cb85c';
-            } else {
-                statusDisplay.textContent = 'РИЗИК ТРАВМИ';
-                statusDisplay.className = 'status-danger';
-                display.style.color = '#d9534f';
-            }
-        }
+    // STATUS LOGIC
+    if (acwr >= 0.8 && acwr <= 1.3) {
+        statusEl.textContent = 'ОПТИМАЛЬНА ЗОНА';
+        statusEl.className = 'status-safe';
+        valueEl.style.color = '#5cb85c';
+    } 
+    else if ((acwr >= 0.6 && acwr < 0.8) || (acwr > 1.3 && acwr <= 1.5)) {
+        statusEl.textContent = 'ПОПЕРЕДЖЕННЯ';
+        statusEl.className = 'status-warning';
+        valueEl.style.color = '#f0ad4e';
+    } 
+    else {
+        statusEl.textContent = 'ВИСОКИЙ РИЗИК ТРАВМИ';
+        statusEl.className = 'status-danger';
+        valueEl.style.color = '#d9534f';
     }
+}
+
 
     async function syncLoadFromFirebase(uid) {
         try {
