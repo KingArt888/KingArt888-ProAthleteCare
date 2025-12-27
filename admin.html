@@ -3,55 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProAtletCare Admin - Dashboard</title>
+    <title>ProAtletCare Admin - Моніторинг</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        body { background-color: #000; color: #fff; font-family: 'Segoe UI', sans-serif; }
-        .admin-container { padding: 30px; max-width: 1200px; margin: 0 auto; }
-        .monitor-table { width: 100%; border-collapse: collapse; background: #111; border-radius: 12px; overflow: hidden; margin-top: 20px; border: 1px solid #333; }
-        .monitor-table th { background: #FFC72C; color: #000; padding: 15px; text-align: left; text-transform: uppercase; font-size: 0.8em; }
-        .monitor-table td { padding: 15px; border-bottom: 1px solid #222; }
+        body { background-color: #000; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; }
+        .admin-wrapper { display: flex; flex-direction: column; min-height: 100vh; }
+        
+        header { background: #111; padding: 20px; border-bottom: 2px solid #FFC72C; display: flex; justify-content: space-between; align-items: center; }
+        .logo { color: #FFC72C; font-weight: bold; font-size: 1.5em; letter-spacing: 2px; }
+
+        .container { padding: 20px; max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+        
+        .monitor-table { width: 100%; border-collapse: collapse; background: #111; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .monitor-table th { background: #FFC72C; color: #000; padding: 15px; text-align: left; text-transform: uppercase; font-size: 0.75em; letter-spacing: 1px; }
+        .monitor-table td { padding: 15px; border-bottom: 1px solid #222; transition: 0.3s; }
         .monitor-table tr:hover { background: #1a1a1a; }
+
+        /* Стилі для критичних показників */
+        .critical-cell { background: rgba(218, 62, 82, 0.2) !important; color: #ff4d4d !important; font-weight: bold; border-left: 4px solid #DA3E52; }
+        .warning-cell { background: rgba(255, 199, 44, 0.1) !important; color: #FFC72C !important; }
         
-        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.75em; font-weight: bold; }
-        .status-recovering { background: #DA3E52; color: #fff; }
-        .status-healthy { background: #50C878; color: #fff; }
-        
-        .btn-analyze { background: #FFC72C; color: #000; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; text-decoration: none; transition: 0.3s; }
-        .btn-analyze:hover { background: #fff; transform: scale(1.05); }
-        
-        .wellness-info { font-size: 0.85em; color: #ccc; }
-        .wellness-val { color: #FFC72C; font-weight: bold; }
+        .athlete-info { display: flex; align-items: center; gap: 12px; }
+        .athlete-photo { width: 45px; height: 45px; border-radius: 50%; border: 1px solid #FFC72C; object-fit: cover; }
+        .athlete-details div { font-size: 0.7em; color: #888; }
+        .athlete-name { color: #FFC72C; font-weight: bold; font-size: 1em !important; }
+
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.7em; font-weight: bold; text-transform: uppercase; }
+        .badge-healthy { background: #50C878; color: #000; }
+        .badge-injured { background: #DA3E52; color: #fff; }
+
+        .btn-action { background: #FFC72C; color: #000; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; text-decoration: none; font-size: 0.8em; }
+        .btn-action:hover { background: #fff; }
     </style>
 </head>
 <body>
 
-<div class="admin-container">
-    <header style="border-bottom: 2px solid #FFC72C; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
-        <h1 style="color: #FFC72C; margin: 0;">PRO ATLET CARE <span style="font-weight: 300; color: #fff;">| Admin</span></h1>
-        <button onclick="location.reload()" style="background: none; border: 1px solid #FFC72C; color: #FFC72C; padding: 5px 10px; cursor: pointer; border-radius: 4px;">Оновити дані</button>
+<div class="admin-wrapper">
+    <header>
+        <div class="logo">PRO ATLET CARE <span style="font-weight: 300; color: #fff;">| ADMIN</span></div>
+        <button onclick="firebase.auth().signOut()" class="btn-action" style="background: transparent; color: #FFC72C; border: 1px solid #FFC72C;">Вихід</button>
     </header>
 
-    <table class="monitor-table">
-        <thead>
-            <tr>
-                <th>Атлет (ID)</th>
-                <th>Статус</th>
-                <th>Макс. Біль</th>
-                <th>Wellness (С / С / В)</th>
-                <th>Дія</th>
-            </tr>
-        </thead>
-        <tbody id="athletes-tbody">
-            <tr><td colspan="5" style="text-align: center; padding: 40px;">Завантаження бази атлетів із Firebase...</td></tr>
-        </tbody>
-    </table>
+    <div class="container">
+        <h2 style="margin-bottom: 20px;">Моніторинг команди</h2>
+        <table class="monitor-table">
+            <thead>
+                <tr>
+                    <th>Атлет / Клуб</th>
+                    <th>Статус</th>
+                    <th>Сон</th>
+                    <th>Стрес</th>
+                    <th>Біль</th>
+                    <th>Готовність</th>
+                    <th>Дія</th>
+                </tr>
+            </thead>
+            <tbody id="athletes-tbody">
+                <tr><td colspan="7" style="text-align: center; padding: 50px;">Завантаження даних атлетів...</td></tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-
 <script src="firebase-config.js"></script>
 <script src="admin.js"></script>
 
