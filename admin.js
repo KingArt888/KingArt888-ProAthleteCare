@@ -51,7 +51,6 @@ async function loadGlobalMonitor() {
             }
         });
 
-        // ЛОГІКА: Додаємо назву травмованої частини тіла
         injuriesSnap.forEach(doc => {
             const data = doc.data();
             const uid = data.userId;
@@ -67,13 +66,12 @@ async function loadGlobalMonitor() {
                         let trendColor = '#FFC72C';
                         if (history.length > 1) {
                             const prevPain = parseInt(history[history.length - 2].pain) || 0;
-                            if (lastPain < prevPain) { trend = 'ПОКРАЩЕННЯ 📈'; trendColor = '#00ff00'; }
-                            else if (lastPain > prevPain) { trend = 'ПОГІРШЕННЯ 📉'; trendColor = '#ff4d4d'; }
+                            if (lastPain < prevPain) { trend = 'ПОКРАЩЕННЯ'; trendColor = '#00ff00'; }
+                            else if (lastPain > prevPain) { trend = 'ПОГІРШЕННЯ'; trendColor = '#ff4d4d'; }
                         } else {
                             trend = 'НОВА ТРАВМА'; trendColor = '#ff4d4d';
                         }
                         
-                        // Зберігаємо частину тіла (наприклад, "Коліно" або "Нижня частина спини")
                         athletesMap[uid].injuryStatus = { 
                             label: trend, 
                             color: trendColor, 
@@ -97,17 +95,32 @@ async function loadGlobalMonitor() {
 
         let athleteList = Object.values(athletesMap);
 
-        // ТЕСТОВІ ДАНІ З НАЗВАМИ ТРАВМ
+        // 5 ТЕСТОВИХ АТЛЕТІВ БЕЗ ЕМОДЗІ В СТАТУСАХ
         const demoAthletes = [
             {
-                uid: "d1", name: "Олександр", club: "Rugby UA", photo: "https://i.pravatar.cc/150?u=1",
-                injuryStatus: { label: 'ПОКРАЩЕННЯ 📈', color: '#00ff00', pain: 2, bodyPart: 'Праве коліно' },
+                uid: "d1", name: "Олександр", club: "Rugby UA", photo: "https://i.pravatar.cc/150?u=11",
+                injuryStatus: { label: 'ПОКРАЩЕННЯ', color: '#00ff00', pain: 2, bodyPart: 'Праве коліно' },
                 wellness: { sleep: 9, stress: 2, soreness: 3, ready: 8 }
             },
             {
-                uid: "d2", name: "Дмитро", club: "FC Shakhtar", photo: "https://i.pravatar.cc/150?u=2",
-                injuryStatus: { label: 'ПОГІРШЕННЯ 📉', color: '#ff4d4d', pain: 8, bodyPart: 'Ахіл' },
+                uid: "d2", name: "Дмитро", club: "FC Shakhtar", photo: "https://i.pravatar.cc/150?u=12",
+                injuryStatus: { label: 'ПОГІРШЕННЯ', color: '#ff4d4d', pain: 8, bodyPart: 'Ахіл' },
                 wellness: { sleep: 4, stress: 9, soreness: 8, ready: 2 }
+            },
+            {
+                uid: "d3", name: "Максим", club: "Paphos FC", photo: "https://i.pravatar.cc/150?u=13",
+                injuryStatus: { label: 'СТАБІЛЬНО', color: '#FFC72C', pain: 4, bodyPart: 'Спина' },
+                wellness: { sleep: 7, stress: 4, soreness: 5, ready: 6 }
+            },
+            {
+                uid: "d4", name: "Іван", club: "Fit/Box EMS", photo: "https://i.pravatar.cc/150?u=14",
+                injuryStatus: { label: 'ЗДОРОВИЙ', color: '#00ff00', pain: 0, bodyPart: '' },
+                wellness: { sleep: 10, stress: 1, soreness: 2, ready: 10 }
+            },
+            {
+                uid: "d5", name: "Артем", club: "ProAtletCare", photo: "https://i.pravatar.cc/150?u=15",
+                injuryStatus: { label: 'НОВА ТРАВМА', color: '#ff4d4d', pain: 5, bodyPart: 'Плече' },
+                wellness: { sleep: 6, stress: 7, soreness: 6, ready: 5 }
             }
         ];
         athleteList = [...athleteList, ...demoAthletes];
@@ -126,11 +139,11 @@ async function loadGlobalMonitor() {
                         </div>
                     </td>
                     <td>
-                        <div style="font-size: 0.75em; padding: 6px; border-radius: 6px; text-align: center; min-width: 110px;
+                        <div style="font-size: 0.75em; padding: 6px; border-radius: 6px; text-align: center; min-width: 120px;
                             background: ${stat.color}15; color: ${stat.color}; border: 1px solid ${stat.color}44;">
-                            <div style="font-weight: bold; text-transform: uppercase;">${stat.label}</div>
-                            ${stat.pain > 0 ? `<div style="color: #fff; margin-top: 2px; font-size: 1.1em; font-weight: bold;">${stat.bodyPart}</div>` : ''}
-                            ${stat.pain > 0 ? `<div style="opacity: 0.8;">Біль: ${stat.pain}</div>` : ''}
+                            <div style="font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">${stat.label}</div>
+                            ${stat.pain > 0 ? `<div style="color: #fff; margin-top: 3px; font-size: 1.1em; font-weight: bold; line-height: 1.1;">${stat.bodyPart}</div>` : ''}
+                            ${stat.pain > 0 ? `<div style="opacity: 0.7; margin-top: 2px;">Біль: ${stat.pain}</div>` : ''}
                         </div>
                     </td>
                     <td style="text-align: center;">${getStatusEmoji('sleep', athlete.wellness.sleep)}</td>
