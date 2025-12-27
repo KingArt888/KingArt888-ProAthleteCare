@@ -1,11 +1,9 @@
 (function() {
     const COLLECTION_NAME = 'wellness_reports';
     
-    // --- ОНОВЛЕНІ КОЛЬОРИ ДИЗАЙНУ ---
+    // --- ДИЗАЙН (ЗБЕРЕЖЕНО) ---
     const GOLD_COLOR = 'rgb(255, 215, 0)';
     const GOLD_AREA = 'rgba(255, 215, 0, 0.4)';
-    
-    // Зробив сітку білішою (0.3 замість 0.1/0.2)
     const WHITE_GRID = 'rgba(255, 255, 255, 0.3)'; 
     const TEXT_COLOR = 'rgba(255, 255, 255, 0.8)';
 
@@ -24,7 +22,14 @@
         ready: { color: 'rgb(50, 205, 50)', area: 'rgba(50, 205, 50, 0.4)' },
     };
 
+    let currentUserId = null;
+
+    // 1. АВТОРИЗАЦІЯ ТА ВИЗНАЧЕННЯ USER
+    const urlParams = new URLSearchParams(window.location.search);
+    const viewUserId = urlParams.get('userId');
+
     async function syncWellnessFromFirebase(uid) {
+        if (!window.db) return;
         try {
             const snapshot = await db.collection(COLLECTION_NAME)
                 .where("userId", "==", uid)
@@ -48,7 +53,7 @@
             initCharts(); 
             checkDailyRestriction();
         } catch (e) {
-            console.error("Помилка:", e);
+            console.error("Помилка завантаження Wellness:", e);
             initCharts();
         }
     }
@@ -62,6 +67,12 @@
         const lastDate = localStorage.getItem('lastWellnessSubmissionDate');
         const today = getTodayDateString();
         const button = document.querySelector('.gold-button');
+
+        // Якщо ми в режимі перегляду (адмін), кнопка нам не потрібна
+        if (viewUserId && button) {
+            button.style.display = 'none';
+            return true;
+        }
 
         if (lastDate === today && button) {
             button.disabled = true;
@@ -84,7 +95,6 @@
             ? history[sortedDates[sortedDates.length - 1]] 
             : { sleep:0, soreness:0, mood:0, water:0, stress:0, ready:0 };
 
-        // --- МАЛЕНЬКІ ГРАФІКИ ---
         WELLNESS_FIELDS.forEach(field => {
             const ctx = document.getElementById(`chart-${field}`);
             const statEl = document.getElementById(`stat-${field}`);
@@ -95,10 +105,8 @@
                 statEl.style.color = score >= 7 ? 'rgb(50, 205, 50)' : (score >= 4 ? 'rgb(255, 159, 64)' : 'rgb(255, 99, 132)');
             }
 
-            if (ctx) {
-                if (window[`chart_${field}`] && typeof window[`chart_${field}`].destroy === 'function') {
-                    window[`chart_${field}`].destroy();
-                }
+            if (ctx && typeof Chart !== 'undefined') {
+                if (window[`chart_${field}`] instanceof Chart) window[`chart_${field}`].destroy();
                 
                 window[`chart_${field}`] = new Chart(ctx, {
                     type: 'line',
@@ -116,15 +124,8 @@
                         responsive: true,
                         maintainAspectRatio: false,
                         scales: {
-                            y: { 
-                                min: 0, max: 10, 
-                                ticks: { color: TEXT_COLOR, stepSize: 2, display: true }, // Біліший текст шкали
-                                grid: { color: WHITE_GRID } // БІЛІША СІТКА
-                            },
-                            x: { 
-                                ticks: { color: TEXT_COLOR, display: false },
-                                grid: { display: false } 
-                            }
+                            y: { min: 0, max: 10, ticks: { color: TEXT_COLOR, stepSize: 2 }, grid: { color: WHITE_GRID } },
+                            x: { ticks: { color: TEXT_COLOR, display: false }, grid: { display: false } }
                         },
                         plugins: { legend: { display: false } }
                     }
@@ -132,12 +133,9 @@
             }
         });
 
-        // --- ПАВУТИННЯ ---
         const mainCtx = document.getElementById('wellnessChart');
-        if (mainCtx) {
-            if (window.wellnessChart && typeof window.wellnessChart.destroy === 'function') {
-                window.wellnessChart.destroy();
-            }
+        if (mainCtx && typeof Chart !== 'undefined') {
+            if (window.wellnessChart instanceof Chart) window.wellnessChart.destroy();
             window.wellnessChart = new Chart(mainCtx, {
                 type: 'radar',
                 data: {
@@ -154,7 +152,7 @@
                     scales: {
                         r: {
                             min: 0, max: 10,
-                            grid: { color: WHITE_GRID }, // БІЛІША СІТКА ПАВУТИННЯ
+                            grid: { color: WHITE_GRID },
                             angleLines: { color: WHITE_GRID },
                             pointLabels: { color: 'white', font: { size: 12 } },
                             ticks: { display: false }
@@ -171,7 +169,8 @@
 
         firebase.auth().onAuthStateChanged(async (user) => {
             if (user) {
-                await syncWellnessFromFirebase(user.uid);
+                currentUserId = viewUserId || user.uid;
+                await syncWellnessFromFirebase(currentUserId);
             } else {
                 await firebase.auth().signInAnonymously();
             }
@@ -184,7 +183,7 @@
                 if (checkDailyRestriction()) return;
 
                 const user = firebase.auth().currentUser;
-                if (!user) return alert("Зачекайте...");
+                if (!user || !window.db) return alert("Зачекайте налаштування бази...");
 
                 const scores = {};
                 WELLNESS_FIELDS.forEach(f => {
@@ -192,7 +191,7 @@
                     if (val) scores[f] = parseInt(val.value, 10);
                 });
 
-                if (Object.keys(scores).length < 6) return alert("Заповніть все!");
+                if (Object.keys(scores).length < 6) return alert("Заповніть усі поля!");
 
                 try {
                     const today = getTodayDateString();
@@ -203,8 +202,9 @@
                         timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     });
                     localStorage.setItem('lastWellnessSubmissionDate', today);
+                    alert("Дані успішно відправлені!");
                     location.reload(); 
-                } catch (err) { alert(err.message); }
+                } catch (err) { alert("Помилка: " + err.message); }
             });
         }
     });
