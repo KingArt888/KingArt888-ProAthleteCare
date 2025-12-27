@@ -1,3 +1,15 @@
+// Перевірка, чи ми зайшли як адмін переглянути чужий профіль
+const urlParams = new URLSearchParams(window.location.search);
+const viewUserId = urlParams.get('userId');
+
+firebase.auth().onAuthStateChanged(async (user) => {
+    if (user) {
+        // Якщо в URL є userId, то завантажуємо дані атлета, інакше свої
+        currentUserId = viewUserId || user.uid;
+        loadInjuriesFromFirebase();
+    }
+});
+
 const INJURY_COLLECTION = 'injuries';
 let currentUserId = null;
 let injuries = [];
