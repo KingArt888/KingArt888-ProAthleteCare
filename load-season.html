@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="load-season.css">
 </head>
 <body>
+
     <header>
         <a href="index.html" class="logo-link">
             <img src="AK_logo.png" alt="Logo" class="logo">
@@ -18,11 +19,11 @@
     
     <div class="content-wrapper">
         <nav class="sidebar" id="main-sidebar"> 
-            <a href="wellness.html">Wellness Control</a>
-            <a href="injury.html">Injury Story</a>
-            <a href="load-season.html" class="active">Load Season</a> 
-            <a href="weight-control.html">Weight Control</a>
-            <a href="velocity-control.html">Velocity Control</a>
+            <a href="wellness.html">Wellness Control <img src="AK_logo.png" class="menu-icon"></a>
+            <a href="injury.html">Injury Story <img src="AK_logo.png" class="menu-icon"></a>
+            <a href="load-season.html" class="active">Load Season <img src="AK_logo.png" class="menu-icon"></a> 
+            <a href="weight-control.html">Weight Control <img src="AK_logo.png" class="menu-icon"></a>
+            <a href="velocity-control.html">Velocity Control <img src="AK_logo.png" class="menu-icon"></a>
         </nav>
         
         <main class="main-content">
@@ -30,13 +31,13 @@
                 <div class="form-card form-container">
                     <h3>Нове тренування</h3>
                     <form id="load-form">
-                        <label for="load-date">Дата:</label>
+                        <label>Дата:</label>
                         <input type="date" id="load-date" required>
-                        <label for="load-duration">Тривалість (хв):</label>
+                        <label>Тривалість (хв):</label>
                         <input type="number" id="load-duration" value="60" required>
-                        <label for="load-distance">Дистанція (км):</label>
+                        <label>Дистанція (км):</label>
                         <input type="number" id="load-distance" step="0.1" value="0.0">
-                        <label>Інтенсивність (RPE):</label>
+                        <label>RPE (1-10):</label>
                         <div class="rpe-group">
                             <input type="radio" id="rpe10" name="rpe" value="10"><label for="rpe10" data-rpe="10"></label>
                             <input type="radio" id="rpe9" name="rpe" value="9"><label for="rpe9" data-rpe="9"></label>
@@ -49,13 +50,13 @@
                             <input type="radio" id="rpe2" name="rpe" value="2"><label for="rpe2" data-rpe="2"></label>
                             <input type="radio" id="rpe1" name="rpe" value="1"><label for="rpe1" data-rpe="1"></label>
                         </div>
-                        <button type="submit" class="submit-button">Зберегти в хмару</button>
+                        <button type="submit" class="submit-button">Зберегти в Firebase</button>
                     </form>
                 </div>
 
                 <div class="info-column">
                     <div class="stats-card">
-                        <h3>Ризик травм (ACWR)</h3>
+                        <h3>Контроль ризику травм (ACWR)</h3>
                         <div class="speedometer-widget">
                             <div class="gauge-display">
                                 <div class="gauge-arc"></div>
@@ -63,17 +64,21 @@
                                     <div class="gauge-needle" id="gauge-needle"></div>
                                 </div>
                                 <div class="gauge-value-text">
-                                    <span id="acwr-value">1.00</span>
+                                    <span id="acwr-value">0.00</span>
                                     <p class="acwr-label">INDEX ACWR</p>
                                 </div>
                             </div>
                         </div>
                         <div class="gauge-status-box">
-                            <p>Статус: <span id="acwr-status">Завантаження...</span></p>
+                            <p>Статус: <span id="acwr-status">Синхронізація...</span></p>
                         </div>
                     </div>
+                    
                     <div class="chart-card">
                         <canvas id="loadChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <canvas id="distanceChart"></canvas>
                     </div>
                 </div>
             </div>
