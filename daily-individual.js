@@ -1,14 +1,6 @@
-// daily-individual.js — ProAtletCare (FIXED)
+// daily-individual.js — ProAtletCare (FIREBASE SYNC FIX)
 
-// Використовуємо var замість const для STORAGE_KEY, щоб уникнути SyntaxError при подвійному підключенні
-if (typeof STORAGE_KEY === 'undefined') {
-    var STORAGE_KEY = 'weeklyPlanData';
-}
-
-var dailyDb = (typeof db !== 'undefined') ? db : firebase.firestore();
-const STAGES = ['Pre-Training', 'Main Training', 'Post-Training'];
-
-// 1. ОТРИМАННЯ ID ТИЖНЯ (Понеділок)
+// Функція формування ID тижня (МАЄ БУТИ ТАКОЮ Ж, ЯК У WEEKLY)
 function getWeekID() {
     const d = new Date();
     const day = d.getDay();
@@ -17,56 +9,67 @@ function getWeekID() {
     return monday.toISOString().split('T')[0];
 }
 
-// 2. ЗАВАНТАЖЕННЯ З FIREBASE
-async function loadDailyPlanFromFirebase() {
+async function loadDailyPlan() {
     const listContainer = document.getElementById('daily-exercise-list');
     const statusDisplay = document.getElementById('md-status-display');
     const currentWeekId = getWeekID();
 
     firebase.auth().onAuthStateChanged(async (user) => {
-        if (!user) return;
-        
+        if (!user) {
+            console.log("Користувач не залогінений");
+            return;
+        }
+
         const uid = user.uid;
+        // ГЕНЕРУЄМО ТОЙ САМИЙ ID, ЩО В WEEKLY
+        const docPath = `${uid}_${currentWeekId}`;
+        console.log("Шукаємо план за шляхом:", docPath);
+
         try {
-            // Зчитуємо дані з Firebase за ID користувача та тижня
-            const doc = await dailyDb.collection('weekly_plans').doc(`${uid}_${currentWeekId}`).get();
+            const doc = await db.collection('weekly_plans').doc(docPath).get();
             
             if (!doc.exists) {
-                if (listContainer) listContainer.innerHTML = '<p style="text-align:center; color:#888; padding:20px;">План тренером ще не опублікований у Firebase.</p>';
+                console.log("Документ не знайдено в Firebase");
+                listContainer.innerHTML = '<p style="text-align:center; color:#888;">План ще не опублікований тренером у Firebase.</p>';
                 return;
             }
 
-            const data = doc.data().planData;
+            const fbData = doc.data().planData;
             const todayIdx = (new Date().getDay() === 0) ? 6 : new Date().getDay() - 1;
 
-            // Визначаємо статус (ВИПРАВЛЕНО: використовуємо ключі day_ як у Weekly)
-            const mdStatus = calculateTodayStatus(data, todayIdx);
+            // Визначаємо статус (ВИПРАВЛЕНО КЛЮЧІ: day_ замість activity_)
+            const mdStatus = calculateStatusFromWeekly(fbData, todayIdx);
             
             if (statusDisplay) {
                 statusDisplay.textContent = mdStatus;
-                statusDisplay.className = `md-status color-dark-grey`; // Базовий колір
+                statusDisplay.className = `md-status color-dark-grey`;
             }
 
             const planKey = `status_plan_${mdStatus}`;
-            const plan = data[planKey];
+            const plan = fbData[planKey];
 
             if (!plan || !plan.exercises || plan.exercises.length === 0) {
-                listContainer.innerHTML = `<div style="text-align:center; padding:30px; color:#888;">На сьогодні (${mdStatus}) вправи не заплановані.</div>`;
+                listContainer.innerHTML = `<p style="text-align:center; padding:20px;">На сьогодні (${mdStatus}) вправ немає.</p>`;
             } else {
-                renderDailyExercises(plan.exercises, listContainer);
+                // Відображення вправ
+                listContainer.innerHTML = plan.exercises.map(ex => `
+                    <div style="background:#111; padding:15px; border-radius:8px; margin-bottom:10px; border-left:4px solid #d4af37;">
+                        <h4 style="margin:0; color:#fff;">${ex.name}</h4>
+                        <p style="color:#aaa; font-size:0.85rem;">${ex.description || ''}</p>
+                        ${ex.videoKey ? `<iframe src="https://www.youtube.com/embed/${ex.videoKey}" style="width:100%; aspect-ratio:16/9; border:0; margin-top:10px;"></iframe>` : ''}
+                    </div>
+                `).join('');
             }
 
-            if (typeof renderFeedbackForm === 'function') renderFeedbackForm();
-
         } catch (e) {
-            console.error("Firebase Load Error:", e);
+            console.error("Firebase Error:", e);
+            listContainer.innerHTML = '<p style="color:red;">Помилка доступу до бази даних.</p>';
         }
     });
 }
 
-// 3. РОЗРАХУНОК СТАТУСУ (ВИПРАВЛЕНО КЛЮЧІ)
-function calculateTodayStatus(data, todayIdx) {
-    // Змінено з activity_ на day_ для синхронізації з Weekly Individual
+function calculateStatusFromWeekly(data, todayIdx) {
+    // ВАЖЛИВО: у твоєму weekly-individual.js ключі називаються day_0, day_1...
     if (data[`day_${todayIdx}`] === 'REST') return 'REST';
     if (data[`day_${todayIdx}`] === 'MATCH') return 'MD';
     
@@ -83,32 +86,4 @@ function calculateTodayStatus(data, todayIdx) {
     return 'TRAIN';
 }
 
-// 4. ВІДОБРАЖЕННЯ ВПРАВ
-function renderDailyExercises(exercises, container) {
-    let html = '';
-    STAGES.forEach(stage => {
-        const stageExs = exercises.filter(ex => ex.stage === stage);
-        if (stageExs.length > 0) {
-            html += `
-                <div style="margin-bottom:20px;">
-                    <div style="color:#d4af37; font-size:0.75rem; text-transform:uppercase; border-bottom:1px solid #333; padding-bottom:5px; margin-bottom:10px;">${stage}</div>
-                    ${stageExs.map(ex => createExerciseItemHTML(ex)).join('')}
-                </div>`;
-        }
-    });
-    container.innerHTML = html;
-}
-
-function createExerciseItemHTML(ex) {
-    return `
-        <div class="exercise-card" style="background:#111; padding:15px; border-radius:8px; margin-bottom:10px; border-left:4px solid #d4af37;">
-            <h4 style="margin:0; color:#fff;">${ex.name}</h4>
-            <p style="color:#aaa; font-size:0.85rem; margin:5px 0;">${ex.description || ''}</p>
-            ${ex.videoKey ? `
-                <div style="margin-top:10px; position:relative; padding-bottom:56.25%; height:0; overflow:hidden;">
-                    <iframe src="https://www.youtube.com/embed/${ex.videoKey}" style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;" allowfullscreen></iframe>
-                </div>` : ''}
-        </div>`;
-}
-
-document.addEventListener('DOMContentLoaded', loadDailyPlanFromFirebase);
+document.addEventListener('DOMContentLoaded', loadDailyPlan);
