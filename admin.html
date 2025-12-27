@@ -3,49 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProAtletCare Admin - Моніторинг</title>
+    <title>ProAtletCare Admin - Dashboard</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { background-color: #000; color: #fff; font-family: 'Segoe UI', sans-serif; }
-        .admin-container { padding: 30px; max-width: 1200px; margin: 0 auto; }
-        .monitor-table { width: 100%; border-collapse: collapse; background: #111; border-radius: 15px; overflow: hidden; margin-top: 20px; }
-        .monitor-table th { background: #FFC72C; color: #000; padding: 15px; text-align: left; text-transform: uppercase; font-size: 0.85em; }
+        .admin-container { padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .monitor-table { width: 100%; border-collapse: collapse; background: #111; border-radius: 12px; overflow: hidden; margin-top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .monitor-table th { background: #FFC72C; color: #000; padding: 15px; text-align: left; text-transform: uppercase; font-size: 0.8em; letter-spacing: 1px; }
         .monitor-table td { padding: 15px; border-bottom: 1px solid #222; }
-        .monitor-table tr:hover { background: #1a1a1a; }
-        .status-badge { padding: 5px 10px; border-radius: 20px; font-size: 0.75em; font-weight: bold; }
-        .recovering { background: #DA3E52; color: #fff; }
-        .healthy { background: #FFC72C; color: #000; }
-        .btn-detail { background: gold; color: #000; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .btn-detail:hover { background: #e6b800; transform: scale(1.05); }
-        .wellness-low { color: #DA3E52; font-weight: bold; }
+        .monitor-table tr:hover { background: #1a1a1a; transition: 0.3s; }
+        
+        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75em; font-weight: bold; }
+        .status-recovering { background: #DA3E52; color: #fff; }
+        .status-healthy { background: #50C878; color: #fff; }
+        
+        .wellness-cell { display: flex; gap: 10px; font-size: 0.9em; }
+        .wellness-item { display: flex; flex-direction: column; align-items: center; min-width: 40px; }
+        .wellness-label { font-size: 0.7em; color: #888; text-transform: uppercase; }
+        .critical { color: #DA3E52; font-weight: bold; }
+        
+        .btn-analyze { background: #FFC72C; color: #000; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; }
+        .btn-analyze:hover { background: #e6b327; transform: translateY(-2px); }
     </style>
 </head>
 <body>
-    <div class="admin-container">
-        <h1 style="color: #FFC72C; margin-bottom: 5px;">ProAtletCare Dashboard</h1>
-        <p style="color: #888;">Загальний моніторинг стану атлетів</p>
 
+<div class="admin-container">
+    <header style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #FFC72C; padding-bottom: 15px;">
+        <h1 style="color: #FFC72C; margin: 0;">PRO ATLET CARE <span style="font-weight: 300; color: #fff;">| Admin</span></h1>
+        <div id="admin-status" style="font-size: 0.9em; color: #888;">Моніторинг активний</div>
+    </header>
+
+    <div style="margin-top: 20px;">
         <table class="monitor-table">
             <thead>
                 <tr>
-                    <th>Атлет</th>
+                    <th>Атлет (ID)</th>
                     <th>Статус</th>
                     <th>Max Pain</th>
-                    <th>Wellness (S/S/F)</th>
+                    <th>Wellness (S / S / F)</th>
                     <th>Дія</th>
                 </tr>
             </thead>
-            <tbody id="monitor-tbody">
-                <tr><td colspan="5" style="text-align:center;">Завантаження даних...</td></tr>
+            <tbody id="athletes-tbody">
+                <tr><td colspan="5" style="text-align: center; padding: 40px;">Завантаження бази атлетів...</td></tr>
             </tbody>
         </table>
     </div>
+</div>
 
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-    <script src="firebase-config.js"></script>
-    <script src="admin.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+<script src="firebase-config.js"></script>
+<script src="admin.js"></script>
+
 </body>
 </html>
