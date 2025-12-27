@@ -75,29 +75,28 @@
 
                 <div class="info-column">
                     
-                   <div class="stats-card stats-container">
-                       <h3>Контроль ризику травм (ACWR)</h3>
-                       <div class="speedometer-widget">
-                           <div class="gauge-display">
-                               <div class="gauge-arc">
-                                   <div class="gauge-label" style="transform: rotate(-75deg) translateY(-120px);">0</div>
-                                   <div class="gauge-label" style="transform: rotate(-35deg) translateY(-120px);">0.8</div>
-                                   <div class="gauge-label" style="transform: rotate(35deg) translateY(-120px);">1.3</div>
-                                   <div class="gauge-label" style="transform: rotate(75deg) translateY(-120px);">2.0+</div>
-                               </div>
-                               <div class="gauge-needle-pivot">
-                                   <div class="gauge-needle" id="gauge-needle"></div>
-                               </div>
-                               <div class="gauge-value-text">
-                                   <span id="acwr-value">0.00</span>
-                                   <p class="acwr-label">ACWR</p>
-                   </div>
-                           </div>
-                       </div>
-                       <div class="gauge-status-box" id="acwr-status-container">
-                           <p>Статус: <span id="acwr-status" class="status-safe">Завантаження...</span></p>
-                       </div>
-                   </div>
+                    <div class="stats-card stats-container">
+                        <h3>Контроль ризику травм (ACWR)</h3>
+                        
+                        <div class="speedometer-widget">
+                            <div class="gauge-display" id="acwr-gauge-display">
+                                <div class="gauge-arc">
+                                    </div>
+                                <div class="gauge-needle-pivot">
+                                    <div class="gauge-needle" id="gauge-needle"></div>
+                                </div>
+                                <div class="gauge-value-text">
+                                    <span id="acwr-value">1.00</span>
+                                    <p class="acwr-label">ACWR</p>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="gauge-status-box">
+                            <p>Статус: <span id="acwr-status" class="status-safe">Безпечна зона</span></p>
+                        </div>
+                    </div>
                     
                     <div class="chart-card">
                         <h4>Навантаження (Acute vs Chronic)</h4>
