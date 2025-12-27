@@ -6,15 +6,10 @@
     let distanceChart = null;
     let dailyData = [];
 
-    /* ===============================
-       INIT
-    =============================== */
     document.addEventListener('DOMContentLoaded', () => {
 
         const dateInput = document.getElementById('load-date');
-        if (dateInput) {
-            dateInput.value = new Date().toISOString().split('T')[0];
-        }
+        if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
 
         firebase.auth().onAuthStateChanged(async (user) => {
             if (user) {
@@ -24,14 +19,9 @@
             }
         });
 
-        document
-            .getElementById('load-form')
-            .addEventListener('submit', handleSubmit);
+        document.getElementById('load-form').addEventListener('submit', handleSubmit);
     });
 
-    /* ===============================
-       FIRESTORE LOAD
-    =============================== */
     async function loadFromFirestore(uid) {
         const snapshot = await db
             .collection(COLLECTION)
@@ -41,31 +31,22 @@
 
         dailyData = [];
         snapshot.forEach(doc => dailyData.push(doc.data()));
-
         updateAll();
     }
 
-    /* ===============================
-       UPDATE ALL UI
-    =============================== */
     function updateAll() {
-
         if (dailyData.length === 0) {
             updateGauge(0.5);
-            return;
+        } else {
+            const acwrSeries = buildACWRSeries(dailyData);
+            const latestACWR = acwrSeries[acwrSeries.length - 1];
+            updateGauge(latestACWR);
         }
 
-        const acwrSeries = buildACWRSeries(dailyData);
-        const latestACWR = acwrSeries[acwrSeries.length - 1];
-
-        updateGauge(latestACWR);
         renderLoadChart();
         renderDistanceChart();
     }
 
-    /* ===============================
-       LOAD CALCULATIONS
-    =============================== */
     function sessionLoad(d) {
         return (d.duration || 0) * (d.rpe || 0);
     }
@@ -84,20 +65,13 @@
         });
     }
 
-    /* ===============================
-       ACWR GAUGE
-    =============================== */
     function updateGauge(acwr) {
-
         const needle = document.querySelector('.gauge-needle');
         const valueEl = document.getElementById('acwr-value');
         const statusEl = document.getElementById('acwr-status');
-
         if (!needle) return;
 
-        const MIN = 0.5;
-        const MAX = 2.0;
-
+        const MIN = 0.5, MAX = 2.0;
         const clamped = Math.max(MIN, Math.min(MAX, acwr));
         const deg = ((clamped - MIN) / (MAX - MIN)) * 180 - 90;
 
@@ -116,13 +90,9 @@
         }
     }
 
-    /* ===============================
-       LOAD CHART (ACUTE vs CHRONIC)
-    =============================== */
     function renderLoadChart() {
-
         const ctx = document.getElementById('loadChart');
-        if (!ctx || dailyData.length < 2) return;
+        if (!ctx || dailyData.length === 0) return;
 
         if (loadChart) loadChart.destroy();
 
@@ -130,91 +100,65 @@
             d.date.split('-').reverse().slice(0, 2).join('.')
         );
 
-        const acuteSeries = dailyData.map((_, i) =>
-            avgLoad(dailyData, 7, i)
-        );
-
-        const chronicSeries = dailyData.map((_, i) =>
-            avgLoad(dailyData, 28, i)
-        );
+        const acuteSeries = dailyData.map((_, i) => avgLoad(dailyData, 7, i));
+        const chronicSeries = dailyData.map((_, i) => avgLoad(dailyData, 28, i));
 
         loadChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels,
                 datasets: [
-                    {
-                        label: 'Acute Load (7 днів)',
-                        data: acuteSeries,
-                        borderWidth: 3,
-                        tension: 0.35
-                    },
-                    {
-                        label: 'Chronic Load (28 днів)',
-                        data: chronicSeries,
-                        borderWidth: 3,
-                        tension: 0.35
-                    }
+                    { label: 'Acute Load (7 днів)', data: acuteSeries, borderWidth: 3, tension: 0.35, borderColor: '#FFD700', backgroundColor: 'rgba(255,215,0,0.1)' },
+                    { label: 'Chronic Load (28 днів)', data: chronicSeries, borderWidth: 3, tension: 0.35, borderColor: '#5cb85c', backgroundColor: 'rgba(92,184,92,0.1)' }
                 ]
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Session Load (duration × RPE)'
-                        }
-                    }
+                    y: { beginAtZero: true, title: { display: true, text: 'Session Load (duration × RPE)' } }
                 }
             }
         });
     }
 
-    /* ===============================
-       DISTANCE CHART
-    =============================== */
     function renderDistanceChart() {
-
         const ctx = document.getElementById('distanceChart');
         if (!ctx || dailyData.length === 0) return;
 
         if (distanceChart) distanceChart.destroy();
 
+        const last7 = dailyData.slice(-7);
+        const labels = last7.map(d => d.date.split('-').reverse().slice(0, 2).join('.'));
+        const data = last7.map(d => d.distance || 0);
+
         distanceChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: dailyData.slice(-7).map(d =>
-                    d.date.split('-').reverse().slice(0, 2).join('.')
-                ),
+                labels,
                 datasets: [{
                     label: 'Дистанція (км)',
-                    data: dailyData.slice(-7).map(d => d.distance || 0),
+                    data,
                     borderWidth: 3,
-                    tension: 0.3
+                    tension: 0.3,
+                    borderColor: '#00BFFF',
+                    backgroundColor: 'rgba(0,191,255,0.1)'
                 }]
             },
             options: {
                 responsive: true,
-                scales: {
-                    y: { beginAtZero: true }
-                }
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true } }
             }
         });
     }
 
-    /* ===============================
-       FORM SUBMIT
-    =============================== */
     async function handleSubmit(e) {
         e.preventDefault();
-
         const user = firebase.auth().currentUser;
         if (!user) return;
 
         const form = e.target;
-
         const data = {
             userId: user.uid,
             date: form.elements.date.value,
@@ -224,10 +168,7 @@
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         };
 
-        await db
-            .collection(COLLECTION)
-            .doc(`${user.uid}_${data.date}`)
-            .set(data);
+        await db.collection(COLLECTION).doc(`${user.uid}_${data.date}`).set(data);
 
         const status = document.getElementById('form-status');
         if (status) {
