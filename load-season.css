@@ -288,6 +288,7 @@ input[type="date"]:focus, input[type="number"]:focus {
     transform: rotate(0deg); 
 }
 
+/* 1. Центр (точка кріплення стрілки) */
 .gauge-needle-pivot {
     position: absolute;
     bottom: 0;
@@ -302,20 +303,35 @@ input[type="date"]:focus, input[type="number"]:focus {
     border: 3px solid #1a1a1a; 
 }
 
+/* 2. Текст поділок на шкалі */
+.gauge-label {
+    position: absolute;
+    top: 140px; /* Центр кола */
+    left: 140px;
+    transform-origin: center;
+    color: #888;
+    font-size: 12px;
+    font-weight: bold;
+    z-index: 7;
+}
+
+/* 3. ОБ'ЄДНАНА СТРІЛКА (тут я зібрав все докупи) */
 .gauge-needle {
     position: absolute;
-    bottom: 9px; 
+    bottom: 9px; /* Щоб починалася з центру півота */
     left: 50%;
     width: 3px; 
-    height: 140px; 
+    height: 120px; /* Оптимальна довжина, щоб не вилазити за дугу */
     background-color: #FFD700; 
     transform-origin: bottom center;
     transition: transform 1.5s ease-out; 
     border-radius: 3px;
     z-index: 9;
-    transform: translateX(-50%) rotate(0deg); 
+    /* Початкове положення - стрілка вліво на початок червоної зони */
+    transform: translateX(-50%) rotate(-90deg); 
 }
 
+/* 4. Текст зі значенням ACWR під стрілкою */
 .gauge-value-text {
     position: absolute;
     bottom: -5px; 
@@ -344,7 +360,6 @@ input[type="date"]:focus, input[type="number"]:focus {
     margin-top: 15px;
     font-size: 1.1em;
 }
-
 .status-safe {
     color: #5cb85c; 
     font-weight: bold;
