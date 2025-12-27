@@ -2,6 +2,7 @@ const USERS_COL = 'users';
 const INJURIES_COL = 'injuries';
 const WELLNESS_COL = 'wellness_reports';
 
+// 1. Кольорові індикатори Wellness
 function getStatusEmoji(type, value) {
     if (value === '-' || value === undefined) return '<span style="opacity: 0.2;">➖</span>';
     const val = parseInt(value);
@@ -21,8 +22,35 @@ function getStatusEmoji(type, value) {
         else if (val <= 6) color = '#FFC72C';
         else color = '#ff4d4d';
     }
-    return `<div style="display: inline-flex; flex-direction: column; align-items: center; justify-content: center; width: 42px; height: 42px; border-radius: 10px; background: ${color}15; border: 1px solid ${color}44;"><span style="font-size: 1.4em; filter: drop-shadow(0 0 2px ${color});">${emoji}</span></div>`;
+    return `
+        <div style="display: inline-flex; flex-direction: column; align-items: center; justify-content: center; 
+                    width: 42px; height: 42px; border-radius: 10px; background: ${color}15; border: 1px solid ${color}44;">
+            <span style="font-size: 1.4em; filter: drop-shadow(0 0 2px ${color});">${emoji}</span>
+        </div>`;
 }
+
+// 2. Функції взаємодії (Чат та Програма)
+window.openChat = function(uid, name) {
+    const msg = prompt(`Повідомлення для ${name}:`);
+    if (msg) {
+        db.collection('messages').add({
+            to: uid,
+            text: msg,
+            sender: 'admin',
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => alert("Відправлено!"));
+    }
+};
+
+window.editProgram = function(uid, name) {
+    const adj = prompt(`Коригування програми для ${name}:`, "Зменшити навантаження на...");
+    if (adj) {
+        db.collection('training_plans').doc(uid).set({
+            adjustments: adj,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true }).then(() => alert("Програму оновлено!"));
+    }
+};
 
 async function loadGlobalMonitor() {
     const tbody = document.getElementById('athletes-tbody');
@@ -37,6 +65,7 @@ async function loadGlobalMonitor() {
 
         const athletesMap = {};
 
+        // Завантаження користувачів
         usersSnap.forEach(doc => {
             const data = doc.data();
             if (data.role !== 'admin') {
@@ -51,6 +80,7 @@ async function loadGlobalMonitor() {
             }
         });
 
+        // Аналіз травм та динаміки (БЕЗ ЕМОДЗІ в тексті)
         injuriesSnap.forEach(doc => {
             const data = doc.data();
             const uid = data.userId;
@@ -58,7 +88,6 @@ async function loadGlobalMonitor() {
                 const history = data.painHistory || data.history || [];
                 if (history.length > 0) {
                     const lastPain = parseInt(history[history.length - 1].pain) || 0;
-                    
                     if (lastPain === 0) {
                         athletesMap[uid].injuryStatus = { label: 'ЗДОРОВИЙ', color: '#00ff00', pain: 0, bodyPart: '' };
                     } else {
@@ -68,14 +97,10 @@ async function loadGlobalMonitor() {
                             const prevPain = parseInt(history[history.length - 2].pain) || 0;
                             if (lastPain < prevPain) { trend = 'ПОКРАЩЕННЯ'; trendColor = '#00ff00'; }
                             else if (lastPain > prevPain) { trend = 'ПОГІРШЕННЯ'; trendColor = '#ff4d4d'; }
-                        } else {
-                            trend = 'НОВА ТРАВМА'; trendColor = '#ff4d4d';
-                        }
+                        } else { trend = 'НОВА ТРАВМА'; trendColor = '#ff4d4d'; }
                         
                         athletesMap[uid].injuryStatus = { 
-                            label: trend, 
-                            color: trendColor, 
-                            pain: lastPain,
+                            label: trend, color: trendColor, pain: lastPain,
                             bodyPart: data.bodyPart || data.type || 'Травма' 
                         };
                     }
@@ -83,6 +108,7 @@ async function loadGlobalMonitor() {
             }
         });
 
+        // Wellness дані
         wellnessSnap.forEach(doc => {
             const data = doc.data();
             const uid = data.userId;
@@ -95,7 +121,7 @@ async function loadGlobalMonitor() {
 
         let athleteList = Object.values(athletesMap);
 
-        // 5 ТЕСТОВИХ АТЛЕТІВ БЕЗ ЕМОДЗІ В СТАТУСАХ
+        // Тимчасові атлети для перевірки (видаліть, коли база заповниться)
         const demoAthletes = [
             {
                 uid: "d1", name: "Олександр", club: "Rugby UA", photo: "https://i.pravatar.cc/150?u=11",
@@ -106,25 +132,11 @@ async function loadGlobalMonitor() {
                 uid: "d2", name: "Дмитро", club: "FC Shakhtar", photo: "https://i.pravatar.cc/150?u=12",
                 injuryStatus: { label: 'ПОГІРШЕННЯ', color: '#ff4d4d', pain: 8, bodyPart: 'Ахіл' },
                 wellness: { sleep: 4, stress: 9, soreness: 8, ready: 2 }
-            },
-            {
-                uid: "d3", name: "Максим", club: "Paphos FC", photo: "https://i.pravatar.cc/150?u=13",
-                injuryStatus: { label: 'СТАБІЛЬНО', color: '#FFC72C', pain: 4, bodyPart: 'Спина' },
-                wellness: { sleep: 7, stress: 4, soreness: 5, ready: 6 }
-            },
-            {
-                uid: "d4", name: "Іван", club: "Fit/Box EMS", photo: "https://i.pravatar.cc/150?u=14",
-                injuryStatus: { label: 'ЗДОРОВИЙ', color: '#00ff00', pain: 0, bodyPart: '' },
-                wellness: { sleep: 10, stress: 1, soreness: 2, ready: 10 }
-            },
-            {
-                uid: "d5", name: "Артем", club: "ProAtletCare", photo: "https://i.pravatar.cc/150?u=15",
-                injuryStatus: { label: 'НОВА ТРАВМА', color: '#ff4d4d', pain: 5, bodyPart: 'Плече' },
-                wellness: { sleep: 6, stress: 7, soreness: 6, ready: 5 }
             }
         ];
         athleteList = [...athleteList, ...demoAthletes];
 
+        // Рендер таблиці
         tbody.innerHTML = athleteList.map(athlete => {
             const stat = athlete.injuryStatus;
             return `
@@ -141,9 +153,9 @@ async function loadGlobalMonitor() {
                     <td>
                         <div style="font-size: 0.75em; padding: 6px; border-radius: 6px; text-align: center; min-width: 120px;
                             background: ${stat.color}15; color: ${stat.color}; border: 1px solid ${stat.color}44;">
-                            <div style="font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">${stat.label}</div>
-                            ${stat.pain > 0 ? `<div style="color: #fff; margin-top: 3px; font-size: 1.1em; font-weight: bold; line-height: 1.1;">${stat.bodyPart}</div>` : ''}
-                            ${stat.pain > 0 ? `<div style="opacity: 0.7; margin-top: 2px;">Біль: ${stat.pain}</div>` : ''}
+                            <div style="font-weight: bold; text-transform: uppercase;">${stat.label}</div>
+                            ${stat.pain > 0 ? `<div style="color: #fff; margin-top: 3px; font-weight: bold;">${stat.bodyPart}</div>` : ''}
+                            ${stat.pain > 0 ? `<div style="opacity: 0.7; font-size: 0.9em;">Біль: ${stat.pain}</div>` : ''}
                         </div>
                     </td>
                     <td style="text-align: center;">${getStatusEmoji('sleep', athlete.wellness.sleep)}</td>
@@ -151,7 +163,11 @@ async function loadGlobalMonitor() {
                     <td style="text-align: center;">${getStatusEmoji('soreness', athlete.wellness.soreness)}</td>
                     <td style="text-align: center;">${getStatusEmoji('ready', athlete.wellness.ready)}</td>
                     <td style="text-align: right; padding-right: 15px;">
-                        <a href="injury.html?userId=${athlete.uid}" style="display: inline-block; background: #FFC72C; color: #000; padding: 8px 18px; border-radius: 4px; font-weight: bold; font-size: 0.8em; text-decoration: none; text-transform: uppercase;">Аналіз</a>
+                        <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                            <a href="injury.html?userId=${athlete.uid}" title="Аналіз" style="background: #FFC72C; color: #000; padding: 7px; border-radius: 4px; text-decoration: none; font-size: 0.9em;">📊</a>
+                            <button onclick="openChat('${athlete.uid}', '${athlete.name}')" style="background: #111; color: #FFC72C; border: 1px solid #FFC72C; padding: 7px; border-radius: 4px; cursor: pointer;">✉️</button>
+                            <button onclick="editProgram('${athlete.uid}', '${athlete.name}')" style="background: #000; color: #FFC72C; border: 1px solid #FFC72C; padding: 7px; border-radius: 4px; cursor: pointer;">🏋️</button>
+                        </div>
                     </td>
                 </tr>`;
         }).join('');
