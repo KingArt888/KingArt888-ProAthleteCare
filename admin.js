@@ -1,119 +1,85 @@
 const INJURY_COLLECTION = 'injuries';
-let allInjuries = [];
-let adminChart = null;
+const WELLNESS_COLLECTION = 'wellness'; // Передбачаємо наявність такої колекції
 
-// 1. ЗАВАНТАЖЕННЯ ВСІХ ДАНИХ (БЕЗ ФІЛЬТРА userId)
-db.collection(INJURY_COLLECTION).onSnapshot((snapshot) => {
-    allInjuries = [];
-    snapshot.forEach(doc => {
-        allInjuries.push({ id: doc.id, ...doc.data() });
-    });
-    renderAthletesList();
-});
+async function loadGlobalMonitor() {
+    const tbody = document.getElementById('monitor-tbody');
+    if (!tbody) return;
 
-// 2. ГРУПУВАННЯ ТА ВІДОБРАЖЕННЯ СПИСКУ АТЛЕТІВ
-function renderAthletesList() {
-    const list = document.getElementById('athletes-list');
-    // Групуємо травми за userId
-    const athletesMap = {};
-    
-    allInjuries.forEach(inj => {
-        if (!athletesMap[inj.userId]) {
-            athletesMap[inj.userId] = {
-                id: inj.userId,
-                injuries: [],
-                lastUpdate: ""
-            };
-        }
-        athletesMap[inj.userId].injuries.push(inj);
-    });
+    try {
+        // 1. Отримуємо всі травми всіх користувачів
+        const injuriesSnapshot = await db.collection(INJURY_COLLECTION).get();
+        const wellnessSnapshot = await db.collection(WELLNESS_COLLECTION).get();
 
-    const athletes = Object.values(athletesMap);
+        const usersData = {};
 
-    list.innerHTML = athletes.map(athlete => {
-        const activeInjuries = athlete.injuries.filter(i => {
-            const last = i.history[i.history.length - 1];
-            return parseInt(last.pain) > 0;
+        // Обробка травм
+        injuriesSnapshot.forEach(doc => {
+            const data = doc.data();
+            const uid = data.userId;
+            
+            if (!usersData[uid]) {
+                usersData[uid] = { uid, maxPain: 0, activeInjuries: 0, lastUpdate: '-', wellness: null };
+            }
+
+            if (data.history && data.history.length > 0) {
+                const lastEntry = data.history[data.history.length - 1];
+                if (parseInt(lastEntry.pain) > usersData[uid].maxPain) {
+                    usersData[uid].maxPain = parseInt(lastEntry.pain);
+                }
+                if (parseInt(lastEntry.pain) > 0) {
+                    usersData[uid].activeInjuries++;
+                }
+                usersData[uid].lastUpdate = lastEntry.date;
+            }
         });
 
-        return `
-            <div class="athlete-card" onclick="showAthleteDetails('${athlete.id}')">
-                <div>
-                    <div style="font-size: 1.2em; font-weight: bold; color: gold;">Атлет #${athlete.id.substring(0, 5)}</div>
-                    <div style="font-size: 0.9em; color: #888;">Всього травм в історії: ${athlete.injuries.length}</div>
-                </div>
-                <span class="status-badge ${activeInjuries.length > 0 ? 'status-recovering' : 'status-healthy'}">
-                    ${activeInjuries.length > 0 ? `Відновлення (${activeInjuries.length})` : 'Здоровий'}
-                </span>
-            </div>
-        `;
-    }).join('') || '<p>Атлетів поки немає.</p>';
-}
+        // Обробка Wellness (якщо є дані)
+        wellnessSnapshot.forEach(doc => {
+            const data = doc.data();
+            const uid = data.userId;
+            if (usersData[uid]) {
+                usersData[uid].wellness = data; // Беремо останній запис wellness
+            }
+        });
 
-// 3. ДЕТАЛЬНИЙ ПЕРЕГЛЯД КОНКРЕТНОГО АТЛЕТА
-window.showAthleteDetails = (userId) => {
-    const athleteInjuries = allInjuries.filter(i => i.userId === userId);
-    document.getElementById('athletes-list').style.display = 'none';
-    document.getElementById('athlete-detail-view').style.display = 'block';
-    document.getElementById('current-athlete-name').innerText = `Профіль атлета: #${userId.substring(0, 5)}`;
+        // 2. Рендеринг таблиці
+        tbody.innerHTML = Object.values(usersData).map(user => {
+            const statusClass = user.activeInjuries > 0 ? 'recovering' : 'healthy';
+            const statusText = user.activeInjuries > 0 ? `Відновлення (${user.activeInjuries})` : 'Здоровий';
+            
+            // Wellness індикатори (S/S/F - Sleep/Stress/Fatigue)
+            let wellnessHtml = '<span style="color:#555;">Немає даних</span>';
+            if (user.wellness) {
+                const sColor = user.wellness.sleep < 3 ? 'wellness-low' : 'wellness-good';
+                const stColor = user.wellness.stress > 3 ? 'wellness-low' : 'wellness-good';
+                wellnessHtml = `
+                    <span class="${sColor}" title="Сон">${user.wellness.sleep}</span> / 
+                    <span class="${stColor}" title="Стрес">${user.wellness.stress}</span> / 
+                    <span>${user.wellness.fatigue || 0}</span>
+                `;
+            }
 
-    renderAdminMarkers(athleteInjuries);
-    // За замовчуванням показуємо графік першої травми
-    if (athleteInjuries.length > 0) {
-        showAdminChart(athleteInjuries[0].id);
+            return `
+                <tr>
+                    <td><strong style="color:gold;">ID: ${user.uid.substring(0, 6)}...</strong></td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    <td style="color: ${user.maxPain > 4 ? '#DA3E52' : '#fff'}; font-weight:bold;">
+                        ${user.maxPain} / 10
+                    </td>
+                    <td>${wellnessHtml}</td>
+                    <td style="font-size: 0.85em; color: #888;">${user.lastUpdate}</td>
+                    <td>
+                        <button class="btn-detail" onclick="window.location.href='injury.html?userId=${user.uid}'">АНАЛІЗ</button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+    } catch (e) {
+        console.error("Помилка завантаження адмінки:", e);
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">Помилка доступу до даних</td></tr>`;
     }
-};
-
-// 4. МАРКЕРИ ТА ГРАФІК (Аналогічно injury.js, але для адміна)
-function renderAdminMarkers(athleteInjuries) {
-    const container = document.getElementById('bodyMapContainer');
-    container.querySelectorAll('.injury-marker').forEach(m => m.remove());
-
-    athleteInjuries.forEach(inj => {
-        const el = document.createElement('div');
-        el.className = 'injury-marker';
-        const last = inj.history[inj.history.length - 1];
-        const color = parseInt(last.pain) === 0 ? '#FFC72C' : '#DA3E52';
-
-        el.style.cssText = `
-            position: absolute; width: 12px; height: 12px; border-radius: 50%;
-            background: ${color}; left: ${inj.coordX}%; top: ${inj.coordY}%;
-            border: 2px solid white; cursor: pointer; z-index: 100;
-        `;
-        el.onclick = () => showAdminChart(inj.id);
-        container.appendChild(el);
-    });
 }
 
-function showAdminChart(injuryId) {
-    const inj = allInjuries.find(i => i.id === injuryId);
-    const ctx = document.getElementById('painChartAdmin');
-    if (adminChart) adminChart.destroy();
-
-    adminChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: inj.history.map(h => h.date),
-            datasets: [{
-                label: `Біль: ${inj.location}`,
-                data: inj.history.map(h => h.pain),
-                borderColor: '#FFC72C',
-                backgroundColor: 'rgba(255, 199, 44, 0.1)',
-                fill: true
-            }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-    });
-
-    // Виводимо історію текстом
-    document.getElementById('athlete-history-admin').innerHTML = inj.history.reverse().map(h => `
-        <div style="background:#1a1a1a; padding:10px; border-radius:5px; margin-bottom:5px; font-size:0.8em;">
-            <b style="color:gold;">${h.date}</b> — Біль: ${h.pain} <br> ${h.notes || ''}
-        </div>
-    `).join('');
-}
-
-window.closeDetails = () => {
-    document.getElementById('athletes-list').style.display = 'block';
-    document.getElementById('athlete-detail-view').style.display = 'none';
-};
+// Запуск при завантаженні
+document.addEventListener('DOMContentLoaded', loadGlobalMonitor);
