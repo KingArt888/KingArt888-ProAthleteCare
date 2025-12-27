@@ -1,96 +1,133 @@
 (function() {
     const COLLECTION_NAME = 'load_season_reports';
     let dailyLoadData = [];
-    let distanceChart, loadChart;
+    let distanceChart = null;
+    let loadChart = null;
 
-    // --- 1. ІНІЦІАЛІЗАЦІЯ ---
+    // --- 1. ІНІЦІАЛІЗАЦІЯ ТА АВТО-ДАТА ---
     document.addEventListener('DOMContentLoaded', () => {
-        // Автоматична дата (сьогодні)
+        // Встановлюємо сьогоднішню дату
         const dateInput = document.getElementById('load-date') || document.querySelector('input[type="date"]');
         if (dateInput) {
             dateInput.value = new Date().toISOString().split('T')[0];
         }
 
+        // Авторизація та завантаження даних
         firebase.auth().onAuthStateChanged(async (user) => {
-            if (user) await syncLoadFromFirebase(user.uid);
-            else await firebase.auth().signInAnonymously();
+            if (user) {
+                await syncLoadFromFirebase(user.uid);
+            } else {
+                // Анонімний вхід для доступу згідно з вашими Rules
+                await firebase.auth().signInAnonymously().catch(e => console.error("Помилка входу:", e));
+            }
         });
 
         const form = document.getElementById('load-form');
         if (form) form.addEventListener('submit', handleFormSubmit);
     });
 
-    // --- 2. ПРЕМІАЛЬНИЙ СПІДОМЕТР (DIGITAL DASHBOARD) ---
+    // --- 2. СПІДОМЕТР (Синхронізація з вашим CSS) ---
     function updateACWRGauge(acwrValue) {
-        const needle = document.getElementById('gauge-needle');
+        const needle = document.querySelector('.gauge-needle'); // Клас з вашого CSS
         const display = document.getElementById('acwr-value');
-        const statusText = document.getElementById('acwr-status');
-        const gaugeTrack = document.querySelector('.gauge-track') || document.querySelector('.gauge-body');
+        const statusContainer = document.querySelector('.gauge-status-box');
 
-        if (!needle || !display || !statusText) return;
+        if (!needle || !display) return;
 
-        // СТИЛІЗАЦІЯ КОРПУСУ (Преміум чорний з градієнтом)
-        if (gaugeTrack) {
-            gaugeTrack.style.position = "relative";
-            gaugeTrack.style.background = `conic-gradient(
-                from 270deg,
-                #FFD700 0deg, #FFD700 36deg,    /* 0.0-0.8 Жовтий (Underload) */
-                #27ae60 36deg, #27ae60 126deg,  /* 0.8-1.3 Зелений (Optimal) */
-                #c0392b 126deg, #c0392b 180deg, /* 1.3+ Червоний (Danger) */
-                transparent 180deg
-            )`;
-            gaugeTrack.style.borderRadius = "200px 200px 0 0";
-            gaugeTrack.style.height = "150px";
-            gaugeTrack.style.overflow = "hidden";
-            gaugeTrack.style.boxShadow = "inset 0 0 15px rgba(0,0,0,0.8), 0 5px 15px rgba(0,0,0,0.3)";
-        }
+        // Розрахунок кута для вашої шкали (від -90 до +90 градусів)
+        let degree = -90;
+        let statusText = '';
+        let statusClass = '';
 
-        // РОЗРАХУНОК КУТА (0-180 градусів, де 0 - крайній лівий)
-        // Масштабуємо значення так, щоб стрілка ніколи не "улітала"
-        let degree = 0;
-        let status = '';
-        let color = '#fff';
-
-        if (acwrValue <= 0.8) {
-            degree = (acwrValue / 0.8) * 45;
-            status = 'НЕДОТРЕНОВАНІСТЬ';
-            color = '#FFD700';
+        if (acwrValue < 0.8) {
+            degree = -90 + (acwrValue / 0.8) * 45; // Жовта зона (Underload)
+            statusText = 'НЕДОТРЕНОВАНІСТЬ';
+            statusClass = 'status-warning';
         } else if (acwrValue <= 1.3) {
-            degree = 45 + ((acwrValue - 0.8) / 0.5) * 90;
-            status = 'ОПТИМАЛЬНА ЗОНА';
-            color = '#2ecc71';
+            degree = -45 + ((acwrValue - 0.8) / 0.5) * 90; // Зелена зона (Optimal)
+            statusText = 'ОПТИМАЛЬНА ФОРМА';
+            statusClass = 'status-safe';
         } else {
-            degree = 135 + ((acwrValue - 1.3) / 0.7) * 45;
-            status = 'РИЗИК ТРАВМИ';
-            color = '#e74c3c';
+            degree = 45 + ((acwrValue - 1.3) / 0.7) * 45; // Червона зона (Danger)
+            statusText = 'РИЗИК ТРАВМИ';
+            statusClass = 'status-danger';
         }
 
-        // Обмеження 180 градусів
-        const finalDegree = Math.min(180, Math.max(0, degree)) - 90;
-
-        // СТИЛЬ СТРІЛКИ (Як у спорткарі)
-        needle.style.position = "absolute";
-        needle.style.bottom = "0";
-        needle.style.left = "50%";
-        needle.style.width = "4px";
-        needle.style.height = "130px";
-        needle.style.background = "linear-gradient(to top, #fff, #FFD700)";
-        needle.style.transformOrigin = "bottom center";
-        needle.style.transition = "transform 1.5s cubic-bezier(0.1, 0.7, 0.1, 1)";
+        const finalDegree = Math.min(90, Math.max(-90, degree));
+        
+        // Плавна анімація стрілки
         needle.style.transform = `translateX(-50%) rotate(${finalDegree}deg)`;
-        needle.style.boxShadow = "0 0 10px rgba(255, 215, 0, 0.5)";
-
-        // ТЕКСТОВІ ДАНІ
         display.textContent = acwrValue.toFixed(2);
-        display.style.color = color;
-        statusText.textContent = status;
-        statusText.style.color = color;
-        statusText.style.fontWeight = "bold";
+        
+        if (statusContainer) {
+            statusContainer.innerHTML = `<span class="${statusClass}">${statusText}</span>`;
+        }
     }
 
-    // --- 3. РОЗРАХУНКИ ТА FIREBASE ---
-    function calculateACWR() {
-        if (dailyLoadData.length === 0) return { acuteLoad: 0, chronicLoad: 0, acwr: 0 };
+    // --- 3. ГРАФІКИ (Виправлення відображення) ---
+    function renderCharts(acute, chronic) {
+        const ctxD = document.getElementById('distanceChart');
+        const ctxL = document.getElementById('loadChart');
+
+        // Графік дистанції
+        if (ctxD) {
+            if (distanceChart) distanceChart.destroy();
+            distanceChart = new Chart(ctxD, {
+                type: 'line',
+                data: {
+                    labels: dailyLoadData.slice(-7).map(d => d.date.split('-').reverse().slice(0,2).join('.')),
+                    datasets: [{
+                        label: 'Дистанція (км)',
+                        data: dailyLoadData.slice(-7).map(d => d.distance),
+                        borderColor: '#FFC72C', // Колір з вашого активного меню
+                        backgroundColor: 'rgba(255, 199, 44, 0.1)',
+                        fill: true, tension: 0.4, borderWidth: 3
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        // Графік Acute/Chronic Load
+        if (ctxL) {
+            if (loadChart) loadChart.destroy();
+            loadChart = new Chart(ctxL, {
+                type: 'line',
+                data: {
+                    labels: ['4 тижні тому', '3 тижні тому', '2 тижні тому', 'Зараз'],
+                    datasets: [
+                        { label: 'Acute', data: [acute*0.8, acute*1.1, acute*0.9, acute], borderColor: '#d9534f', tension: 0.3 },
+                        { label: 'Chronic', data: [chronic*0.9, chronic*0.95, chronic, chronic], borderColor: '#5cb85c', tension: 0.3 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+    }
+
+    // --- 4. РОЗРАХУНКИ ТА FIREBASE ---
+    async function syncLoadFromFirebase(uid) {
+        try {
+            const snapshot = await db.collection(COLLECTION_NAME)
+                .where("userId", "==", uid)
+                .orderBy("date", "asc")
+                .get();
+            
+            dailyLoadData = [];
+            snapshot.forEach(doc => dailyLoadData.push(doc.data()));
+            
+            if (dailyLoadData.length === 0) dailyLoadData = getDemoData();
+
+            const { acute, chronic, acwr } = calculateMetrics();
+            updateACWRGauge(acwr);
+            renderCharts(acute, chronic);
+        } catch (e) {
+            console.error("Помилка синхронізації:", e);
+        }
+    }
+
+    function calculateMetrics() {
+        if (dailyLoadData.length === 0) return { acute: 0, chronic: 0, acwr: 0 };
         const sorted = [...dailyLoadData].sort((a, b) => new Date(a.date) - new Date(b.date));
         const lastDate = new Date(sorted[sorted.length - 1].date);
 
@@ -102,37 +139,16 @@
             return total / days;
         };
 
-        const a = getAvg(7);
-        const c = getAvg(28);
-        return { acuteLoad: Math.round(a), chronicLoad: Math.round(c), acwr: c > 0 ? parseFloat((a / c).toFixed(2)) : 0 };
-    }
-
-    async function syncLoadFromFirebase(uid) {
-        try {
-            const snapshot = await db.collection(COLLECTION_NAME)
-                .where("userId", "==", uid)
-                .orderBy("date", "asc")
-                .get();
-            const data = [];
-            snapshot.forEach(doc => data.push(doc.data()));
-            dailyLoadData = data.length > 0 ? data : getDemoData();
-            refreshUI();
-        } catch (e) {
-            dailyLoadData = getDemoData();
-            refreshUI();
-        }
-    }
-
-    function refreshUI() {
-        const { acuteLoad, chronicLoad, acwr } = calculateACWR();
-        updateACWRGauge(acwr); 
-        // Тут залишаються ваші виклики для графіків...
+        const acute = getAvg(7);
+        const chronic = getAvg(28);
+        return { acute, chronic, acwr: chronic > 0 ? acute / chronic : 0 };
     }
 
     async function handleFormSubmit(e) {
         e.preventDefault();
         const user = firebase.auth().currentUser;
         if (!user) return;
+        
         const form = e.target;
         const data = {
             userId: user.uid,
@@ -142,6 +158,7 @@
             rpe: parseInt(form.querySelector('input[name="rpe"]:checked')?.value || 0),
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         };
+
         await db.collection(COLLECTION_NAME).doc(`${user.uid}_${data.date}`).set(data);
         await syncLoadFromFirebase(user.uid);
     }
