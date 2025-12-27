@@ -4,22 +4,18 @@
     let distanceChart = null;
     let loadChart = null;
 
-    // --- 1. ІНІЦІАЛІЗАЦІЯ ТА АВТО-ДАТА ---
+    // --- 1. ІНІЦІАЛІЗАЦІЯ ---
     document.addEventListener('DOMContentLoaded', () => {
-        // Автоматично ставимо сьогоднішню дату
+        // Сьогоднішня дата автоматично
         const dateInput = document.getElementById('load-date') || document.querySelector('input[type="date"]');
-        if (dateInput) {
-            dateInput.value = new Date().toISOString().split('T')[0];
-        }
+        if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
 
-        // Чекаємо авторизацію, потім вантажимо дані
+        // Вхід та завантаження
         firebase.auth().onAuthStateChanged(async (user) => {
             if (user) {
-                console.log("Авторизовано:", user.uid);
                 await syncLoadFromFirebase(user.uid);
             } else {
-                // Якщо не увійшов — входимо анонімно для доступу до БД
-                firebase.auth().signInAnonymously().catch(console.error);
+                await firebase.auth().signInAnonymously().catch(console.error);
             }
         });
 
@@ -27,48 +23,48 @@
         if (form) form.addEventListener('submit', handleFormSubmit);
     });
 
-    // --- 2. ПРЕМІАЛЬНИЙ СПІДОМЕТР (Фікс стрілки) ---
+    // --- 2. ПРЕМІУМ СПІДОМЕТР (Синхронізація з вашим CSS) ---
     function updateACWRGauge(acwrValue) {
-        const needle = document.querySelector('.gauge-needle'); // Використовуємо ваш клас з CSS
+        const needle = document.querySelector('.gauge-needle'); // Використовуємо ваш клас
         const display = document.getElementById('acwr-value');
-        const statusContainer = document.querySelector('.gauge-status-box');
+        const statusBox = document.querySelector('.gauge-status-box');
 
         if (!needle || !display) return;
 
-        // ВАЖЛИВО: У вашому CSS 0 градусів — це горизонталь (праворуч)
-        // Нам треба, щоб стрілка ходила від -180 (ліво) до 0 (право)
+        // ЛОГІКА ОБЕРТАННЯ: 
+        // Згідно з вашим CSS, стрілка по замовчуванню стоїть горизонтально (0°).
+        // Шкала - це півколо: від -180° (ліво) до 0° (право).
         let degree = -180; 
         let statusText = '';
         let statusClass = '';
 
         if (acwrValue < 0.8) {
-            degree = -180 + (acwrValue / 0.8) * 45; // Зона недотренованості
+            degree = -180 + (acwrValue / 0.8) * 45; // Жовта зона (Underload)
             statusText = 'НЕДОТРЕНОВАНІСТЬ';
-            statusClass = 'status-warning'; // Клас з вашого CSS
+            statusClass = 'status-warning';
         } else if (acwrValue <= 1.3) {
-            degree = -135 + ((acwrValue - 0.8) / 0.5) * 90; // Зелена зона (Оптимально)
+            degree = -135 + ((acwrValue - 0.8) / 0.5) * 90; // Зелена зона (Optimal)
             statusText = 'ОПТИМАЛЬНА ФОРМА';
-            statusClass = 'status-safe'; // Клас з вашого CSS
+            statusClass = 'status-safe';
         } else {
-            degree = -45 + ((acwrValue - 1.3) / 0.7) * 45; // Зона ризику
+            degree = -45 + ((acwrValue - 1.3) / 0.7) * 45; // Червона зона (Danger)
             statusText = 'РИЗИК ТРАВМИ';
-            statusClass = 'status-danger'; // Клас з вашого CSS
+            statusClass = 'status-danger';
         }
 
-        // Обмежуємо стрілку, щоб не вилітала за межі (від -180 до 0)
+        // Жорстке обмеження, щоб стрілка не "улітала"
         const finalDegree = Math.min(0, Math.max(-180, degree));
         
-        // Плавна анімація як у спорткарі (використовуємо transform: rotate)
+        // Плавна анімація
         needle.style.transform = `translateX(-50%) rotate(${finalDegree}deg)`;
-        
         display.textContent = acwrValue.toFixed(2);
         
-        if (statusContainer) {
-            statusContainer.innerHTML = `<span class="${statusClass}">${statusText}</span>`;
+        if (statusBox) {
+            statusBox.innerHTML = `<span class="${statusClass}">${statusText}</span>`;
         }
     }
 
-    // --- 3. ГРАФІКИ (Виправлення відображення) ---
+    // --- 3. ГРАФІКИ (Fix для відображення) ---
     function renderCharts(acute, chronic) {
         const ctxD = document.getElementById('distanceChart');
         const ctxL = document.getElementById('loadChart');
@@ -82,7 +78,7 @@
                     datasets: [{
                         label: 'Дистанція (км)',
                         data: dailyLoadData.slice(-7).map(d => d.distance),
-                        borderColor: '#FFC72C', // Золотий колір з вашого CSS
+                        borderColor: '#FFC72C', // Колір золота
                         backgroundColor: 'rgba(255, 199, 44, 0.1)',
                         fill: true, tension: 0.4, borderWidth: 3
                     }]
@@ -107,7 +103,7 @@
         }
     }
 
-    // --- 4. FIREBASE ТА РОЗРАХУНКИ ---
+    // --- 4. DATA LOGIC ---
     async function syncLoadFromFirebase(uid) {
         try {
             const snapshot = await db.collection(COLLECTION_NAME)
@@ -124,7 +120,7 @@
             updateACWRGauge(acwr);
             renderCharts(acute, chronic);
         } catch (e) {
-            console.error("Помилка синхронізації:", e);
+            console.error("Firebase Error:", e);
         }
     }
 
