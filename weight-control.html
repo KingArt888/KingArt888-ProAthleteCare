@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weight Control | ProAthleteCare</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="injury.css"> <link rel="stylesheet" href="weight-control.css">
+    <link rel="stylesheet" href="injury.css"> 
+    <link rel="stylesheet" href="weight-control.css">
     <link rel="stylesheet" href="navigation-mobile.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
 </head>
@@ -19,10 +20,14 @@
     </header>
 
     <div class="content-wrapper">
-        <nav class="sidebar" id="main-sidebar">
-            <a href="wellness.html">Wellness Control <img src="AK_logo.png" class="menu-icon"></a>
-            <a href="injury.html">Injury Story <img src="AK_logo.png" class="menu-icon"></a>
-            <a href="weight-control.html" class="active">Weight Control <img src="AK_logo.png" class="menu-icon"></a>
+        <nav class="sidebar" id="main-sidebar"> 
+            <a href="wellness.html">Wellness Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="injury.html">Injury Story <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="load-season.html">Load Season <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="daily-individual.html">Daily Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="weekly-individual.html">Weekly Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="weight-control.html" class="active">Weight Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="velocity-control.html">Velocity Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
         </nav>
 
         <main class="main-content">
@@ -83,7 +88,14 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    
     <script src="firebase-config.js"></script>
     <script src="weight.js"></script>
+    
+    <script>
+        document.getElementById('menu-toggle-button')?.addEventListener('click', function() {
+            document.getElementById('main-sidebar')?.classList.toggle('active');
+        });
+    </script>
 </body>
 </html>
