@@ -1,9 +1,8 @@
-// admin.js — Головна панель моніторингу ProAtletCare
-
+// admin.js — Панель моніторингу ProAtletCare з демо-даними
 const USERS_COL = 'users';
 const WEIGHT_COL = 'weight_history';
 
-// Кольорові статуси Wellness
+// 1. Кольорові статуси Wellness
 function getStatusEmoji(type, value) {
     if (value === '-' || value === undefined || value === null) return '<span style="opacity: 0.1;">➖</span>';
     const val = parseInt(value);
@@ -22,17 +21,17 @@ function getStatusEmoji(type, value) {
         </div>`;
 }
 
-// Колір BMI
+// 2. Колір BMI (Світлофор)
 function getBmiColor(bmi) {
     const val = parseFloat(bmi);
-    if (!val) return '#888';
-    if (val < 18.5) return '#00BFFF';
-    if (val < 25) return '#00ff00';
-    if (val < 30) return '#FFC72C';
-    return '#ff4d4d';
+    if (!val || isNaN(val)) return '#888';
+    if (val < 18.5) return '#00BFFF'; // Синій - недовага
+    if (val < 25) return '#00ff00';   // Зелений - норма
+    if (val < 30) return '#FFC72C';   // Жовтий - увага
+    return '#ff4d4d';                // Червоний - ожиріння
 }
 
-// Функція малювання таблиці
+// 3. Функція малювання таблиці
 function renderAdminTable(athletesMap) {
     const tbody = document.getElementById('athletes-tbody');
     if (!tbody) return;
@@ -58,7 +57,7 @@ function renderAdminTable(athletesMap) {
                     <div style="font-size: 0.7em; padding: 4px; border-radius: 4px; text-align: center; min-width: 90px;
                         background: ${stat.color}15; color: ${stat.color}; border: 1px solid ${stat.color}44;">
                         <div style="font-weight: bold; text-transform: uppercase;">${stat.label}</div>
-                        ${stat.pain > 0 ? `<div style="font-size: 0.85em; color: #fff;">${stat.bodyPart} (${stat.pain})</div>` : ''}
+                        ${stat.pain > 0 ? `<div style="font-size: 0.85em; color: #fff;">${stat.bodyPart || 'Біль'} (${stat.pain})</div>` : ''}
                     </div>
                 </td>
                 <td style="text-align: center;">
@@ -81,15 +80,32 @@ function renderAdminTable(athletesMap) {
     }).join('');
 }
 
+// 4. Завантаження даних + 10 Демо-атлетів
 async function loadAdminDashboard() {
-    const athletesMap = {};
+    // Тимчасові 10 атлетів для редагування панелі
+    const demoAthletes = {
+        "d1": { uid: "d1", name: "Артем Кулик", club: "ProAtletCare", photo: "https://i.pravatar.cc/150?u=1", injuryStatus: { label: 'ЗДОРОВИЙ', color: '#00ff00', pain: 0 }, wellness: { sleep: 9, stress: 2, soreness: 1, ready: 10 }, weightData: { weight: 88, bmi: 24.1 } },
+        "d2": { uid: "d2", name: "Максим Регбі", club: "Paphos FC", photo: "https://i.pravatar.cc/150?u=2", injuryStatus: { label: 'УВАГА', color: '#FFC72C', pain: 4, bodyPart: 'Коліно' }, wellness: { sleep: 6, stress: 5, soreness: 6, ready: 7 }, weightData: { weight: 95, bmi: 28.3 } },
+        "d3": { uid: "d3", name: "Іван Бокс", club: "Fit/Box", photo: "https://i.pravatar.cc/150?u=3", injuryStatus: { label: 'ТРАВМА', color: '#ff4d4d', pain: 9, bodyPart: 'Плече' }, wellness: { sleep: 4, stress: 8, soreness: 9, ready: 2 }, weightData: { weight: 82, bmi: 23.5 } },
+        "d4": { uid: "d4", name: "Дмитро Сила", club: "Donetsk", photo: "https://i.pravatar.cc/150?u=4", injuryStatus: { label: 'ЗДОРОВИЙ', color: '#00ff00', pain: 0 }, wellness: { sleep: 8, stress: 3, soreness: 2, ready: 9 }, weightData: { weight: 105, bmi: 31.2 } },
+        "d5": { uid: "d5", name: "Олександр Швидкість", club: "Shakhtar", photo: "https://i.pravatar.cc/150?u=5", injuryStatus: { label: 'УВАГА', color: '#FFC72C', pain: 3, bodyPart: 'Ахілл' }, wellness: { sleep: 7, stress: 4, soreness: 4, ready: 6 }, weightData: { weight: 78, bmi: 21.8 } },
+        "d6": { uid: "d6", name: "Сергій Атлет", club: "ProAtletCare", photo: "https://i.pravatar.cc/150?u=6", injuryStatus: { label: 'ЗДОРОВИЙ', color: '#00ff00', pain: 0 }, wellness: { sleep: 10, stress: 1, soreness: 0, ready: 10 }, weightData: { weight: 85, bmi: 24.5 } },
+        "d7": { uid: "d7", name: "Андрій Крос", club: "Cyprus Run", photo: "https://i.pravatar.cc/150?u=7", injuryStatus: { label: 'ЗДОРОВИЙ', color: '#00ff00', pain: 0 }, wellness: { sleep: 5, stress: 6, soreness: 7, ready: 4 }, weightData: { weight: 70, bmi: 19.5 } },
+        "d8": { uid: "d8", name: "Микола ММА", club: "Fight Club", photo: "https://i.pravatar.cc/150?u=8", injuryStatus: { label: 'ТРАВМА', color: '#ff4d4d', pain: 7, bodyPart: 'Спина' }, wellness: { sleep: 6, stress: 7, soreness: 8, ready: 5 }, weightData: { weight: 90, bmi: 26.8 } },
+        "d9": { uid: "d9", name: "Віктор Тренер", club: "FitBox", photo: "https://i.pravatar.cc/150?u=9", injuryStatus: { label: 'ЗДОРОВИЙ', color: '#00ff00', pain: 0 }, wellness: { sleep: 8, stress: 2, soreness: 3, ready: 8 }, weightData: { weight: 84, bmi: 25.1 } },
+        "d10": { uid: "d10", name: "Олег Регбіст", club: "Paphos FC", photo: "https://i.pravatar.cc/150?u=10", injuryStatus: { label: 'УВАГА', color: '#FFC72C', pain: 2, bodyPart: 'Гомілка' }, wellness: { sleep: 7, stress: 3, soreness: 5, ready: 7 }, weightData: { weight: 98, bmi: 29.5 } }
+    };
+
+    renderAdminTable(demoAthletes); // Спочатку показуємо демо
+
     try {
         const usersSnap = await db.collection(USERS_COL).get();
+        const realAthletes = {};
+        
         for (const userDoc of usersSnap.docs) {
             const data = userDoc.data();
             if (data.role === 'admin') continue;
 
-            // Захищений запит ваги
             const weightSnap = await db.collection(WEIGHT_COL)
                 .where('userId', '==', userDoc.id)
                 .orderBy('timestamp', 'desc')
@@ -101,7 +117,7 @@ async function loadAdminDashboard() {
                 weightData = { weight: w.weight, bmi: w.bmi };
             }
 
-            athletesMap[userDoc.id] = {
+            realAthletes[userDoc.id] = {
                 uid: userDoc.id,
                 name: data.name || "Атлет",
                 photo: data.photoURL || `https://ui-avatars.com/api/?name=${data.name || 'A'}&background=FFC72C&color=000`,
@@ -111,8 +127,14 @@ async function loadAdminDashboard() {
                 weightData: weightData
             };
         }
-        renderAdminTable(athletesMap);
-    } catch (e) { console.error("Admin Load Error:", e); }
+        
+        // Якщо є реальні атлети, додаємо їх до демо-списку або замінюємо його
+        if (Object.keys(realAthletes).length > 0) {
+            renderAdminTable({...demoAthletes, ...realAthletes});
+        }
+    } catch (e) { 
+        console.error("Admin Load Error:", e);
+    }
 }
 
 firebase.auth().onAuthStateChanged(user => {
