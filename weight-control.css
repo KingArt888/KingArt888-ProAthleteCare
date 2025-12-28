@@ -7,7 +7,7 @@
 }
 
 .form-card, .chart-card {
-    min-height: 450px; /* Однакова висота для всіх вікон */
+    min-height: 450px;
     display: flex;
     flex-direction: column;
 }
@@ -26,10 +26,20 @@
     margin: 10px 0;
 }
 
-#body-hologram-img {
+#human-vitals-svg {
     height: 90%;
-    filter: drop-shadow(0 0 12px #FFC72C) brightness(1.2);
-    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 100%;
+}
+
+#body-hologram-img {
+    transition: all 0.8s ease-in-out;
+    animation: hologramPulse 3s infinite ease-in-out;
+}
+
+@keyframes hologramPulse {
+    0% { opacity: 0.7; stroke-width: 1.8px; }
+    50% { opacity: 1; stroke-width: 2.2px; }
+    100% { opacity: 0.7; stroke-width: 1.8px; }
 }
 
 .scan-line {
@@ -44,11 +54,11 @@
 
 @keyframes scanMove {
     0% { top: 0; opacity: 0; }
-    50% { opacity: 1; }
+    20% { opacity: 1; }
+    80% { opacity: 1; }
     100% { top: 100%; opacity: 0; }
 }
 
-/* Віджет жиру та ІМТ */
 .fat-display-badge, .bmi-status-bar {
     background: #1a1a1a;
     padding: 10px;
@@ -57,23 +67,3 @@
     border-left: 3px solid #FFC72C;
     margin-top: auto;
 }
-
-#fat-percentage-value, #bmi-value {
-    color: #FFC72C;
-    font-weight: bold;
-    font-size: 1.2em;
-}
-
-/* Стиль дієти */
-.diet-list {
-    list-style: none;
-    padding: 0;
-    margin-top: 10px;
-}
-.diet-list li {
-    padding: 8px 0;
-    border-bottom: 1px solid #222;
-    font-size: 0.9em;
-    color: #ccc;
-}
-.diet-list li::before { content: "• "; color: #FFC72C; }
