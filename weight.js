@@ -23,7 +23,6 @@
         }
     });
 
-    // ГОЛОВНА ФУНКЦІЯ РОЗРАХУНКУ
     async function handleAthleteAnalysis(e) {
         e.preventDefault();
         const w = parseFloat(document.getElementById('weight-value').value);
@@ -35,7 +34,7 @@
         const bmi = (w / ((h / 100) ** 2)).toFixed(1);
         const analysis = calculateAthleteData(w, bmi, h, a);
 
-        updateScannerUI(bmi, analysis.status, analysis.targetCalories, analysis.prot, analysis.fat, analysis.carb, analysis.statusColor, analysis.recommendation);
+        updateScannerUI(w, bmi, analysis.status, analysis.targetCalories, analysis.prot, analysis.fat, analysis.carb, analysis.statusColor, analysis.recommendation);
 
         try {
             await firebase.firestore().collection('weight_history').add({
@@ -55,7 +54,6 @@
         } catch (error) { console.error("Firebase Error:", error); }
     }
 
-    // ЛОГІКА РОЗРАХУНКУ (винесена окремо для повторного використання)
     function calculateAthleteData(w, bmi, h, a) {
         let status, recommendation, statusColor, calorieModifier, pRatio, fRatio, cRatio;
 
@@ -84,10 +82,19 @@
         };
     }
 
-    function updateScannerUI(bmi, status, kcal, p, f, c, color, rec) {
-        const mainCircleValue = document.getElementById('fat-percentage-value');
-        if (mainCircleValue) { mainCircleValue.textContent = bmi; mainCircleValue.style.color = color; }
+    function updateScannerUI(weight, bmi, status, kcal, p, f, c, color, rec) {
+        // Оновлюємо головне коло: тепер там ВАГА
+        const mainValue = document.getElementById('fat-percentage-value');
+        if (mainValue) { 
+            mainValue.textContent = weight + "kg"; 
+            mainValue.style.color = "#FFC72C"; // Золотий для ваги
+        }
         
+        // Змінюємо підпис "FAT %" на "CURRENT WEIGHT"
+        const smallLabel = document.querySelector('.main-circle small');
+        if (smallLabel) smallLabel.textContent = "CURRENT WEIGHT";
+
+        // BMI виводимо в маленьке поле знизу (де раніше був BMI)
         const bmiBadge = document.getElementById('bmi-value');
         if (bmiBadge) bmiBadge.textContent = bmi;
 
@@ -116,23 +123,21 @@
         if (!snap.empty) {
             const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             
-            // 1. ПОКАЗУЄМО ОСТАННІ ДАНІ В СКАНЕРІ ВІДРАЗУ ПРИ ЗАВАНТАЖЕННІ
-            const lastEntry = docs[0];
-            updateScannerUI(lastEntry.bmi, lastEntry.status, lastEntry.target_kcal, lastEntry.macros.p, lastEntry.macros.f, lastEntry.macros.c, lastEntry.statusColor, lastEntry.recommendation);
+            // Завантажуємо останню вагу в сканер
+            const last = docs[0];
+            updateScannerUI(last.weight, last.bmi, last.status, last.target_kcal, last.macros.p, last.macros.f, last.macros.c, last.statusColor, last.recommendation);
 
-            // 2. ОНОВЛЮЄМО ГРАФІК
             const chartData = [...docs].reverse();
             weightChart.data.labels = chartData.map(d => d.date.split('-').reverse().slice(0,2).join('.'));
             weightChart.data.datasets[0].data = chartData.map(d => d.weight);
             weightChart.update();
 
-            // 3. ЗАПОВНЮЄМО СПИСОК ІСТОРІЇ
             docs.forEach(entry => {
                 const item = document.createElement('div');
                 item.style.cssText = "display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #1a1a1a; padding:8px 0; font-size:13px;";
                 item.innerHTML = `
                     <div style="color:#fff;"><strong>${entry.weight} kg</strong> <span style="color:#666; font-size:11px; margin-left:8px;">${entry.date}</span></div>
-                    <button onclick="deleteWeightEntry('${entry.id}')" style="background:none; border:none; color:#DA3E52; cursor:pointer; font-size:14px; opacity:0.7;">✕</button>
+                    <button onclick="deleteWeightEntry('${entry.id}')" style="background:none; border:none; color:#DA3E52; cursor:pointer; font-size:14px;">✕</button>
                 `;
                 historyContainer.appendChild(item);
             });
