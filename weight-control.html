@@ -34,7 +34,6 @@
             <h2 style="color: #6C7A89; margin-bottom: 20px;">⚖️ Weight Analysis & Body Composition</h2>
             
             <div class="dashboard-container">
-                <!-- Параметри тіла -->
                 <div class="form-card">
                     <h3>Параметри тіла</h3>
                     <form id="weight-form">
@@ -49,35 +48,30 @@
                             </div>
                         </div>
                         <label style="margin-top: 15px; display: block;">Сьогоднішня вага (кг):</label>
-                        <input type="number" id="weight-value" step="0.1" required style="border: 1px solid #FFC72C; text-align: center; font-size: 1.2em;">
+                        <input type="number" id="weight-value" step="0.1" required style="border: 1px solid #FFC72C; text-align: center; font-size: 1.2em; background: #000; color: #fff; width: 100%; box-sizing: border-box; padding: 10px;">
                         <button type="submit" id="submit-btn" class="gold-button">Записати результат</button>
                     </form>
                 </div>
 
-                <!-- Body Composition Scan -->
                 <div class="form-card hologram-container">
-    <h3>Body Composition Scan</h3>
-    <div class="hologram-wrapper" id="hologram-box">
-        <div class="scan-line"></div>
-        
-        <svg id="athlete-svg" viewBox="0 0 100 180" style="height: 90%; fill: #FFC72C; transition: all 0.5s ease; filter: drop-shadow(0 0 8px #FFC72C);">
-            <path d="M50,15 c4,0,7.5,-3.5,7.5,-7.5 S54,0,50,0 S42.5,3.5,42.5,7.5 S46,15,50,15 M35,20 h30 l8,45 l-6,3 l-7,-30 v142 h-10 v-50 h-10 v50 h-10 v-142 l-7,30 l-6,-3 Z" />
-        </svg>
-    </div>
+                    <h3>Body Composition Scan</h3>
+                    <div class="hologram-wrapper" id="hologram-box">
+                        <div class="scan-line"></div>
+                        <svg id="athlete-svg" viewBox="0 0 100 180" style="height: 90%; fill: #FFC72C; transition: all 0.5s ease; filter: drop-shadow(0 0 8px #FFC72C);">
+                            <path d="M50,15 c4,0,7.5,-3.5,7.5,-7.5 S54,0,50,0 S42.5,3.5,42.5,7.5 S46,15,50,15 M35,20 h30 l8,45 l-6,3 l-7,-30 v142 h-10 v-50 h-10 v50 h-10 v-142 l-7,30 l-6,-3 Z" />
+                        </svg>
+                    </div>
+                    <div class="fat-display-badge">
+                        <span>EST. BODY FAT:</span>
+                        <span id="fat-percentage-value">0%</span>
+                    </div>
+                </div>
 
-    <div class="fat-display-badge">
-        <span>EST. BODY FAT:</span>
-        <span id="fat-percentage-value">0%</span>
-    </div>
-</div>
-
-                <!-- Дієта / рекомендації -->
                 <div class="form-card diet-card">
                     <h3>Рекомендації та Дієта</h3>
                     <div id="diet-plan-content" class="placeholder-text">Введіть дані...</div>
                 </div>
 
-                <!-- Графік прогресу -->
                 <div class="chart-card">
                     <h3>Аналітика прогресу</h3>
                     <div class="bmi-status-bar">
@@ -91,18 +85,6 @@
         </main>
     </div>
 
-    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-    <script src="firebase-config.js"></script>
-
-    <!-- Weight JS -->
-    <script src="weight.js"></script>
-
-    <!-- Model Viewer -->
-    <script type="module"
-        src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js">
-    </script>
-</body>
-</html>
+    <script src="
