@@ -37,8 +37,8 @@
         const bmi = (w / ((h / 100) ** 2)).toFixed(1);
         const analysis = calculateAthleteData(w, bmi, h, a);
 
-        // Оновлюємо інтерфейс: тепер BMI з'являється після розрахунку
-        updateScannerUI(w, bmi, analysis.status, analysis.targetCalories, analysis.prot, analysis.fat, analysis.carb, analysis.statusColor, analysis.recommendation, true);
+        // Оновлюємо інтерфейс
+        updateScannerUI(w, bmi, analysis.status, analysis.targetCalories, analysis.prot, analysis.fat, analysis.carb, analysis.statusColor, analysis.recommendation);
 
         try {
             await firebase.firestore().collection('weight_history').add({
@@ -56,7 +56,9 @@
 
             await firebase.firestore().collection('users').doc(currentUserId).set({ height: h, age: a }, { merge: true });
             
+            // Блокуємо кнопку до завтра
             disableButtonUntilTomorrow(submitBtn);
+            
             loadHistory();
         } catch (error) { 
             console.error("Firebase Error:", error); 
@@ -91,15 +93,10 @@
         };
     }
 
-    // Параметр showBmi контролює, чи показувати цифру BMI
-    function updateScannerUI(weight, bmi, status, kcal, p, f, c, color, rec, showBmi = false) {
+    function updateScannerUI(weight, bmi, status, kcal, p, f, c, color, rec) {
         const mainValue = document.getElementById('fat-percentage-value');
         if (mainValue) { 
-            let content = `<span style="font-size: 36px; color: #FFC72C; font-weight: bold;">${weight}kg</span>`;
-            if (showBmi) {
-                content += `<div style="font-size: 14px; color: #888; margin-top: 5px; animation: fadeIn 0.5s;">BMI: ${bmi}</div>`;
-            }
-            mainValue.innerHTML = content;
+            mainValue.innerHTML = `<span style="font-size: 32px; color: #FFC72C;">${weight}kg</span><br><span style="font-size: 16px; color: #aaa;">BMI: ${bmi}</span>`;
         }
         
         const smallLabel = document.querySelector('.main-circle small');
@@ -113,17 +110,10 @@
             rankElement.style.marginTop = '15px';
             document.querySelector('.form-card:nth-child(2)').appendChild(rankElement);
         }
-
-        // Відображаємо аналіз лише якщо BMI активовано (після розрахунку)
-        if (showBmi) {
-            rankElement.innerHTML = `
-                <div style="color:${color}; font-size:18px; font-weight:bold; animation: fadeIn 0.8s;">${status}</div>
-                <div style="color:#fff; font-size:24px; font-weight:bold;">${kcal} ккал</div>
-                <div style="color:#aaa; font-size:11px;">Б: ${p}г | Ж: ${f}г | В: ${c}г</div>
-                <div style="color:#FFC72C; font-size:11px; margin-top:10px; border-top:1px solid #222; padding-top:5px;">${rec}</div>`;
-        } else {
-            rankElement.innerHTML = `<div style="color:#444; font-size:12px;">Натисніть "Розрахувати", щоб отримати аналіз</div>`;
-        }
+        rankElement.innerHTML = `<div style="color:${color}; font-size:18px; font-weight:bold;">${status}</div>
+            <div style="color:#fff; font-size:24px; font-weight:bold;">${kcal} ккал</div>
+            <div style="color:#aaa; font-size:11px;">Б: ${p}г | Ж: ${f}г | В: ${c}г</div>
+            <div style="color:#FFC72C; font-size:11px; margin-top:10px; border-top:1px solid #222; padding-top:5px;">${rec}</div>`;
     }
 
     function disableButtonUntilTomorrow(btn) {
@@ -135,6 +125,15 @@
         localStorage.setItem('weight_updated_date', new Date().toDateString());
     }
 
+    function checkButtonStatus() {
+        const lastUpdate = localStorage.getItem('weight_updated_date');
+        const today = new Date().toDateString();
+        const submitBtn = document.querySelector('#weight-form button[type="submit"]');
+        if (lastUpdate === today && submitBtn) {
+            disableButtonUntilTomorrow(submitBtn);
+        }
+    }
+
     async function loadHistory() {
         if (!currentUserId || !weightChart) return;
         const snap = await firebase.firestore().collection('weight_history')
@@ -143,22 +142,14 @@
         const historyContainer = getOrCreateCompactHistory();
         historyContainer.innerHTML = "";
 
-        const lastUpdate = localStorage.getItem('weight_updated_date');
-        const today = new Date().toDateString();
-
         if (!snap.empty) {
             const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             const last = docs[0];
             
-            // Якщо сьогодні вже оновлювали - показуємо все з BMI
-            const isAlreadyUpdated = (lastUpdate === today);
-            updateScannerUI(last.weight, last.bmi, last.status, last.target_kcal, last.macros.p, last.macros.f, last.macros.c, last.statusColor, last.recommendation, isAlreadyUpdated);
+            // Завантажуємо вагу та BMI в сканер
+            updateScannerUI(last.weight, last.bmi, last.status, last.target_kcal, last.macros.p, last.macros.f, last.macros.c, last.statusColor, last.recommendation);
             
-            if (isAlreadyUpdated) {
-                const submitBtn = document.querySelector('#weight-form button[type="submit"]');
-                disableButtonUntilTomorrow(submitBtn);
-            }
-
+            // Залишаємо останню вагу в полі вводу
             const weightInput = document.getElementById('weight-value');
             if (weightInput) weightInput.value = last.weight;
 
@@ -176,6 +167,7 @@
                 `;
                 historyContainer.appendChild(item);
             });
+            checkButtonStatus();
         }
     }
 
@@ -193,9 +185,10 @@
         if (confirm("Видалити запис?")) {
             try { 
                 await firebase.firestore().collection('weight_history').doc(id).delete(); 
-                localStorage.removeItem('weight_updated_date');
+                localStorage.removeItem('weight_updated_date'); // Дозволяємо переввести дані після видалення
                 location.reload(); 
-            } catch (e) { console.error(e); }
+            }
+            catch (e) { console.error(e); }
         }
     };
 
