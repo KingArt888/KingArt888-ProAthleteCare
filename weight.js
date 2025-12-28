@@ -8,35 +8,10 @@
         if (user) {
             currentUserId = user.uid;
             await loadUserProfile();
-            await checkDailyEntry();
+            await checkDailyEntry(); // Викликаємо функцію, що оголошена нижче
             await initWeightChart();
         }
     });
-
-    // Оновлення візуалізації голограми
-    function updateVisuals(weight, height, age) {
-        if (!weight || !height) return;
-
-        const bmi = (weight / ((height / 100) ** 2)).toFixed(1);
-        document.getElementById('bmi-value').textContent = bmi;
-
-        // Формула % жиру
-        let fat = (1.20 * bmi) + (0.23 * (age || 25)) - 16.2;
-        document.getElementById('fat-percentage-value').textContent = Math.max(3, fat).toFixed(1) + "%";
-
-        // Трансформація зображення тіла (масштабування по горизонталі)
-        const img = document.getElementById('body-hologram-img');
-        if (img) {
-            let scaleX = 1 + (bmi - 22) * 0.035; // база BMI 22
-            scaleX = Math.min(1.4, Math.max(0.7, scaleX)); // обмеження
-            img.style.transform = `scaleX(${scaleX})`;
-        }
-
-        const status = document.getElementById('bmi-status');
-        if (bmi < 18.5) status.textContent = "(Дефіцит)";
-        else if (bmi < 25) status.textContent = "(Норма)";
-        else status.textContent = "(Надмірна вага)";
-    }
 
     async function loadUserProfile() {
         const doc = await db.collection(COLL_USERS).doc(currentUserId).get();
@@ -44,6 +19,66 @@
             const data = doc.data();
             if (data.height) document.getElementById('user-height').value = data.height;
             if (data.age) document.getElementById('user-age').value = data.age;
+        }
+    }
+
+    // Головна функція розрахунків та візуалізації
+    function updateInterface(weight, height, age) {
+        if (!weight || !height) return;
+        
+        const bmi = (weight / ((height / 100) ** 2)).toFixed(1);
+        document.getElementById('bmi-value').textContent = bmi;
+
+        // 1. Відсоток жиру
+        let fat = (1.20 * bmi) + (0.23 * (age || 25)) - 16.2;
+        document.getElementById('fat-percentage-value').textContent = Math.max(3, fat).toFixed(1) + "%";
+
+        // 2. Трансформація голограми (м'язи стають ширшими)
+        const img = document.getElementById('body-hologram-img');
+        if (img) {
+            let scaleX = 1 + (bmi - 22) * 0.035;
+            img.style.transform = `scaleX(${Math.min(1.4, Math.max(0.7, scaleX))})`;
+        }
+
+        // 3. Генерація дієти та рекомендацій
+        const dietBox = document.getElementById('diet-plan-content');
+        const statusText = document.getElementById('bmi-status-text');
+        
+        if (bmi < 18.5) {
+            statusText.textContent = "(Дефіцит)";
+            dietBox.innerHTML = `<strong>План: Набір маси</strong>
+                <ul class="diet-list">
+                    <li>Профіцит калорій (+300-500 ккал)</li>
+                    <li>Білки: 2г/кг, Вуглеводи: 4-5г/кг</li>
+                    <li>Силові тренування 3 рази на тиждень</li>
+                </ul>`;
+        } else if (bmi < 25) {
+            statusText.textContent = "(Норма)";
+            dietBox.innerHTML = `<strong>План: Підтримка рельєфу</strong>
+                <ul class="diet-list">
+                    <li>Баланс КБЖВ</li>
+                    <li>Мінімум 2л води на день</li>
+                    <li>Фокус на якісному сні та відновленні</li>
+                </ul>`;
+        } else {
+            statusText.textContent = "(Надмірна вага)";
+            dietBox.innerHTML = `<strong>План: Жироспалювання</strong>
+                <ul class="diet-list">
+                    <li>Дефіцит калорій (-15-20%)</li>
+                    <li>Збільшити кількість овочів та клітковини</li>
+                    <li>Кардіо 40 хв після силового тренування</li>
+                </ul>`;
+        }
+    }
+
+    async function checkDailyEntry() {
+        const snap = await db.collection(COLL_HISTORY)
+            .where("userId", "==", currentUserId).orderBy("date", "desc").limit(1).get();
+        if (!snap.empty) {
+            const last = snap.docs[0].data();
+            const h = document.getElementById('user-height').value;
+            const a = document.getElementById('user-age').value;
+            updateInterface(last.weight, h, a);
         }
     }
 
@@ -61,8 +96,26 @@
         location.reload();
     });
 
-    // Решта коду для графіка...
     async function initWeightChart() {
-        // Логіка Chart.js завантаження даних з Firestore
+        const snap = await db.collection(COLL_HISTORY).where("userId", "==", currentUserId).orderBy("date", "asc").limit(10).get();
+        const labels = [], data = [];
+        snap.forEach(doc => { labels.push(doc.data().date.slice(5)); data.push(doc.data().weight); });
+
+        const ctx = document.getElementById('weightChart').getContext('2d');
+        if (weightChartInstance) weightChartInstance.destroy();
+        weightChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    borderColor: '#FFC72C',
+                    backgroundColor: 'rgba(255, 199, 44, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
     }
 })();
