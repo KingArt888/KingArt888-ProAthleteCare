@@ -2,25 +2,33 @@
     let weightChart = null;
     let currentUserId = null;
 
+    // 1. ПАРАМЕТРИ URL ТА АВТОРИЗАЦІЯ (Твій блок без змін)
     const urlParams = new URLSearchParams(window.location.search);
     const viewUserId = urlParams.get('userId');
 
     firebase.auth().onAuthStateChanged(async (user) => {
         if (user) {
+            // Якщо є userId в URL - ми в режимі адміна, якщо ні - беремо ID поточного юзера
             currentUserId = viewUserId || user.uid;
+            console.log("ProAthleteCare Active ID:", currentUserId);
             loadBaseData();
             loadHistory();
         } else {
+            // Анонімний вхід для стабільності сесії
             firebase.auth().signInAnonymously().catch(e => console.error("Auth error:", e));
         }
     });
 
+    // 2. ІНІЦІАЛІЗАЦІЯ ПРИ ЗАВАНТАЖЕННІ
     document.addEventListener('DOMContentLoaded', () => {
         initChart();
         const form = document.getElementById('weight-form');
-        if (form) form.addEventListener('submit', handleAthleteAnalysis);
+        if (form) {
+            form.addEventListener('submit', handleAthleteAnalysis);
+        }
     });
 
+    // 3. ГОЛОВНА ЛОГІКА: АНАЛІЗ, РОЗРАХУНОК ТА ЗБЕРЕЖЕННЯ
     async function handleAthleteAnalysis(e) {
         e.preventDefault();
         
@@ -30,105 +38,122 @@
 
         if (!w || !h || !a) return;
 
-        // 1. РОЗРАХУНОК BMI ТА СТАТУСУ
+        // Розрахунок BMI
         const bmi = (w / ((h / 100) ** 2)).toFixed(1);
-        let status, recommendation, color;
+        
+        // Визначення стратегії харчування
+        let status, recommendation, statusColor, calorieModifier, pRatio, fRatio, cRatio;
 
-        if (bmi < 18.5) {
-            status = "UNDERWEIGHT (Muscle Gain Mode)";
-            recommendation = "Ціль: Гіпертрофія. Профіцит +15%. Білок: 2.2г/кг.";
-            color = "#00BFFF"; // Блакитний
-        } else if (bmi < 25) {
-            status = "ATHLETIC FORM (Maintenance)";
-            recommendation = "Ціль: Рекімпозиція. Підтримка форми. Білок: 2.0г/кг.";
-            color = "#FFC72C"; // Золотий
+        if (bmi < 20.5) { 
+            // РЕЖИМ НАБОРУ МАСИ
+            status = "MUSCLE GAIN MODE";
+            recommendation = "Ціль: Гіпертрофія. Профіцит +15%. Вуглеводи — паливо для росту.";
+            statusColor = "#00BFFF"; // Синій
+            calorieModifier = 1.15;  
+            pRatio = 0.25; fRatio = 0.25; cRatio = 0.50; 
+        } else if (bmi < 25.5) {
+            // ПІДТРИМКА ТА РЕКОМПОЗИЦІЯ
+            status = "ATHLETIC FORM";
+            recommendation = "Ціль: Рекімпозиція. Підтримка форми та якісне відновлення.";
+            statusColor = "#FFC72C"; // Золотий
+            calorieModifier = 1.0;
+            pRatio = 0.30; fRatio = 0.25; cRatio = 0.45;
         } else {
-            status = "WEIGHT LOSS (Fat Burn Mode)";
-            recommendation = "Ціль: Дефіцит -20%. Акцент на інтенсивність. Білок: 2.5г/кг.";
-            color = "#DA3E52"; // Червоний
+            // РЕЖИМ СХУДНЕННЯ
+            status = "WEIGHT LOSS MODE";
+            recommendation = "Ціль: Жироспалювання. Дефіцит -20%. Високий білок для захисту м'язів.";
+            statusColor = "#DA3E52"; // Червоний
+            calorieModifier = 0.80;  
+            pRatio = 0.35; fRatio = 0.25; cRatio = 0.40;
         }
 
-        // 2. ПРОФЕСІЙНИЙ РОЗРАХУНОК КАЛОРІЙ (Mifflin-St Jeor)
+        // Професійний розрахунок калорій (Mifflin-St Jeor)
         const bmr = (10 * w) + (6.25 * h) - (5 * a) + 5;
-        const tdee = Math.round(bmr * 1.55); // Середня активність атлета
+        const maintenance = Math.round(bmr * 1.55); // Коефіцієнт активного атлета
+        const targetCalories = Math.round(maintenance * calorieModifier);
 
-        // Розрахунок БЖВ (професійна пропорція для атлетів 30/30/40)
-        const protein = Math.round((tdee * 0.30) / 4);
-        const fats = Math.round((tdee * 0.25) / 9);
-        const carbs = Math.round((tdee * 0.45) / 4);
+        // Розрахунок БЖВ у грамах
+        const prot = Math.round((targetCalories * pRatio) / 4);
+        const fat = Math.round((targetCalories * fRatio) / 9);
+        const carb = Math.round((targetCalories * cRatio) / 4);
 
-        // 3. ВИСНОВОК В ІНТЕРФЕЙС
-        // Оновлюємо коло SCAN
-        const fatDisplay = document.getElementById('fat-percentage-value');
-        if (fatDisplay) fatDisplay.textContent = w + "kg";
+        // ОНОВЛЕННЯ ІНТЕРФЕЙСУ (Блок COMPOSITION SCAN)
+        const mainCircleValue = document.getElementById('fat-percentage-value');
+        if (mainCircleValue) {
+            mainCircleValue.textContent = bmi;
+            mainCircleValue.style.color = statusColor;
+        }
+        
+        const smallLabel = document.querySelector('.main-circle small');
+        if (smallLabel) smallLabel.textContent = "BMI INDEX";
 
-        const bmiDisplay = document.getElementById('bmi-value');
-        if (bmiDisplay) bmiDisplay.textContent = bmi;
+        const bmiBadge = document.getElementById('bmi-value');
+        if (bmiBadge) bmiBadge.textContent = bmi;
 
-        // Оновлюємо статус та калорії (у блок під сканером)
-        const rankElement = document.getElementById('athlete-rank');
-        if (rankElement) {
-            rankElement.style.color = color;
-            rankElement.innerHTML = `
-                <div style="font-size: 16px; margin-bottom: 5px;">${status}</div>
-                <div style="font-size: 20px; color: #fff;">${tdee} kcal</div>
-                <div style="font-size: 11px; color: #888; margin-top: 5px;">
-                    P: ${protein}g | F: ${fats}g | C: ${carbs}g
-                </div>
-            `;
+        // Виведення статусу та рекомендацій
+        let rankElement = document.getElementById('athlete-rank');
+        if (!rankElement) {
+            // Створюємо елемент, якщо його немає в HTML
+            rankElement = document.createElement('div');
+            rankElement.id = 'athlete-rank';
+            rankElement.style.textAlign = 'center';
+            rankElement.style.marginTop = '15px';
+            document.querySelector('.form-card:nth-child(2)').appendChild(rankElement);
         }
 
-        // Додаємо детальні рекомендації в блок нотаток (якщо він є у вашому шаблоні)
-        const dietNote = document.getElementById('diet-plan-content');
-        if (dietNote) {
-            dietNote.style.display = 'block';
-            dietNote.innerHTML = `<strong>ПЛАН:</strong> ${recommendation}`;
-        }
+        rankElement.innerHTML = `
+            <div style="color:${statusColor}; font-size: 18px; font-weight: bold; margin-bottom: 5px;">${status}</div>
+            <div style="color:#fff; font-size: 24px; font-weight: bold;">${targetCalories} ккал</div>
+            <div style="color:#aaa; font-size: 13px; margin-top: 5px;">
+                Б: ${prot}г | Ж: ${fat}г | В: ${carb}г
+            </div>
+            <div style="color:#FFC72C; font-size: 11px; margin-top: 10px; padding: 10px; background: rgba(255,199,44,0.05); border-radius: 6px; border: 1px dashed rgba(255,199,44,0.2);">
+                ${recommendation}
+            </div>
+        `;
 
-        // 4. ЗБЕРЕЖЕННЯ
+        // ЗБЕРЕЖЕННЯ В FIREBASE (v8)
         try {
             await firebase.firestore().collection('weight_history').add({
                 userId: currentUserId,
                 weight: w,
                 bmi: bmi,
-                daily_kcal: tdee,
-                macros: { p: protein, f: fats, c: carbs },
+                target_kcal: targetCalories,
+                macros: { p: prot, f: fat, c: carb },
                 date: new Date().toISOString().split('T')[0],
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
             
-            await firebase.firestore().collection('users').doc(currentUserId).set({ height: h, age: a }, { merge: true });
+            await firebase.firestore().collection('users').doc(currentUserId).set({
+                height: h,
+                age: a
+            }, { merge: true });
+            
             loadHistory();
-        } catch (e) { console.error(e); }
+        } catch (error) {
+            console.error("Firebase Save Error:", error);
+        }
     }
 
+    // 4. ГРАФІК (Chart.js)
     function initChart() {
         const canvas = document.getElementById('weightChart');
         if (!canvas) return;
-        weightChart = new Chart(canvas.getContext('2d'), {
+        const ctx = canvas.getContext('2d');
+        weightChart = new Chart(ctx, {
             type: 'line',
-            data: { labels: [], datasets: [{ label: 'Вага', data: [], borderColor: '#FFC72C', tension: 0.4, fill: true, backgroundColor: 'rgba(255,199,44,0.05)' }] },
-            options: { responsive: true, maintainAspectRatio: false }
-        });
-    }
-
-    async function loadBaseData() {
-        const doc = await firebase.firestore().collection('users').doc(currentUserId).get();
-        if (doc.exists) {
-            const data = doc.data();
-            document.getElementById('user-height').value = data.height || "";
-            document.getElementById('user-age').value = data.age || "";
-        }
-    }
-
-    async function loadHistory() {
-        const snap = await firebase.firestore().collection('weight_history')
-            .where('userId', '==', currentUserId).orderBy('date', 'asc').limit(15).get();
-        if (!snap.empty) {
-            const docs = snap.docs.map(d => d.data());
-            weightChart.data.labels = docs.map(d => d.date.split('-').reverse().slice(0,2).join('.'));
-            weightChart.data.datasets[0].data = docs.map(d => d.weight);
-            weightChart.update();
-        }
-    }
-})();
+            data: { 
+                labels: [], 
+                datasets: [{ 
+                    label: 'Вага (кг)', 
+                    data: [], 
+                    borderColor: '#FFC72C', 
+                    backgroundColor: 'rgba(255,199,44,0.05)',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#FFC72C',
+                    tension: 0.4,
+                    fill: true 
+                }] 
+            },
+            options: { 
+                responsive: true,
