@@ -1,28 +1,35 @@
-/* Вирівнювання голограми */
-.hologram-card-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+/* Уніфікація контейнерів під стиль injury.css */
+.dashboard-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 25px;
+    align-items: stretch;
 }
 
+.form-card, .chart-card {
+    min-height: 450px; /* Однакова висота для всіх вікон */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Голограма */
 .hologram-wrapper {
     position: relative;
-    width: 100%;
-    height: 300px;
-    background: radial-gradient(circle, rgba(255, 199, 44, 0.05) 0%, transparent 70%);
+    flex-grow: 1;
+    background: radial-gradient(circle, rgba(255, 199, 44, 0.07) 0%, transparent 80%);
     display: flex;
     justify-content: center;
     align-items: center;
     overflow: hidden;
     border-radius: 8px;
     border: 1px solid #1a1a1a;
+    margin: 10px 0;
 }
 
 #body-hologram-img {
-    height: 95%;
-    /* Золоте світіння м'язів */
+    height: 90%;
     filter: drop-shadow(0 0 12px #FFC72C) brightness(1.2);
-    transition: transform 0.6s ease-in-out;
+    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .scan-line {
@@ -32,29 +39,41 @@
     background: #FFC72C;
     box-shadow: 0 0 15px #FFC72C;
     z-index: 5;
-    animation: scan-move 4s infinite linear;
+    animation: scanMove 4s infinite linear;
 }
 
-@keyframes scan-move {
+@keyframes scanMove {
     0% { top: 0; opacity: 0; }
     50% { opacity: 1; }
     100% { top: 100%; opacity: 0; }
 }
 
-.fat-display-box {
-    margin-top: 15px;
-    padding: 10px 25px;
+/* Віджет жиру та ІМТ */
+.fat-display-badge, .bmi-status-bar {
     background: #1a1a1a;
-    border-radius: 30px;
-    border: 1px solid #333;
-    color: #FFC72C;
-    font-weight: bold;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+    border-left: 3px solid #FFC72C;
+    margin-top: auto;
 }
 
-.bmi-badge {
-    padding: 10px;
-    background: #1a1a1a;
-    border-left: 3px solid #FFC72C;
-    border-radius: 5px;
-    margin-bottom: 15px;
+#fat-percentage-value, #bmi-value {
+    color: #FFC72C;
+    font-weight: bold;
+    font-size: 1.2em;
 }
+
+/* Стиль дієти */
+.diet-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 10px;
+}
+.diet-list li {
+    padding: 8px 0;
+    border-bottom: 1px solid #222;
+    font-size: 0.9em;
+    color: #ccc;
+}
+.diet-list li::before { content: "• "; color: #FFC72C; }
