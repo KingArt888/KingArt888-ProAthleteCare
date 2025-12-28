@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weight Control | ProAthleteCare</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="injury.css"> 
     <link rel="stylesheet" href="weight-control.css">
     <link rel="stylesheet" href="navigation-mobile.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
@@ -21,63 +20,75 @@
 
     <div class="content-wrapper">
         <nav class="sidebar" id="main-sidebar"> 
-            <a href="wellness.html">Wellness Control <img src="AK_logo.png" class="menu-icon" alt="AK"></a>
-            <a href="injury.html">Injury Story <img src="AK_logo.png" class="menu-icon" alt="AK"></a>
-            <a href="load-season.html">Load Season <img src="AK_logo.png" class="menu-icon" alt="AK"></a>
-            <a href="daily-individual.html">Daily Individual <img src="AK_logo.png" class="menu-icon" alt="AK"></a>
-            <a href="weekly-individual.html">Weekly Individual <img src="AK_logo.png" class="menu-icon" alt="AK"></a>
-            <a href="weight-control.html" class="active">Weight Control <img src="AK_logo.png" class="menu-icon" alt="AK"></a>
-            <a href="velocity-control.html">Velocity Control <img src="AK_logo.png" class="menu-icon" alt="AK"></a>
+            <a href="wellness.html">Wellness Control <img src="AK_logo.png" class="menu-icon"></a>
+            <a href="injury.html">Injury Story <img src="AK_logo.png" class="menu-icon"></a>
+            <a href="load-season.html">Load Season <img src="AK_logo.png" class="menu-icon"></a>
+            <a href="weight-control.html" class="active">Weight Control <img src="AK_logo.png" class="menu-icon"></a>
+            <a href="velocity-control.html">Velocity Control <img src="AK_logo.png" class="menu-icon"></a>
         </nav>
 
         <main class="main-content">
-            <h2 style="color: #6C7A89; margin-bottom: 20px;">⚖️ Weight Analysis & Body Composition</h2>
+            <h2 class="page-title">⚖️ Body Composition Analytics</h2>
             
-            <div class="dashboard-container">
-                <div class="form-card">
-                    <h3>Параметри тіла</h3>
+            <div class="dashboard-grid">
+                <div class="glass-card">
+                    <h3>Input Metrics</h3>
                     <form id="weight-form">
-                        <div style="display: flex; gap: 15px;">
-                            <div style="flex: 1;">
-                                <label>Вік:</label>
+                        <div class="form-row">
+                            <div class="input-box">
+                                <label>Вік</label>
                                 <input type="number" id="user-age" placeholder="25" required>
                             </div>
-                            <div style="flex: 1;">
-                                <label>Зріст (см):</label>
+                            <div class="input-box">
+                                <label>Зріст (см)</label>
                                 <input type="number" id="user-height" placeholder="180" required>
                             </div>
                         </div>
-                        <label style="margin-top: 15px; display: block;">Сьогоднішня вага (кг):</label>
-                        <input type="number" id="weight-value" step="0.1" required style="border: 1px solid #FFC72C; text-align: center; font-size: 1.2em; background: #000; color: #fff; width: 100%; box-sizing: border-box; padding: 10px;">
-                        <button type="submit" id="submit-btn" class="gold-button">Записати результат</button>
+                        <div class="input-box main-input">
+                            <label>Сьогоднішня вага (кг)</label>
+                            <input type="number" id="weight-value" step="0.1" required>
+                        </div>
+                        <button type="submit" class="gold-btn">Analyze Composition</button>
                     </form>
                 </div>
 
-                <div class="form-card hologram-container">
-                    <h3>Body Composition Scan</h3>
-                    <div class="hologram-wrapper" id="hologram-box">
-                        <div class="scan-line"></div>
-                        <svg id="athlete-svg" viewBox="0 0 100 180" style="height: 90%; fill: #FFC72C; transition: all 0.5s ease; filter: drop-shadow(0 0 8px #FFC72C);">
-                            <path d="M50,15 c4,0,7.5,-3.5,7.5,-7.5 S54,0,50,0 S42.5,3.5,42.5,7.5 S46,15,50,15 M35,20 h30 l8,45 l-6,3 l-7,-30 v142 h-10 v-50 h-10 v50 h-10 v-142 l-7,30 l-6,-3 Z" />
-                        </svg>
-                    </div>
-                    <div class="fat-display-badge">
-                        <span>EST. BODY FAT:</span>
-                        <span id="fat-percentage-value">0%</span>
+                <div class="glass-card pro-status-card">
+                    <h3>Body Composition</h3>
+                    <div class="bio-display">
+                        <div class="circle-container">
+                            <svg viewBox="0 0 100 100" class="bio-circle">
+                                <circle cx="50" cy="50" r="45" class="bg-circle"></circle>
+                                <circle cx="50" cy="50" r="45" id="fat-progress" class="fg-circle"></circle>
+                            </svg>
+                            <div class="circle-content">
+                                <span class="c-label">FAT %</span>
+                                <span id="fat-percentage-value" class="c-value">0%</span>
+                            </div>
+                        </div>
+                        <div class="side-metrics">
+                            <div class="m-item">
+                                <span class="m-label">LEAN MASS</span>
+                                <span id="lbm-value" class="m-value">-- KG</span>
+                            </div>
+                            <div class="m-item">
+                                <span class="m-label">STATUS</span>
+                                <span id="athlete-rank" class="m-value gold-text">INIT...</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="form-card diet-card">
-                    <h3>Рекомендації та Дієта</h3>
-                    <div id="diet-plan-content" class="placeholder-text">Введіть дані...</div>
+                <div class="glass-card full-width">
+                    <h3>Performance Insights</h3>
+                    <div class="insight-row">
+                        <div class="bmi-badge">ІМТ: <span id="bmi-value">0.0</span> <span id="bmi-status-text"></span></div>
+                        <div id="diet-plan-content" class="insight-text">Система готова до аналізу даних.</div>
+                    </div>
                 </div>
 
-                <div class="chart-card">
-                    <h3>Аналітика прогресу</h3>
-                    <div class="bmi-status-bar">
-                        ІМТ: <span id="bmi-value">0.0</span> <span id="bmi-status-text">---</span>
-                    </div>
-                    <div class="chart-area" style="height: 200px; margin-top: 15px;">
+                <div class="glass-card full-width chart-card">
+                    <h3>Weight Trend</h3>
+                    <div class="chart-wrapper">
                         <canvas id="weightChart"></canvas>
                     </div>
                 </div>
@@ -87,4 +98,8 @@
 
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="weight.js"></script>
+</body>
+</html>
