@@ -37,7 +37,7 @@
         const bmi = (w / ((h / 100) ** 2)).toFixed(1);
         const analysis = calculateAthleteData(w, bmi, h, a);
 
-        // Оновлюємо інтерфейс: тепер BMI з'являється після розрахунку
+        // Відображаємо вагу та BMI
         updateScannerUI(w, bmi, analysis.status, analysis.targetCalories, analysis.prot, analysis.fat, analysis.carb, analysis.statusColor, analysis.recommendation, true);
 
         try {
@@ -91,13 +91,12 @@
         };
     }
 
-    // Параметр showBmi контролює, чи показувати цифру BMI
-    function updateScannerUI(weight, bmi, status, kcal, p, f, c, color, rec, showBmi = false) {
+    function updateScannerUI(weight, bmi, status, kcal, p, f, c, color, rec, showDetails = false) {
         const mainValue = document.getElementById('fat-percentage-value');
         if (mainValue) { 
             let content = `<span style="font-size: 36px; color: #FFC72C; font-weight: bold;">${weight}kg</span>`;
-            if (showBmi) {
-                content += `<div style="font-size: 14px; color: #888; margin-top: 5px; animation: fadeIn 0.5s;">BMI: ${bmi}</div>`;
+            if (showDetails) {
+                content += `<div style="font-size: 14px; color: #888; margin-top: 5px;">BMI: ${bmi}</div>`;
             }
             mainValue.innerHTML = content;
         }
@@ -111,18 +110,20 @@
             rankElement.id = 'athlete-rank';
             rankElement.style.textAlign = 'center';
             rankElement.style.marginTop = '15px';
-            document.querySelector('.form-card:nth-child(2)').appendChild(rankElement);
+            const scanCard = document.querySelector('.form-card:nth-child(2)');
+            if (scanCard) scanCard.appendChild(rankElement);
         }
 
-        // Відображаємо аналіз лише якщо BMI активовано (після розрахунку)
-        if (showBmi) {
-            rankElement.innerHTML = `
-                <div style="color:${color}; font-size:18px; font-weight:bold; animation: fadeIn 0.8s;">${status}</div>
-                <div style="color:#fff; font-size:24px; font-weight:bold;">${kcal} ккал</div>
-                <div style="color:#aaa; font-size:11px;">Б: ${p}г | Ж: ${f}г | В: ${c}г</div>
-                <div style="color:#FFC72C; font-size:11px; margin-top:10px; border-top:1px solid #222; padding-top:5px;">${rec}</div>`;
-        } else {
-            rankElement.innerHTML = `<div style="color:#444; font-size:12px;">Натисніть "Розрахувати", щоб отримати аналіз</div>`;
+        if (rankElement) {
+            if (showDetails) {
+                rankElement.innerHTML = `
+                    <div style="color:${color}; font-size:18px; font-weight:bold;">${status}</div>
+                    <div style="color:#fff; font-size:24px; font-weight:bold;">${kcal} ккал</div>
+                    <div style="color:#aaa; font-size:11px;">Б: ${p}г | Ж: ${f}г | В: ${c}г</div>
+                    <div style="color:#FFC72C; font-size:11px; margin-top:10px; border-top:1px solid #222; padding-top:5px;">${rec}</div>`;
+            } else {
+                rankElement.innerHTML = `<div style="color:#444; font-size:12px;">Введіть вагу для аналізу</div>`;
+            }
         }
     }
 
@@ -150,9 +151,13 @@
             const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             const last = docs[0];
             
-            // Якщо сьогодні вже оновлювали - показуємо все з BMI
+            // Захист від помилок 'undefined' для старих записів
+            const p = (last.macros && last.macros.p) ? last.macros.p : 0;
+            const f = (last.macros && last.macros.f) ? last.macros.f : 0;
+            const c = (last.macros && last.macros.c) ? last.macros.c : 0;
+
             const isAlreadyUpdated = (lastUpdate === today);
-            updateScannerUI(last.weight, last.bmi, last.status, last.target_kcal, last.macros.p, last.macros.f, last.macros.c, last.statusColor, last.recommendation, isAlreadyUpdated);
+            updateScannerUI(last.weight, last.bmi, last.status || "N/A", last.target_kcal || 0, p, f, c, last.statusColor || "#fff", last.recommendation || "", isAlreadyUpdated);
             
             if (isAlreadyUpdated) {
                 const submitBtn = document.querySelector('#weight-form button[type="submit"]');
@@ -160,7 +165,7 @@
             }
 
             const weightInput = document.getElementById('weight-value');
-            if (weightInput) weightInput.value = last.weight;
+            if (weightInput && !isAlreadyUpdated) weightInput.value = last.weight;
 
             const chartData = [...docs].reverse();
             weightChart.data.labels = chartData.map(d => d.date.split('-').reverse().slice(0,2).join('.'));
@@ -203,6 +208,7 @@
         let container = document.getElementById('compact-history');
         if (!container) {
             const chartCard = document.querySelector('.chart-card');
+            if (!chartCard) return document.createElement('div');
             const wrapper = document.createElement('div');
             wrapper.style.cssText = "margin-top:15px; max-height:180px; overflow-y:auto; padding-right:5px;";
             container = document.createElement('div');
