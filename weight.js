@@ -4,15 +4,14 @@
     let currentUserId = null;
     let weightChartInstance = null;
 
-    // --- 1. АВТОРИЗАЦІЯ ТА НАЛАШТУВАННЯ КНОПКИ ---
+    // --- 1. АВТОРИЗАЦІЯ ТА СТИЛЬ КНОПКИ ---
     firebase.auth().onAuthStateChanged(async (user) => {
         if (user) {
             currentUserId = user.uid;
             
-            // Робимо кнопку маленькою через JS (не чіпаючи CSS)
             const btn = document.getElementById('submit-btn');
             if (btn) {
-                btn.style.width = 'auto';
+                btn.style.width = 'auto'; // Маленька кнопка
                 btn.style.padding = '6px 15px';
                 btn.style.fontSize = '0.85em';
                 btn.style.borderRadius = '20px';
@@ -20,34 +19,19 @@
                 btn.style.display = 'block';
             }
 
-            await loadUserProfile(); // Підтягуємо зріст/вік
-            await checkDailyEntry(); // Перевіряємо ліміт на день
-            await initWeightChart(); // Малюємо графік
+            await loadUserProfile(); 
+            await checkDailyEntry(); 
+            await initWeightChart(); 
         } else {
             await firebase.auth().signInAnonymously();
         }
     });
 
-    // --- 2. ЗАВАНТАЖЕННЯ ПАРАМЕТРІВ (Зріст/Вік) ---
-    async function loadUserProfile() {
-        if (!window.db) return;
-        const doc = await db.collection(COLL_USERS).doc(currentUserId).get();
-        if (doc.exists) {
-            const data = doc.data();
-            // Запам'ятовуємо зріст та вік
-            if (data.height) document.getElementById('user-height').value = data.height;
-            if (data.age) document.getElementById('user-age').value = data.age;
-            
-            // Якщо є остання вага, одразу показуємо аналітику BMI
-            if (data.lastWeight && data.height) {
-                calculateBMI(data.lastWeight, data.height);
-            }
-        }
-    }
-
-    // --- 3. РОЗРАХУНОК BMI ТА РЕКОМЕНДАЦІЇ ---
-    function calculateBMI(w, h) {
-        const bmi = (w / ((h/100) ** 2)).toFixed(1);
+    // --- 2. BMI: РОЗРАХУНОК ТА ВІДОБРАЖЕННЯ ---
+    function updateBMIAnalysis(w, h) {
+        // Розрахунок Body Mass Index: вага / (зріст у метрах)^2
+        const bmi = (w / ((h / 100) ** 2)).toFixed(1);
+        
         const bmiVal = document.getElementById('bmi-value');
         const bmiStatus = document.getElementById('bmi-status');
         const advice = document.getElementById('nutrition-advice');
@@ -55,20 +39,39 @@
 
         if (!panel) return;
         panel.style.display = 'block';
-        bmiVal.textContent = bmi;
+        
+        // Виводимо число BMI
+        bmiVal.textContent = bmi; 
 
         if (bmi < 18.5) {
-            bmiStatus.textContent = "Недостатня вага ⚠️";
-            bmiStatus.style.color = "#FFD700"; // Золотий
-            advice.textContent = "Потрібен профіцит калорій. Рекомендуємо отримати рецепти для набору маси.";
+            bmiStatus.textContent = `BMI: ${bmi} — Недостатня вага ⚠️`;
+            bmiStatus.style.color = "#FFD700"; // GOLD_COLOR
+            advice.textContent = "Ваш ІМТ нижче норми. Рекомендується збільшити калорійність раціону.";
         } else if (bmi < 25) {
-            bmiStatus.textContent = "Норма ✅";
-            bmiStatus.style.color = "#4CAF50"; // Зелений
-            advice.textContent = "Ваша вага в нормі. Підтримуйте поточний режим харчування.";
+            bmiStatus.textContent = `BMI: ${bmi} — Норма ✅`;
+            bmiStatus.style.color = "#4CAF50"; 
+            advice.textContent = "Ідеальний показник. Підтримуйте поточний баланс БЖУ.";
         } else {
-            bmiStatus.textContent = "WEIGHT LOSS (Надмірна вага) 📉";
-            bmiStatus.style.color = "#DA3E52"; // Червоний
-            advice.textContent = "Рекомендовано дефіцит калорій. Натисніть кнопку нижче для перегляду дієтичних рецептів.";
+            // Використовуємо колір для Weight Loss з вашого CSS
+            bmiStatus.textContent = `BMI: ${bmi} — Weight Loss Needed 📉`;
+            bmiStatus.style.color = "#DA3E52"; 
+            advice.textContent = "Ваш ІМТ вказує на надмірну вагу. Рекомендується дефіцит калорій.";
+        }
+    }
+
+    // --- 3. ЗАВАНТАЖЕННЯ ДАНИХ (Зріст/Вік) ---
+    async function loadUserProfile() {
+        if (!window.db) return;
+        const doc = await db.collection(COLL_USERS).doc(currentUserId).get();
+        if (doc.exists) {
+            const data = doc.data();
+            if (data.height) document.getElementById('user-height').value = data.height;
+            if (data.age) document.getElementById('user-age').value = data.age;
+            
+            // Якщо є зріст і вага, виводимо BMI
+            if (data.lastWeight && data.height) {
+                updateBMIAnalysis(data.lastWeight, data.height);
+            }
         }
     }
 
@@ -84,24 +87,22 @@
             if (btn) {
                 btn.disabled = true;
                 btn.textContent = "Записано";
-                btn.classList.add('disabled-button'); // Використовуємо ваш клас
+                btn.classList.add('disabled-button'); // Клас з вашого CSS
             }
         }
     }
 
-    // --- 5. ЗБЕРЕЖЕННЯ ДАНИХ ---
-    const weightForm = document.getElementById('weight-form');
-    if (weightForm) {
-        weightForm.addEventListener('submit', async (e) => {
+    // --- 5. ЗБЕРЕЖЕННЯ ---
+    const form = document.getElementById('weight-form');
+    if (form) {
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             const w = parseFloat(document.getElementById('weight-value').value);
             const h = parseFloat(document.getElementById('user-height').value);
             const a = parseInt(document.getElementById('user-age').value);
             const today = new Date().toISOString().split('T')[0];
 
             try {
-                // Записуємо в історію
                 await db.collection(COLL_HISTORY).add({
                     userId: currentUserId,
                     weight: w,
@@ -109,31 +110,26 @@
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                // Оновлюємо сталі параметри в профілі
                 await db.collection(COLL_USERS).doc(currentUserId).set({
-                    height: h,
-                    age: a,
-                    lastWeight: w
+                    height: h, age: a, lastWeight: w
                 }, { merge: true });
 
                 alert("Дані збережено!");
                 location.reload();
-            } catch (err) {
-                alert("Помилка: " + err.message);
-            }
+            } catch (err) { alert(err.message); }
         });
     }
 
-    // --- 6. ГРАФІК (ЗОЛОТИЙ СТИЛЬ) ---
+    // --- 6. ГРАФІК ---
     async function initWeightChart() {
         const snap = await db.collection(COLL_HISTORY)
             .where("userId", "==", currentUserId)
-            .orderBy("date", "asc").limit(12).get();
+            .orderBy("date", "asc").limit(10).get();
 
-        const labels = [], values = [];
+        const labels = [], data = [];
         snap.forEach(d => {
             labels.push(d.data().date.split('-').slice(1).join('/'));
-            values.push(d.data().weight);
+            data.push(d.data().weight);
         });
 
         const ctx = document.getElementById('weightChart');
@@ -145,8 +141,8 @@
                     labels: labels,
                     datasets: [{
                         label: 'Вага',
-                        data: values,
-                        borderColor: 'rgb(255, 215, 0)', // GOLD
+                        data: data,
+                        borderColor: 'rgb(255, 215, 0)', // GOLD_COLOR
                         backgroundColor: 'rgba(255, 215, 0, 0.1)',
                         fill: true,
                         tension: 0.4
