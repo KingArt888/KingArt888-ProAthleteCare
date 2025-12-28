@@ -2,34 +2,25 @@
     let weightChart = null;
     let currentUserId = null;
 
-    // 1. ПАРАМЕТРИ URL ТА АВТОРИЗАЦІЯ (Твій блок без змін)
     const urlParams = new URLSearchParams(window.location.search);
     const viewUserId = urlParams.get('userId');
 
     firebase.auth().onAuthStateChanged(async (user) => {
         if (user) {
-            // Якщо є userId в URL - ми в режимі адміна, якщо ні - беремо ID поточного юзера
             currentUserId = viewUserId || user.uid;
-            console.log("Працюємо з ID:", currentUserId);
             loadBaseData();
             loadHistory();
         } else {
-            // Якщо юзер не залогінений - логінимо анонімно для тестів
-            firebase.auth().signInAnonymously().catch(e => console.error("Auth error:", e));
+            firebase.auth().signInAnonymously();
         }
     });
 
-    // 2. ІНІЦІАЛІЗАЦІЯ ПРИ ЗАВАНТАЖЕННІ
     document.addEventListener('DOMContentLoaded', () => {
         initChart();
-        const form = document.getElementById('weight-form');
-        if (form) {
-            form.addEventListener('submit', handleWeightSubmit);
-        }
+        document.getElementById('weight-form').addEventListener('submit', handleAthleteAnalysis);
     });
 
-    // 3. ОБРОБКА ФОРМИ ТА РОЗРАХУНОК СКАНЕРА
-    async function handleWeightSubmit(e) {
+    async function handleAthleteAnalysis(e) {
         e.preventDefault();
         
         const w = parseFloat(document.getElementById('weight-value').value);
@@ -38,85 +29,78 @@
 
         if (!w || !h || !a) return;
 
-        // Розрахунки для блоку COMPOSITION SCAN
+        // 1. РОЗРАХУНОК BMI ТА СТАТУСУ
         const bmi = (w / ((h / 100) ** 2)).toFixed(1);
-        // Формула проценту жиру (Deurenberg)
-        const fat = ((1.20 * bmi) + (0.23 * a) - 16.2).toFixed(1);
+        let status = "";
+        let recommendation = "";
 
-        // Оновлення значень на екрані
+        if (bmi < 18.5) {
+            status = "UNDERWEIGHT (Дефіцит маси)";
+            recommendation = "Weight Gain: Профіцит калорій +500 ккал. Акцент на складні вуглеводи та білок (2г/кг).";
+        } else if (bmi < 25) {
+            status = "NORMAL (Норма)";
+            recommendation = "Maintenance: Підтримка поточної форми. Баланс БЖВ: 30/30/40.";
+        } else {
+            status = "WEIGHT LOSS (Надлишкова маса)";
+            recommendation = "Fat Loss: Дефіцит калорій -15% від норми. Збільшити інтенсивність кардіо.";
+        }
+
+        // 2. ПРОФЕСІЙНИЙ РОЗРАХУНОК КАЛОРІЙ (Mifflin-St Jeor)
+        // Для чоловіків: (10 × вага) + (6.25 × зріст) - (5 × вік) + 5
+        const bmr = (10 * w) + (6.25 * h) - (5 * a) + 5;
+        const maintenance = Math.round(bmr * 1.55); // Коефіцієнт середньої активності атлета
+
+        // 3. ВИСНОВОК В ІНТЕРФЕЙС
         const fatDisplay = document.getElementById('fat-percentage-value');
+        if (fatDisplay) fatDisplay.textContent = w + " kg";
+
         const bmiDisplay = document.getElementById('bmi-value');
-        
-        if (fatDisplay) fatDisplay.textContent = fat + "%";
         if (bmiDisplay) bmiDisplay.textContent = bmi;
 
-        // Збереження даних у Firebase (v8 Syntax)
-        try {
-            await firebase.firestore().collection('weight_history').add({
-                userId: currentUserId,
-                weight: w,
-                date: new Date().toISOString().split('T')[0],
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            
-            // Оновлюємо базові дані користувача
-            await firebase.firestore().collection('users').doc(currentUserId).set({
-                height: h,
-                age: a
-            }, { merge: true });
-            
-            loadHistory();
-        } catch (error) {
-            console.error("Помилка збереження:", error);
+        // Висновок рекомендацій у підпис під сканером (athlete-rank)
+        const rankElement = document.getElementById('athlete-rank');
+        if (rankElement) {
+            rankElement.innerHTML = `<span style="color:#FFC72C">${status}</span><br>
+                                     <small>BMR: ${maintenance} kcal/day</small>`;
         }
+
+        // 4. ЗБЕРЕЖЕННЯ
+        await firebase.firestore().collection('weight_history').add({
+            userId: currentUserId,
+            weight: w,
+            bmi: bmi,
+            calories_norm: maintenance,
+            date: new Date().toISOString().split('T')[0],
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        await firebase.firestore().collection('users').doc(currentUserId).set({ height: h, age: a }, { merge: true });
+        loadHistory();
     }
 
-    // 4. ГРАФІК (Chart.js)
+    // --- Решта функцій initChart, loadBaseData, loadHistory залишаються без змін як у минулому коді ---
     function initChart() {
         const canvas = document.getElementById('weightChart');
         if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        weightChart = new Chart(ctx, {
+        weightChart = new Chart(canvas.getContext('2d'), {
             type: 'line',
-            data: { 
-                labels: [], 
-                datasets: [{ 
-                    label: 'Вага (кг)', 
-                    data: [], 
-                    borderColor: '#FFC72C', 
-                    backgroundColor: 'rgba(255,199,44,0.1)',
-                    tension: 0.4,
-                    fill: true 
-                }] 
-            },
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false,
-                scales: {
-                    y: { beginAtZero: false, grid: { color: '#222' } },
-                    x: { grid: { display: false } }
-                }
-            }
+            data: { labels: [], datasets: [{ label: 'Вага (кг)', data: [], borderColor: '#FFC72C', tension: 0.4 }] },
+            options: { responsive: true, maintainAspectRatio: false }
         });
     }
 
-    // 5. ЗАВАНТАЖЕННЯ ДАНИХ
     async function loadBaseData() {
-        if (!currentUserId) return;
         const doc = await firebase.firestore().collection('users').doc(currentUserId).get();
         if (doc.exists) {
             const data = doc.data();
-            if (document.getElementById('user-height')) document.getElementById('user-height').value = data.height || "";
-            if (document.getElementById('user-age')) document.getElementById('user-age').value = data.age || "";
+            document.getElementById('user-height').value = data.height || "";
+            document.getElementById('user-age').value = data.age || "";
         }
     }
 
     async function loadHistory() {
-        if (!currentUserId || !weightChart) return;
         const snap = await firebase.firestore().collection('weight_history')
-            .where('userId', '==', currentUserId)
-            .orderBy('date', 'asc').limit(10).get();
-        
+            .where('userId', '==', currentUserId).orderBy('date', 'asc').limit(10).get();
         if (!snap.empty) {
             const docs = snap.docs.map(d => d.data());
             weightChart.data.labels = docs.map(d => d.date.split('-').reverse().slice(0,2).join('.'));
