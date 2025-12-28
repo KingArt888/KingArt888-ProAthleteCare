@@ -1,34 +1,88 @@
-/* Зменшуємо контейнер форми для Weight Control */
-#weight-form {
-    max-width: 300px; /* Обмежуємо ширину самої форми всередині картки */
-    margin: 0 auto;
+/* Основні картки */
+.form-card, .hologram-card, .chart-card {
+    background: #111;
+    border: 1px solid #222;
+    border-radius: 15px;
+    padding: 20px;
 }
 
-/* Компактна картка форми */
-.form-card {
-    width: 25% !important; /* Зменшуємо загальну ширину картки */
-    min-width: 280px !important;
-    padding: 15px 20px !important; /* Менші внутрішні відступи */
-}
+.form-card { width: 250px; }
 
-/* Маленька та стильна кнопка */
-#submit-btn {
-    width: auto !important; /* Кнопка більше не на всю ширину */
-    padding: 8px 20px !important; /* Компактні розміри */
-    font-size: 0.9em !important; /* Менший шрифт */
-    margin: 15px auto 0 auto !important; /* Центрування з невеликим відступом */
-    border-radius: 20px !important; /* Закруглені краї для "дорогого" вигляду */
-    display: block;
-}
-
-/* Стилізація інпутів для компактності */
+/* Інпути */
 #weight-form input {
-    padding: 6px 10px !important;
-    margin-bottom: 10px !important;
-    font-size: 0.95em !important;
+    width: 100%;
+    padding: 10px;
+    background: #000;
+    border: 1px solid #333;
+    color: #fff;
+    margin-top: 5px;
+    border-radius: 5px;
 }
 
-#weight-form label {
-    font-size: 0.85em !important;
-    margin-top: 10px !important;
+/* Кнопка */
+.gold-button {
+    background: #FFC72C;
+    color: #000;
+    border: none;
+    padding: 10px 20px;
+    font-weight: bold;
+    border-radius: 20px;
+    cursor: pointer;
+    margin-top: 15px;
+    width: 100%;
+    transition: 0.3s;
+}
+
+/* Голограма */
+.hologram-card {
+    flex: 1;
+    min-width: 200px;
+    text-align: center;
+    position: relative;
+}
+
+.hologram-wrapper {
+    position: relative;
+    height: 250px;
+    display: flex;
+    justify-content: center;
+    overflow: hidden;
+}
+
+#body-svg {
+    height: 100%;
+    fill: rgba(255, 199, 44, 0.15);
+    stroke: #FFC72C;
+    stroke-width: 2;
+    filter: drop-shadow(0 0 10px rgba(255, 199, 44, 0.7));
+    transition: transform 0.5s ease;
+}
+
+.hologram-glow {
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    background: #FFC72C;
+    box-shadow: 0 0 15px #FFC72C;
+    animation: scan 3s infinite linear;
+    z-index: 2;
+}
+
+@keyframes scan {
+    0% { top: 0; opacity: 0; }
+    50% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+}
+
+.fat-display {
+    margin-top: 10px;
+    font-weight: bold;
+    color: #FFC72C;
+    font-size: 1.2em;
+}
+
+/* BMI картка */
+#bmi-result-card {
+    border-left: 5px solid #666;
+    padding-left: 15px;
 }
