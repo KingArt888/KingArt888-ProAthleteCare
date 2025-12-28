@@ -7,25 +7,51 @@
     firebase.auth().onAuthStateChanged(async (user) => {
         if (user) {
             currentUserId = user.uid;
-            await loadUserData(); // Завантажуємо зріст/вік
-            await checkTodayEntry(); // Перевіряємо, чи вже важився
-            await loadWeightHistory(); // Будуємо графік
+            await loadStaticData(); // Завантажуємо зріст та вік
+            await checkDailyLimit(); // Блокування кнопки
+            await loadHistoryAndChart(); // Графік
         }
     });
 
-    // Завантаження збережених даних користувача (Зріст, Вік)
-    async function loadUserData() {
+    // Завантаження збережених параметрів (Зріст/Вік)
+    async function loadStaticData() {
         const doc = await db.collection(COLL_USERS).doc(currentUserId).get();
         if (doc.exists) {
             const data = doc.data();
             if (data.height) document.getElementById('user-height').value = data.height;
             if (data.age) document.getElementById('user-age').value = data.age;
-            if (data.lastWeight) calculateBMI(data.lastWeight, data.height);
+            if (data.lastWeight) performAnalysis(data.lastWeight, data.height);
         }
     }
 
-    // Перевірка, чи був запис сьогодні
-    async function checkTodayEntry() {
+    // Аналіз BMI та рекомендації
+    function performAnalysis(weight, height) {
+        const bmi = (weight / ((height/100) ** 2)).toFixed(1);
+        const panel = document.getElementById('bmi-result-panel');
+        const valueEl = document.getElementById('bmi-value');
+        const statusEl = document.getElementById('bmi-status');
+        const adviceEl = document.getElementById('nutrition-advice');
+
+        panel.style.display = 'block';
+        valueEl.textContent = bmi;
+
+        if (bmi < 18.5) {
+            statusEl.textContent = "Недостатня вага ⚠️";
+            statusEl.style.color = "#FFD700";
+            adviceEl.textContent = "Вашому організму потрібно більше енергії. Рекомендовано профіцит калорій (+10-15%) та збільшення білків.";
+        } else if (bmi < 25) {
+            statusEl.textContent = "Вага в нормі ✅";
+            statusEl.style.color = "#4CAF50";
+            adviceEl.textContent = "Чудовий результат! Підтримуйте поточний рівень активності та збалансоване харчування.";
+        } else {
+            statusEl.textContent = "Weight Loss (Надмірна вага) 📉";
+            statusEl.style.color = "#DA3E52";
+            adviceEl.textContent = "Рекомендовано помірний дефіцит калорій (15-20%) та контроль вуглеводів. Перегляньте наші рецепти для схуднення.";
+        }
+    }
+
+    // Перевірка на "раз на день"
+    async function checkDailyLimit() {
         const today = new Date().toISOString().split('T')[0];
         const snapshot = await db.collection(COLL_HISTORY)
             .where("userId", "==", currentUserId)
@@ -36,33 +62,7 @@
             const btn = document.getElementById('submit-btn');
             btn.disabled = true;
             btn.textContent = "Сьогодні вагу вже записано";
-            btn.classList.add('disabled-button');
-        }
-    }
-
-    function calculateBMI(weight, height) {
-        const hMeter = height / 100;
-        const bmi = (weight / (hMeter * hMeter)).toFixed(1);
-        const bmiValEl = document.getElementById('bmi-value');
-        const bmiStatusEl = document.getElementById('bmi-status');
-        const adviceEl = document.getElementById('nutrition-advice');
-        const recipeBtn = document.getElementById('recipe-link-container');
-
-        bmiValEl.textContent = bmi;
-        recipeBtn.style.display = 'block';
-
-        if (bmi < 18.5) {
-            bmiStatusEl.textContent = "Недостатня вага";
-            bmiStatusEl.style.color = "#FFD700";
-            adviceEl.textContent = "Рекомендовано: Профіцит калорій. Збільште споживання білків та складних вуглеводів.";
-        } else if (bmi < 25) {
-            bmiStatusEl.textContent = "Норма";
-            bmiStatusEl.style.color = "#4CAF50";
-            adviceEl.textContent = "Рекомендовано: Підтримка ваги. Збалансоване харчування.";
-        } else {
-            bmiStatusEl.textContent = "Weight Loss (Надмірна вага)";
-            bmiStatusEl.style.color = "#DA3E52";
-            adviceEl.textContent = "Рекомендовано: Дефіцит калорій. Оберіть низьковуглеводні рецепти та кардіо.";
+            btn.classList.add('disabled-button'); // Використовуємо ваш стиль з CSS
         }
     }
 
@@ -74,7 +74,7 @@
         const today = new Date().toISOString().split('T')[0];
 
         try {
-            // 1. Зберігаємо історію ваги
+            // Зберігаємо історію
             await db.collection(COLL_HISTORY).add({
                 userId: currentUserId,
                 weight: weight,
@@ -82,45 +82,42 @@
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
 
-            // 2. Оновлюємо профіль користувача (зріст/вік)
+            // Запам'ятовуємо параметри в профілі користувача
             await db.collection(COLL_USERS).doc(currentUserId).set({
                 height: height,
                 age: age,
                 lastWeight: weight
             }, { merge: true });
 
-            alert("Дані успішно оновлено!");
+            alert("Дані збережено! Аналіз оновлено.");
             location.reload();
         } catch (err) {
             alert("Помилка: " + err.message);
         }
     });
 
-    async function loadWeightHistory() {
+    async function loadHistoryAndChart() {
         const snapshot = await db.collection(COLL_HISTORY)
             .where("userId", "==", currentUserId)
             .orderBy("date", "asc")
             .limit(14)
             .get();
 
-        const labels = [];
-        const data = [];
+        const labels = [], values = [];
         snapshot.forEach(doc => {
             labels.push(doc.data().date.split('-').slice(1).join('/'));
-            data.push(doc.data().weight);
+            values.push(doc.data().weight);
         });
-        renderChart(labels, data);
-    }
-
-    function renderChart(labels, data) {
+        
         const ctx = document.getElementById('weightChart').getContext('2d');
-        new Chart(ctx, {
+        if (weightChartInstance) weightChartInstance.destroy();
+        weightChartInstance = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
                 datasets: [{
                     label: 'Вага (кг)',
-                    data: data,
+                    data: values,
                     borderColor: '#FFC72C',
                     backgroundColor: 'rgba(255, 199, 44, 0.1)',
                     fill: true,
