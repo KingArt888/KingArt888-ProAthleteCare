@@ -9,15 +9,15 @@
             currentUserId = user.uid;
             
             await loadUserProfile(); 
-            await checkDailyEntry(); // Приховує форму та показує результат
+            await checkDailyEntry(); 
             await initWeightChart(); 
         } else {
             await firebase.auth().signInAnonymously();
         }
     });
 
-    // --- 1. РОЗРАХУНОК ТА ВИВІД BMI (ЗАМІСТЬ НУЛІВ) ---
-    function displayBMIResult(weight, height) {
+    // --- 1. РОЗРАХУНОК BMI, % ЖИРУ ТА ГОЛОГРАМА ---
+    function displayBMIResult(weight, height, age) {
         const bmi = (weight / ((height / 100) ** 2)).toFixed(1);
         
         const bmiValEl = document.getElementById('bmi-value');
@@ -25,32 +25,63 @@
         const adviceEl = document.getElementById('nutrition-advice');
         const card = document.getElementById('bmi-result-card');
 
-        if (!card) return;
+        if (bmiValEl) bmiValEl.textContent = bmi;
 
-        // Вставляємо реальне число BMI
-        bmiValEl.textContent = bmi;
-
-        // Налаштовуємо статус та колір залежно від результату
-        if (bmi < 18.5) {
-            bmiStatusEl.textContent = "Недостатня вага";
-            card.style.borderLeft = "5px solid #FFD700"; // Золотий
-            adviceEl.textContent = "Рекомендовано: Збільшити калорійність раціону та силові тренування.";
-        } else if (bmi < 25) {
-            bmiStatusEl.textContent = "Норма";
-            card.style.borderLeft = "5px solid #4CAF50"; // Зелений
-            adviceEl.textContent = "Ваш показник в нормі. Продовжуйте підтримувати поточний режим.";
-        } else {
-            bmiStatusEl.textContent = "Weight Loss Needed";
-            card.style.borderLeft = "5px solid #DA3E52"; // Червоний
-            adviceEl.textContent = "Рекомендовано: Дефіцит калорій та перегляд плану харчування.";
+        if (card) {
+            if (bmi < 18.5) {
+                bmiStatusEl.textContent = "Недостатня вага";
+                card.style.borderLeft = "5px solid #FFD700";
+                adviceEl.textContent = "Рекомендовано: Збільшити калорійність раціону та силові тренування.";
+            } else if (bmi < 25) {
+                bmiStatusEl.textContent = "Норма";
+                card.style.borderLeft = "5px solid #4CAF50";
+                adviceEl.textContent = "Ваш показник в нормі. Продовжуйте підтримувати поточний режим.";
+            } else {
+                bmiStatusEl.textContent = "Weight Loss Needed";
+                card.style.borderLeft = "5px solid #DA3E52";
+                adviceEl.textContent = "Рекомендовано: Дефіцит калорій та перегляд плану харчування.";
+            }
         }
+
+        // Оновлення голограми та % жиру
+        updateHologram(weight, height, age);
         
-        // Показуємо кнопку рецептів, якщо вона була прихована
         const recipeBtn = document.getElementById('recipe-link-container');
         if (recipeBtn) recipeBtn.style.display = 'block';
     }
 
-    // --- 2. ПЕРЕВІРКА: ПРИХОВАТИ ВІКНО ВАГИ ТА ПОКАЗАТИ РЕЗУЛЬТАТ ---
+    function updateHologram(weight, height, age) {
+        const bmi = (weight / ((height / 100) ** 2)).toFixed(1);
+        const bodyPath = document.getElementById('body-svg');
+        const fatVal = document.getElementById('fat-percentage-value');
+
+        if (!fatVal || !bodyPath) return;
+
+        // Розрахунок відсотка жиру
+        let fat = (1.20 * bmi) + (0.23 * age) - 16.2;
+        if (fat < 3) fat = 3;
+        fatVal.textContent = fat.toFixed(1) + "%";
+
+        // Трансформація голограми
+        let scaleX = 1 + (bmi - 22) * 0.03;
+        if (scaleX > 1.4) scaleX = 1.4;
+        if (scaleX < 0.7) scaleX = 0.7;
+
+        bodyPath.style.transform = `scaleX(${scaleX})`;
+
+        // Окрас голограми
+        if (bmi > 25) {
+            bodyPath.style.fill = "rgba(218, 62, 82, 0.3)";
+            bodyPath.style.stroke = "#DA3E52";
+            bodyPath.style.filter = "drop-shadow(0 0 15px rgba(218, 62, 82, 0.6))";
+        } else {
+            bodyPath.style.fill = "rgba(255, 199, 44, 0.2)";
+            bodyPath.style.stroke = "#FFC72C";
+            bodyPath.style.filter = "drop-shadow(0 0 15px rgba(255, 199, 44, 0.8))";
+        }
+    }
+
+    // --- 2. ПЕРЕВІРКА ЗАПИСУ ---
     async function checkDailyEntry() {
         const today = new Date().toISOString().split('T')[0];
         const snap = await db.collection(COLL_HISTORY)
@@ -58,23 +89,21 @@
             .where("date", "==", today)
             .orderBy("timestamp", "desc").limit(1).get();
 
+        const userDoc = await db.collection(COLL_USERS).doc(currentUserId).get();
+        const userData = userDoc.exists ? userDoc.data() : null;
+
         if (!snap.empty) {
-            // ПРИХОВУЄМО форму (form-card), щоб не займала місце
             const formCard = document.querySelector('.form-card');
             if (formCard) formCard.style.display = 'none';
             
-            // Отримуємо сьогоднішню вагу та зріст з профілю для виводу BMI
             const todayData = snap.docs[0].data();
-            const userDoc = await db.collection(COLL_USERS).doc(currentUserId).get();
-            
-            if (userDoc.exists && userDoc.data().height) {
-                // ТЕПЕР ТУТ З'ЯВЛЯЄТЬСЯ РЕЗУЛЬТАТ ЗАМІСТЬ 0.0
-                displayBMIResult(todayData.weight, userDoc.data().height);
+            if (userData && userData.height) {
+                displayBMIResult(todayData.weight, userData.height, userData.age || 25);
             }
         }
     }
 
-    // --- 3. ЗАВАНТАЖЕННЯ ДАНИХ КОРИСТУВАЧА ---
+    // --- 3. ЗАВАНТАЖЕННЯ ПРОФІЛЮ ---
     async function loadUserProfile() {
         if (!window.db) return;
         const doc = await db.collection(COLL_USERS).doc(currentUserId).get();
@@ -85,7 +114,7 @@
         }
     }
 
-    // --- 4. ОБРОБКА ФОРМИ ТА ЗБЕРЕЖЕННЯ ---
+    // --- 4. ЗБЕРЕЖЕННЯ ---
     const weightForm = document.getElementById('weight-form');
     if (weightForm) {
         weightForm.addEventListener('submit', async (e) => {
@@ -97,9 +126,7 @@
 
             try {
                 await db.collection(COLL_HISTORY).add({
-                    userId: currentUserId,
-                    weight: w,
-                    date: today,
+                    userId: currentUserId, weight: w, date: today,
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
@@ -107,7 +134,7 @@
                     height: h, age: a, lastWeight: w
                 }, { merge: true });
 
-                location.reload(); // Перезавантаження активує checkDailyEntry()
+                location.reload(); 
             } catch (err) { alert("Помилка: " + err.message); }
         });
     }
