@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weight Control | ProAthleteCare</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="injury.css">
-    <link rel="stylesheet" href="weight-control.css">
+    <link rel="stylesheet" href="injury.css"> <link rel="stylesheet" href="weight-control.css">
     <link rel="stylesheet" href="navigation-mobile.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -34,7 +33,6 @@
         <main class="main-content">
             <h2>Weight Control: Аналітика складу тіла</h2>
             <div class="dashboard-container">
-                
                 <div class="form-card">
                     <h3>📍 ПАРАМЕТРИ ТІЛА</h3>
                     <form id="weight-form">
@@ -52,17 +50,9 @@
                             <label>Сьогоднішня вага (кг)</label>
                             <input type="number" id="weight-value" step="0.1" placeholder="00.0" required>
                         </div>
-                        
-                        <div class="btn-center-wrapper">
-                            <button type="submit" class="compact-gold-btn">
-                                💾 ЗБЕРЕГТИ
-                            </button>
-                        </div>
+                        <button type="submit" class="gold-button">ЗБЕРЕГТИ ТА АНАЛІЗУВАТИ</button>
                     </form>
-                    
-                    <div class="bmi-badge-center">
-                        <div class="bmi-result-badge">BMI: <span id="bmi-value">0.0</span> | READY</div>
-                    </div>
+                    <div class="bmi-result-badge">BMI: <span id="bmi-value">0.0</span> | READY</div>
                 </div>
 
                 <div class="form-card">
@@ -74,7 +64,6 @@
                             <strong id="fat-percentage-value">--</strong>
                         </div>
                     </div>
-                    <div id="athlete-rank" style="text-align:center; color:#FFC72C; margin-top:10px; font-weight:bold;">INITIALIZING...</div>
                 </div>
 
                 <div class="chart-card">
