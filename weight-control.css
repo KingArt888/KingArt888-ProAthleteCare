@@ -1,35 +1,25 @@
-/* Наслідуємо структуру Injury Story */
+/* Додаткові стилі до injury.css */
 
-.hologram-card-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-}
-
-/* Контейнер голограми */
 .hologram-wrapper {
     position: relative;
     width: 100%;
-    height: 300px; /* Фіксована висота для вирівнювання з формою */
+    height: 300px;
     background: radial-gradient(circle, rgba(255, 199, 44, 0.05) 0%, transparent 70%);
     display: flex;
     justify-content: center;
     align-items: center;
     overflow: hidden;
-    border-radius: 8px;
+    border-radius: 8px; /* як у injury.css */
     border: 1px solid #1a1a1a;
 }
 
 #body-hologram-img {
-    height: 90%;
+    height: 95%;
     width: auto;
     filter: drop-shadow(0 0 10px #FFC72C) brightness(1.1);
     transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    opacity: 0.85;
 }
 
-/* Лінія сканування */
 .scan-line {
     position: absolute;
     width: 100%;
@@ -46,31 +36,26 @@
     100% { top: 100%; opacity: 0; }
 }
 
-/* Блок з відсотком жиру */
-.fat-display-box {
+.fat-display-badge {
     margin-top: 15px;
-    padding: 10px 20px;
+    padding: 8px 20px;
     background: #1a1a1a;
     border-radius: 20px;
     border: 1px solid #333;
-    width: fit-content;
-}
-
-#fat-percentage-value {
     color: #FFC72C;
     font-weight: bold;
-    font-size: 1.3em;
-    margin-left: 10px;
+    font-size: 1.1em;
 }
 
-/* Адаптація графіка під стиль Injury */
-.chart-card h3 {
+.bmi-badge {
+    padding: 10px;
+    background: #1a1a1a;
+    border-left: 3px solid #FFC72C; /* стиль як у notes-section */
+    border-radius: 5px;
     margin-bottom: 10px;
 }
 
-#bmi-result-header {
-    background: #1a1a1a;
-    padding: 10px;
-    border-radius: 5px;
-    border-left: 3px solid #FFC72C;
+#bmi-value {
+    font-weight: bold;
+    font-size: 1.3em;
 }
