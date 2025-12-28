@@ -1,4 +1,3 @@
-/* Уніфікація контейнерів під стиль injury.css */
 .dashboard-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -12,7 +11,7 @@
     flex-direction: column;
 }
 
-/* Голограма */
+/* === HOLOGRAM === */
 .hologram-wrapper {
     position: relative;
     flex-grow: 1;
@@ -29,11 +28,15 @@
 #human-vitals-svg {
     height: 90%;
     width: 100%;
+    transform: perspective(800px) rotateX(1deg);
 }
 
 #body-hologram-img {
     transition: all 0.8s ease-in-out;
     animation: hologramPulse 3s infinite ease-in-out;
+    filter:
+      drop-shadow(0 0 6px rgba(0,242,254,0.4))
+      drop-shadow(0 0 12px rgba(255,199,44,0.25));
 }
 
 @keyframes hologramPulse {
@@ -66,4 +69,15 @@
     text-align: center;
     border-left: 3px solid #FFC72C;
     margin-top: auto;
+}
+
+/* === MOBILE === */
+@media (max-width: 768px) {
+    .dashboard-container {
+        grid-template-columns: 1fr;
+    }
+
+    #human-vitals-svg {
+        height: 75%;
+    }
 }
