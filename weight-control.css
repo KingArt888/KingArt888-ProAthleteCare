@@ -1,0 +1,34 @@
+/* Зменшуємо контейнер форми для Weight Control */
+#weight-form {
+    max-width: 300px; /* Обмежуємо ширину самої форми всередині картки */
+    margin: 0 auto;
+}
+
+/* Компактна картка форми */
+.form-card {
+    width: 25% !important; /* Зменшуємо загальну ширину картки */
+    min-width: 280px !important;
+    padding: 15px 20px !important; /* Менші внутрішні відступи */
+}
+
+/* Маленька та стильна кнопка */
+#submit-btn {
+    width: auto !important; /* Кнопка більше не на всю ширину */
+    padding: 8px 20px !important; /* Компактні розміри */
+    font-size: 0.9em !important; /* Менший шрифт */
+    margin: 15px auto 0 auto !important; /* Центрування з невеликим відступом */
+    border-radius: 20px !important; /* Закруглені краї для "дорогого" вигляду */
+    display: block;
+}
+
+/* Стилізація інпутів для компактності */
+#weight-form input {
+    padding: 6px 10px !important;
+    margin-bottom: 10px !important;
+    font-size: 0.95em !important;
+}
+
+#weight-form label {
+    font-size: 0.85em !important;
+    margin-top: 10px !important;
+}
