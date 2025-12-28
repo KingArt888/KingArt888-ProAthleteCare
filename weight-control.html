@@ -34,6 +34,7 @@
             <h2 style="color: #6C7A89; margin-bottom: 20px;">⚖️ Weight Analysis & Body Composition</h2>
             
             <div class="dashboard-container">
+                <!-- Параметри тіла -->
                 <div class="form-card">
                     <h3>Параметри тіла</h3>
                     <form id="weight-form">
@@ -53,33 +54,38 @@
                     </form>
                 </div>
 
+                <!-- Body Composition Scan -->
                 <div class="form-card hologram-container">
                     <h3>Body Composition Scan</h3>
                     <div class="hologram-wrapper">
                         <div class="scan-line"></div>
-                        <svg id="human-vitals-svg" viewBox="0 0 200 500" preserveAspectRatio="xMidYMid meet">
-                            <defs>
-                                <filter id="neon-glow">
-                                    <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
-                                    <feMerge>
-                                        <feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/>
-                                    </feMerge>
-                                </filter>
-                            </defs>
-                            <g id="body-hologram-img" filter="url(#neon-glow)" fill="none" stroke="#FFC72C" stroke-width="2"></g>
-                        </svg>
+
+                        <!-- 3D Athlete Model -->
+                        <model-viewer
+                            id="athlete-model"
+                            src="assets/athlete.glb"
+                            auto-rotate
+                            camera-controls
+                            disable-zoom
+                            exposure="1.3"
+                            shadow-intensity="1"
+                            style="width:100%; height:100%; background: transparent;">
+                        </model-viewer>
                     </div>
+
                     <div class="fat-display-badge">
                         <span>EST. BODY FAT:</span>
                         <span id="fat-percentage-value">0%</span>
                     </div>
                 </div>
 
+                <!-- Дієта / рекомендації -->
                 <div class="form-card diet-card">
                     <h3>Рекомендації та Дієта</h3>
                     <div id="diet-plan-content" class="placeholder-text">Введіть дані...</div>
                 </div>
 
+                <!-- Графік прогресу -->
                 <div class="chart-card">
                     <h3>Аналітика прогресу</h3>
                     <div class="bmi-status-bar">
@@ -93,10 +99,18 @@
         </main>
     </div>
 
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="firebase-config.js"></script>
+
+    <!-- Weight JS -->
     <script src="weight.js"></script>
+
+    <!-- Model Viewer -->
+    <script type="module"
+        src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js">
+    </script>
 </body>
 </html>
