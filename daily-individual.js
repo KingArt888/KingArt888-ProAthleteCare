@@ -1,4 +1,4 @@
-// daily-individual.js — ProAtletCare (PREMIUM ULTIMATE)
+// daily-individual.js — ProAtletCare (PREMIUM FINAL)
 
 (function() {
     const YOUTUBE_BASE = 'https://www.youtube.com/embed/';
@@ -44,10 +44,10 @@
                     <div style="margin-bottom: 25px;">
                         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
                             <div id="status-pill" style="background: #d4af37; color: #000; padding: 8px 12px; border-radius: 10px; font-weight: 900; font-size: 1rem; min-width: 50px; text-align: center;">...</div>
-                            <h2 style="color: #fff; margin: 0; font-size: 1.2rem; font-weight: 800;">Привіт, ${firstName}! ${getFullDateString()}</h2>
+                            <h2 style="color: #fff; margin: 0; font-size: 1.1rem; font-weight: 800; line-height: 1.3;">Привіт, ${firstName}! <br><span style="color:#666; font-size:0.9rem; font-weight:600;">${getFullDateString()}</span></h2>
                         </div>
                         <div style="background: rgba(212, 175, 55, 0.05); border-left: 3px solid #d4af37; padding: 12px 15px; border-radius: 0 10px 10px 0;">
-                             <p id="advice-text" style="margin: 0; font-size: 0.9rem; line-height: 1.4;">
+                             <p id="advice-text" style="margin: 0; font-size: 0.85rem; line-height: 1.4;">
                                 <span style="color:#d4af37; font-weight:900; text-transform:uppercase; font-size:0.65rem; letter-spacing:1px; display:block; margin-bottom:2px;">Порада тренера:</span>
                                 <span style="color: #fff; font-style: italic; opacity: 0.9;">Завантаження...</span>
                              </p>
@@ -83,7 +83,7 @@
                     </div>
                     <div style="display:none; padding:8px 0;">
                         ${stageExs.map(ex => `
-                            <div class="ex-card" style="background:#050505; border:1px solid #111; border-radius:12px; padding:12px; margin-bottom:10px; display:flex; flex-direction:column; gap:10px; transition: 0.3s;">
+                            <div class="ex-card" style="background:#050505; border:1px solid #111; border-radius:12px; padding:12px; margin-bottom:10px; display:flex; flex-direction:column; gap:10px;">
                                 <h4 style="color:#fff; margin:0; font-size:0.95rem;">${ex.name}</h4>
                                 ${ex.videoKey ? `<div style="border-radius:8px; overflow:hidden;"><iframe src="${YOUTUBE_BASE}${ex.videoKey}" style="width:100%; aspect-ratio:16/9; border:0;" allowfullscreen></iframe></div>` : ''}
                                 <label style="align-self:flex-end; color:#d4af37; font-size:0.55rem; font-weight:900; letter-spacing:1px;"><input type="checkbox" onchange="this.closest('.ex-card').style.opacity=this.checked?0.2:1"> DONE</label>
@@ -99,45 +99,59 @@
         container.innerHTML = `
             <div style="background:#0a0a0a; border:1px solid #1a1a1a; padding:15px; border-radius:15px; margin-top:20px;">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
-                    <div style="background: #000; padding: 8px; border-radius: 10px; text-align: center; border: 1px solid #111;">
-                        <p style="color:#d4af37; font-size:0.55rem; text-transform:uppercase; font-weight:900; margin-bottom:5px;">RPE (1-10)</p>
-                        <div style="display:flex; justify-content:center; gap:2px;">
-                            ${[1,2,3,4,5,6,7,8,9,10].map(n => `<span onclick="setRPE(${n})" class="bolt" style="font-size:0.9rem; cursor:pointer; color:#222;">⚡</span>`).join('')}
+                    <div style="background: #000; padding: 10px; border-radius: 12px; text-align: center; border: 1px solid #111;">
+                        <p style="color:#d4af37; font-size:0.55rem; text-transform:uppercase; font-weight:900; margin-bottom:8px; letter-spacing:0.5px;">RPE (Складність)</p>
+                        <div style="display:flex; justify-content:center; gap:3px;">
+                            ${[1,2,3,4,5,6,7,8,9,10].map(n => `<span onclick="setRPE(${n})" class="bolt" style="font-size:1rem; cursor:pointer; color:#252525; transition: 0.2s;">⚡</span>`).join('')}
                         </div>
                     </div>
-                    <div style="background: #000; padding: 8px; border-radius: 10px; text-align: center; border: 1px solid #111;">
-                        <p style="color:#d4af37; font-size:0.55rem; text-transform:uppercase; font-weight:900; margin-bottom:5px;">Оцінка</p>
-                        <div style="display:flex; justify-content:center; gap:4px;">
-                            ${[1,2,3,4,5].map(n => `<span onclick="setStars(${n})" class="star" style="font-size:1.1rem; cursor:pointer; color:#222;">★</span>`).join('')}
+                    <div style="background: #000; padding: 10px; border-radius: 12px; text-align: center; border: 1px solid #111;">
+                        <p style="color:#d4af37; font-size:0.55rem; text-transform:uppercase; font-weight:900; margin-bottom:8px; letter-spacing:0.5px;">Оцінка тренування</p>
+                        <div style="display:flex; justify-content:center; gap:5px;">
+                            ${[1,2,3,4,5].map(n => `<span onclick="setStars(${n})" class="star" style="font-size:1.2rem; cursor:pointer; color:#252525; transition: 0.2s;">★</span>`).join('')}
                         </div>
                     </div>
                 </div>
 
                 <div style="display: flex; gap: 8px;">
-                    <input id="coach-comment" placeholder="Твій коментар..." style="flex: 1; background:#000; border:1px solid #222; color:#fff; padding:10px; border-radius:10px; font-size:0.8rem; outline:none;">
-                    <button onclick="submitTrainingReport('${uid}', '${weekId}', ${dayIdx})" id="save-btn" style="background:#d4af37; color:#000; border:0; padding:0 20px; border-radius:10px; font-weight:900; text-transform:uppercase; cursor:pointer; font-size:0.65rem; height:40px;">OK</button>
+                    <input id="coach-comment" placeholder="Твій коментар..." style="flex: 1; background:#000; border:1px solid #222; color:#fff; padding:10px; border-radius:10px; font-size:0.8rem; outline:none; font-family: inherit;">
+                    <button onclick="submitTrainingReport('${uid}', '${weekId}', ${dayIdx})" id="save-btn" style="background:#d4af37; color:#000; border:0; padding:0 15px; border-radius:10px; font-weight:900; text-transform:uppercase; cursor:pointer; font-size:0.65rem; min-width:60px;">OK</button>
                 </div>
             </div>
             <style>
-                .bolt.active { color: #d4af37 !important; filter: drop-shadow(0 0 5px #d4af37); }
-                .star.active { color: #ffcc00 !important; filter: drop-shadow(0 0 5px #ffcc00); }
+                .bolt.active { 
+                    color: #d4af37 !important; 
+                    filter: drop-shadow(0 0 5px rgba(212,175,55,0.8));
+                }
+                .star.active { 
+                    color: #ffcc00 !important; 
+                    filter: drop-shadow(0 0 8px rgba(255,204,0,0.6));
+                }
             </style>
         `;
     }
 
     window.setRPE = (val) => {
         selectedRPE = val;
-        document.querySelectorAll('.bolt').forEach((el, i) => el.classList.toggle('active', i < val));
+        const bolts = document.querySelectorAll('.bolt');
+        bolts.forEach((el, i) => {
+            el.classList.toggle('active', i < val);
+        });
     };
 
     window.setStars = (val) => {
         selectedStars = val;
-        document.querySelectorAll('.star').forEach((el, i) => el.classList.toggle('active', i < val));
+        const stars = document.querySelectorAll('.star');
+        stars.forEach((el, i) => {
+            el.classList.toggle('active', i < val);
+        });
     };
 
     window.submitTrainingReport = async (uid, weekId, dayIdx) => {
+        if (selectedRPE === 0) { alert("Будь ласка, обери рівень RPE"); return; }
         const comment = document.getElementById('coach-comment').value;
         const btn = document.getElementById('save-btn');
+        const oldText = btn.innerText;
         btn.innerText = "...";
         try {
             await firebase.firestore().collection('athlete_reports').add({
@@ -145,6 +159,7 @@
             });
             btn.style.background = "#2ecc71";
             btn.innerText = "✓";
+            setTimeout(() => { btn.style.background = "#d4af37"; btn.innerText = "OK"; }, 3000);
         } catch (e) { btn.innerText = "!"; }
     };
 
