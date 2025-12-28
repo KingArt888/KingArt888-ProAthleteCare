@@ -53,7 +53,6 @@
             });
             await firebase.firestore().collection('users').doc(currentUserId).set({ height: h, age: a }, { merge: true });
             
-            // Блокуємо кнопку
             if (submitBtn) {
                 submitBtn.disabled = true;
                 submitBtn.textContent = "ОНОВЛЕНО";
@@ -95,17 +94,31 @@
     function updateScannerUI(weight, bmi, status, kcal, p, f, c, color, rec) {
         const mainValue = document.getElementById('fat-percentage-value');
         if (mainValue) { 
-            // Виводимо вагу і під нею BMI по центру
-            mainValue.innerHTML = `${weight}kg<div style="font-size: 16px; color: #aaa; margin-top: 5px;">BMI: ${bmi}</div>`;
-            mainValue.style.color = "#FFC72C"; 
-            mainValue.style.lineHeight = "1.2";
+            // Визначаємо колір для BMI
+            let bmiColor = "#4CAF50"; // Зелений (норма)
+            const bmiNum = parseFloat(bmi);
+            if (bmiNum < 18.5) bmiColor = "#00BFFF"; // Синій (недовага)
+            else if (bmiNum >= 25 && bmiNum < 30) bmiColor = "#FFC72C"; // Золотий/Жовтий (надмірна)
+            else if (bmiNum >= 30) bmiColor = "#DA3E52"; // Червоний (ожиріння)
+
+            // Центруємо все всередині кола
+            mainValue.style.display = "flex";
+            mainValue.style.flexDirection = "column";
+            mainValue.style.alignItems = "center";
+            mainValue.style.justifyContent = "center";
+            mainValue.style.height = "100%";
+
+            mainValue.innerHTML = `
+                <span style="font-size: 34px; color: #FFC72C; font-weight: bold; line-height: 1;">${weight}kg</span>
+                <span style="font-size: 16px; color: ${bmiColor}; font-weight: bold; margin-top: 8px;">BMI: ${bmi}</span>
+            `;
         }
         
         const smallLabel = document.querySelector('.main-circle small');
-        if (smallLabel) smallLabel.textContent = "CURRENT WEIGHT";
-
-        const bmiBadge = document.getElementById('bmi-value');
-        if (bmiBadge) bmiBadge.textContent = bmi;
+        if (smallLabel) {
+            smallLabel.textContent = "CURRENT WEIGHT";
+            smallLabel.style.marginBottom = "10px";
+        }
 
         let rankElement = document.getElementById('athlete-rank');
         if (!rankElement) {
@@ -133,7 +146,6 @@
             const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             const last = docs[0];
             
-            // Перевірка на сьогоднішню дату для блокування кнопки
             const today = new Date().toISOString().split('T')[0];
             if (last.date === today) {
                 const submitBtn = document.querySelector('#weight-form button[type="submit"]');
@@ -177,7 +189,6 @@
         if (confirm("Видалити запис?")) {
             try { 
                 await firebase.firestore().collection('weight_history').doc(id).delete(); 
-                // Після видалення можна дозволити знову оновити вагу сьогодні
                 location.reload(); 
             }
             catch (e) { console.error(e); }
