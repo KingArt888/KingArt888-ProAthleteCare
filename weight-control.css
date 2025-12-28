@@ -1,78 +1,61 @@
-(function() {
-    let weightChart = null;
-    let currentUserId = null;
+/* ТОЧНА КОПІЯ ПІДСВІТКИ З INJURY.CSS */
+.sidebar a.active {
+    background-color: #FFC72C !important; 
+    color: #000000 !important; 
+    border-left: 2px solid #000000 !important;
+}
 
-    // 1. АВТОРИЗАЦІЯ ТА ВИЗНАЧЕННЯ USER_ID (АДМІН-РЕЖИМ)
-    const urlParams = new URLSearchParams(window.location.search);
-    const viewUserId = urlParams.get('userId');
+.sidebar a.active img {
+    filter: none !important; 
+}
 
-    firebase.auth().onAuthStateChanged(async (user) => {
-        if (user) {
-            currentUserId = viewUserId || user.uid;
-            console.log("Працюємо з ID:", currentUserId);
-            loadBaseData();
-            loadHistory();
-        } else {
-            firebase.auth().signInAnonymously().catch(e => console.error("Auth error:", e));
-        }
-    });
+/* Виправлення полів для професійного вигляду */
+.dashboard-container {
+    display: flex;
+    gap: 25px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
 
-    document.addEventListener('DOMContentLoaded', () => {
-        initChart();
-        document.getElementById('weight-form').addEventListener('submit', handleSubmission);
-    });
+.form-card, .chart-card {
+    background-color: #0d0d0d;
+    border: 1px solid #1a1a1a;
+    border-radius: 10px;
+    padding: 25px;
+    flex: 1;
+    min-width: 320px;
+    max-width: 480px;
+}
 
-    async function handleSubmission(e) {
-        e.preventDefault();
-        const w = parseFloat(document.getElementById('weight-value').value);
-        const h = parseFloat(document.getElementById('user-height').value);
-        const a = parseInt(document.getElementById('user-age').value);
+.input-row-top { display: flex; gap: 15px; margin-bottom: 20px; }
+.field-box label { display: block; color: #666; font-size: 11px; margin-bottom: 5px; }
+.field-box input {
+    width: 100%; background: #1a1a1a; border: 1px solid #333; color: #fff;
+    padding: 12px; border-radius: 6px; box-sizing: border-box;
+}
 
-        const bmi = (w / ((h / 100) ** 2)).toFixed(1);
-        const fat = ((1.20 * bmi) + (0.23 * a) - 16.2).toFixed(1);
-        const lbm = (w * (1 - (fat / 100))).toFixed(1);
+.weight-focus-area input {
+    width: 100%; background: #000; border: 2px solid #FFC72C; color: #FFC72C;
+    font-size: 40px; padding: 15px 0; text-align: center; border-radius: 8px;
+}
 
-        document.getElementById('bmi-value').textContent = bmi;
-        document.getElementById('fat-percentage-value').textContent = fat + "%";
-        document.getElementById('lbm-value').textContent = lbm;
-        
-        document.getElementById('athlete-rank').textContent = fat < 15 ? "PRO ATHLETE" : "ACTIVE MODE";
+.gold-button {
+    background: #FFC72C; color: #000; border: none; padding: 16px;
+    width: 100%; font-weight: bold; text-transform: uppercase; cursor: pointer;
+}
 
-        await db.collection('weight_history').add({
-            userId: currentUserId,
-            weight: w,
-            date: new Date().toISOString().split('T')[0],
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        
-        await db.collection('users').doc(currentUserId).set({ height: h, age: a }, { merge: true });
-        loadHistory();
-    }
+/* Ефекти */
+.hologram-viewport {
+    position: relative; min-height: 250px; display: flex; align-items: center; 
+    justify-content: center; border: 1px solid #1a1a1a; border-radius: 8px; overflow: hidden;
+}
+.scan-beam {
+    position: absolute; width: 100%; height: 2px; background: #FFC72C;
+    top: 0; animation: scanMove 3s infinite linear;
+}
+@keyframes scanMove { 0% { top: 0; } 100% { top: 100%; } }
 
-    function initChart() {
-        const ctx = document.getElementById('weightChart').getContext('2d');
-        weightChart = new Chart(ctx, {
-            type: 'line',
-            data: { labels: [], datasets: [{ label: 'Вага', data: [], borderColor: '#FFC72C', tension: 0.4, fill: true, backgroundColor: 'rgba(255,199,44,0.05)' }] },
-            options: { responsive: true, maintainAspectRatio: false }
-        });
-    }
-
-    async function loadBaseData() {
-        const doc = await db.collection('users').doc(currentUserId).get();
-        if (doc.exists) {
-            document.getElementById('user-height').value = doc.data().height || "";
-            document.getElementById('user-age').value = doc.data().age || "";
-        }
-    }
-
-    async function loadHistory() {
-        const snap = await db.collection('weight_history').where('userId', '==', currentUserId).orderBy('date', 'asc').limit(10).get();
-        if (!snap.empty) {
-            const data = snap.docs.map(d => d.data());
-            weightChart.data.labels = data.map(d => d.date.split('-').reverse().slice(0,2).reverse().join('.'));
-            weightChart.data.datasets[0].data = data.map(d => d.weight);
-            weightChart.update();
-        }
-    }
-})();
+.main-circle {
+    width: 120px; height: 120px; border: 2px solid #FFC72C; border-radius: 50%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
