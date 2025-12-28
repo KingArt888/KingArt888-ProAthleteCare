@@ -1,88 +1,76 @@
-/* Основні картки */
-.form-card, .hologram-card, .chart-card {
-    background: #111;
-    border: 1px solid #222;
-    border-radius: 15px;
-    padding: 20px;
+/* Наслідуємо структуру Injury Story */
+
+.hologram-card-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
 }
 
-.form-card { width: 250px; }
-
-/* Інпути */
-#weight-form input {
-    width: 100%;
-    padding: 10px;
-    background: #000;
-    border: 1px solid #333;
-    color: #fff;
-    margin-top: 5px;
-    border-radius: 5px;
-}
-
-/* Кнопка */
-.gold-button {
-    background: #FFC72C;
-    color: #000;
-    border: none;
-    padding: 10px 20px;
-    font-weight: bold;
-    border-radius: 20px;
-    cursor: pointer;
-    margin-top: 15px;
-    width: 100%;
-    transition: 0.3s;
-}
-
-/* Голограма */
-.hologram-card {
-    flex: 1;
-    min-width: 200px;
-    text-align: center;
-    position: relative;
-}
-
+/* Контейнер голограми */
 .hologram-wrapper {
     position: relative;
-    height: 250px;
+    width: 100%;
+    height: 300px; /* Фіксована висота для вирівнювання з формою */
+    background: radial-gradient(circle, rgba(255, 199, 44, 0.05) 0%, transparent 70%);
     display: flex;
     justify-content: center;
+    align-items: center;
     overflow: hidden;
+    border-radius: 8px;
+    border: 1px solid #1a1a1a;
 }
 
-#body-svg {
-    height: 100%;
-    fill: rgba(255, 199, 44, 0.15);
-    stroke: #FFC72C;
-    stroke-width: 2;
-    filter: drop-shadow(0 0 10px rgba(255, 199, 44, 0.7));
-    transition: transform 0.5s ease;
+#body-hologram-img {
+    height: 90%;
+    width: auto;
+    filter: drop-shadow(0 0 10px #FFC72C) brightness(1.1);
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0.85;
 }
 
-.hologram-glow {
+/* Лінія сканування */
+.scan-line {
     position: absolute;
     width: 100%;
     height: 2px;
     background: #FFC72C;
     box-shadow: 0 0 15px #FFC72C;
-    animation: scan 3s infinite linear;
-    z-index: 2;
+    z-index: 5;
+    animation: scan-move 4s infinite linear;
 }
 
-@keyframes scan {
+@keyframes scan-move {
     0% { top: 0; opacity: 0; }
     50% { opacity: 1; }
     100% { top: 100%; opacity: 0; }
 }
 
-.fat-display {
-    margin-top: 10px;
-    font-weight: bold;
-    color: #FFC72C;
-    font-size: 1.2em;
+/* Блок з відсотком жиру */
+.fat-display-box {
+    margin-top: 15px;
+    padding: 10px 20px;
+    background: #1a1a1a;
+    border-radius: 20px;
+    border: 1px solid #333;
+    width: fit-content;
 }
 
-/* BMI картка */
-#bmi-result-card {
-    border-left: 5px solid #666;
-    padding-left: 15px;
+#fat-percentage-value {
+    color: #FFC72C;
+    font-weight: bold;
+    font-size: 1.3em;
+    margin-left: 10px;
+}
+
+/* Адаптація графіка під стиль Injury */
+.chart-card h3 {
+    margin-bottom: 10px;
+}
+
+#bmi-result-header {
+    background: #1a1a1a;
+    padding: 10px;
+    border-radius: 5px;
+    border-left: 3px solid #FFC72C;
 }
