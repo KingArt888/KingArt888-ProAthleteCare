@@ -135,7 +135,7 @@
                     </div>
                 </div>
                 <div style="display: flex; gap: 8px; margin-top: 5px;">
-                    <input id="coach-comment" placeholder="Коментар..." style="flex: 1; background:#000; border:1px solid #222; color:#fff; padding:10px; border-radius:10px; font-size:0.8rem; outline:none;">
+                    <input id="coach-comment" placeholder="Коментар для тренера..." style="flex: 1; background:#000; border:1px solid #222; color:#fff; padding:10px; border-radius:10px; font-size:0.8rem; outline:none;">
                     <button onclick="submitTrainingReport('${uid}', '${weekId}', ${dayIdx})" id="save-btn" style="background:#d4af37; color:#000; border:0; padding:0 15px; border-radius:10px; font-weight:900; text-transform:uppercase; cursor:pointer; font-size:0.65rem; min-width:65px;">OK</button>
                 </div>
             </div>
