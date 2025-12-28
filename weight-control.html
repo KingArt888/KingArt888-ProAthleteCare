@@ -57,7 +57,23 @@
                     <h3>Body Composition Scan</h3>
                     <div class="hologram-wrapper">
                         <div class="scan-line"></div>
-                        <img src="human_body_outline.png" id="body-hologram-img" alt="Anatomy Scan">
+                        
+                        <svg id="human-vitals-svg" viewBox="0 0 200 500" preserveAspectRatio="xMidYMid meet" style="height: 90%; width: auto;">
+                            <defs>
+                                <filter id="neon-glow">
+                                    <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
+                                    <feMerge>
+                                        <feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/>
+                                    </feMerge>
+                                </filter>
+                            </defs>
+                            <g id="body-hologram-img" filter="url(#neon-glow)" fill="none" stroke="#FFC72C" stroke-width="2.5">
+                                <circle cx="100" cy="40" r="18" />
+                                <path d="M100,58 L110,65 L140,80 L135,120 L130,180 L135,240 L125,350 L130,480 L105,480 L100,380 L95,480 L70,480 L75,350 L65,240 L70,180 L65,120 L60,80 L90,65 Z" />
+                                <path d="M60,80 L40,150 L45,220 M140,80 L160,150 L155,220" />
+                            </g>
+                        </svg>
+
                     </div>
                     <div class="fat-display-badge">
                         <span>EST. BODY FAT:</span>
