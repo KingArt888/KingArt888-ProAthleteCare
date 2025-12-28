@@ -23,6 +23,7 @@
         }
     });
 
+    // ГОЛОВНА ФУНКЦІЯ РОЗРАХУНКУ
     async function handleAthleteAnalysis(e) {
         e.preventDefault();
         const w = parseFloat(document.getElementById('weight-value').value);
@@ -32,11 +33,35 @@
         if (!w || !h || !a) return;
 
         const bmi = (w / ((h / 100) ** 2)).toFixed(1);
+        const analysis = calculateAthleteData(w, bmi, h, a);
+
+        updateScannerUI(bmi, analysis.status, analysis.targetCalories, analysis.prot, analysis.fat, analysis.carb, analysis.statusColor, analysis.recommendation);
+
+        try {
+            await firebase.firestore().collection('weight_history').add({
+                userId: currentUserId,
+                weight: w,
+                bmi: bmi,
+                target_kcal: analysis.targetCalories,
+                macros: { p: analysis.prot, f: analysis.fat, c: analysis.carb },
+                status: analysis.status,
+                statusColor: analysis.statusColor,
+                recommendation: analysis.recommendation,
+                date: new Date().toISOString().split('T')[0],
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            await firebase.firestore().collection('users').doc(currentUserId).set({ height: h, age: a }, { merge: true });
+            loadHistory();
+        } catch (error) { console.error("Firebase Error:", error); }
+    }
+
+    // ЛОГІКА РОЗРАХУНКУ (винесена окремо для повторного використання)
+    function calculateAthleteData(w, bmi, h, a) {
         let status, recommendation, statusColor, calorieModifier, pRatio, fRatio, cRatio;
 
         if (bmi < 20.5) { 
             status = "MUSCLE GAIN MODE";
-            recommendation = "Ціль: Гіпертрофія. Профіцит +15%. Вуглеводи — паливо.";
+            recommendation = "Ціль: Гіпертрофія. Профіцит +15%.";
             statusColor = "#00BFFF"; calorieModifier = 1.15; pRatio = 0.25; fRatio = 0.25; cRatio = 0.50; 
         } else if (bmi < 25.5) {
             status = "ATHLETIC FORM";
@@ -49,32 +74,23 @@
         }
 
         const bmr = (10 * w) + (6.25 * h) - (5 * a) + 5;
-        const maintenance = Math.round(bmr * 1.55); 
-        const targetCalories = Math.round(maintenance * calorieModifier);
-        const prot = Math.round((targetCalories * pRatio) / 4);
-        const fat = Math.round((targetCalories * fRatio) / 9);
-        const carb = Math.round((targetCalories * cRatio) / 4);
-
-        updateScannerUI(bmi, status, targetCalories, prot, fat, carb, statusColor, recommendation);
-
-        try {
-            await firebase.firestore().collection('weight_history').add({
-                userId: currentUserId,
-                weight: w,
-                bmi: bmi,
-                target_kcal: targetCalories,
-                macros: { p: prot, f: fat, c: carb },
-                date: new Date().toISOString().split('T')[0],
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            await firebase.firestore().collection('users').doc(currentUserId).set({ height: h, age: a }, { merge: true });
-            loadHistory();
-        } catch (error) { console.error("Firebase Error:", error); }
+        const targetCalories = Math.round(bmr * 1.55 * calorieModifier);
+        
+        return {
+            status, recommendation, statusColor, targetCalories,
+            prot: Math.round((targetCalories * pRatio) / 4),
+            fat: Math.round((targetCalories * fRatio) / 9),
+            carb: Math.round((targetCalories * cRatio) / 4)
+        };
     }
 
     function updateScannerUI(bmi, status, kcal, p, f, c, color, rec) {
         const mainCircleValue = document.getElementById('fat-percentage-value');
         if (mainCircleValue) { mainCircleValue.textContent = bmi; mainCircleValue.style.color = color; }
+        
+        const bmiBadge = document.getElementById('bmi-value');
+        if (bmiBadge) bmiBadge.textContent = bmi;
+
         let rankElement = document.getElementById('athlete-rank');
         if (!rankElement) {
             rankElement = document.createElement('div');
@@ -89,16 +105,6 @@
             <div style="color:#FFC72C; font-size:11px; margin-top:10px; border-top:1px solid #222; padding-top:5px;">${rec}</div>`;
     }
 
-    function initChart() {
-        const canvas = document.getElementById('weightChart');
-        if (!canvas) return;
-        weightChart = new Chart(canvas.getContext('2d'), {
-            type: 'line',
-            data: { labels: [], datasets: [{ label: 'Вага (кг)', data: [], borderColor: '#FFC72C', backgroundColor: 'rgba(255,199,44,0.05)', tension: 0.4, fill: true }] },
-            options: { responsive: true, maintainAspectRatio: false }
-        });
-    }
-
     async function loadHistory() {
         if (!currentUserId || !weightChart) return;
         const snap = await firebase.firestore().collection('weight_history')
@@ -109,11 +115,18 @@
 
         if (!snap.empty) {
             const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            
+            // 1. ПОКАЗУЄМО ОСТАННІ ДАНІ В СКАНЕРІ ВІДРАЗУ ПРИ ЗАВАНТАЖЕННІ
+            const lastEntry = docs[0];
+            updateScannerUI(lastEntry.bmi, lastEntry.status, lastEntry.target_kcal, lastEntry.macros.p, lastEntry.macros.f, lastEntry.macros.c, lastEntry.statusColor, lastEntry.recommendation);
+
+            // 2. ОНОВЛЮЄМО ГРАФІК
             const chartData = [...docs].reverse();
             weightChart.data.labels = chartData.map(d => d.date.split('-').reverse().slice(0,2).join('.'));
             weightChart.data.datasets[0].data = chartData.map(d => d.weight);
             weightChart.update();
 
+            // 3. ЗАПОВНЮЄМО СПИСОК ІСТОРІЇ
             docs.forEach(entry => {
                 const item = document.createElement('div');
                 item.style.cssText = "display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #1a1a1a; padding:8px 0; font-size:13px;";
@@ -124,6 +137,16 @@
                 historyContainer.appendChild(item);
             });
         }
+    }
+
+    function initChart() {
+        const canvas = document.getElementById('weightChart');
+        if (!canvas) return;
+        weightChart = new Chart(canvas.getContext('2d'), {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'Вага (кг)', data: [], borderColor: '#FFC72C', backgroundColor: 'rgba(255,199,44,0.05)', tension: 0.4, fill: true }] },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
     }
 
     window.deleteWeightEntry = async (id) => {
