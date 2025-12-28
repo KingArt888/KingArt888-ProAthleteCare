@@ -1,180 +1,132 @@
-(function () {
+// ===============================
+// Weight Control – ProAthleteCare
+// ===============================
 
-  /* ===============================
-     FIREBASE
-  =============================== */
-  const db = firebase.firestore();
-  const auth = firebase.auth();
+const form = document.getElementById("weight-form");
+const weightInput = document.getElementById("weight-value");
+const heightInput = document.getElementById("user-height");
+const ageInput = document.getElementById("user-age");
 
-  const COLL_HISTORY = "weight_history";
-  const COLL_USERS = "users";
-  let currentUserId = null;
+const bmiValue = document.getElementById("bmi-value");
+const bmiStatusText = document.getElementById("bmi-status-text");
+const fatValue = document.getElementById("fat-percentage-value");
+const dietContent = document.getElementById("diet-plan-content");
 
-  /* ===============================
-     3D ATHLETE INIT
-  =============================== */
-  const wrapper = document.querySelector(".hologram-wrapper");
+let weightHistory = [];
+let chart;
 
-  // Видаляємо SVG (fallback)
-  const oldSVG = document.getElementById("human-vitals-svg");
-  if (oldSVG) oldSVG.remove();
+// ===============================
+// BMI + BODY FAT
+// ===============================
+function calculateBMI(weight, heightCm) {
+    const h = heightCm / 100;
+    return weight / (h * h);
+}
 
-  // Створюємо 3D атлета
-  const modelViewer = document.createElement("model-viewer");
-  modelViewer.setAttribute("src", "assets/athlete.glb");
-  modelViewer.setAttribute("auto-rotate", "");
-  modelViewer.setAttribute("camera-controls", "");
-  modelViewer.setAttribute("interaction-prompt", "none");
-  modelViewer.setAttribute("exposure", "1.25");
-  modelViewer.setAttribute("shadow-intensity", "0");
-  modelViewer.style.width = "100%";
-  modelViewer.style.height = "100%";
-  modelViewer.style.background = "transparent";
+function calculateBodyFat(bmi, age) {
+    // Deurenberg formula (male, athlete-friendly approx)
+    return (1.20 * bmi) + (0.23 * age) - 16.2;
+}
 
-  wrapper.appendChild(modelViewer);
+function getBMIStatus(bmi) {
+    if (bmi < 18.5) return ["Underweight", "#3498db"];
+    if (bmi < 25) return ["Optimal", "#2ecc71"];
+    if (bmi < 30) return ["Overweight", "#f1c40f"];
+    return ["High Risk", "#e74c3c"];
+}
 
-  /* ===============================
-     HOLOGRAM STYLE
-  =============================== */
-  function setHologramStyle(bmi) {
-    let filter = "";
-
-    if (bmi < 18.5 || bmi > 27) {
-      // alert
-      filter = `
-        brightness(1.1)
-        drop-shadow(0 0 10px rgba(255,77,77,0.6))
-        drop-shadow(0 0 25px rgba(255,77,77,0.4))
-      `;
-    } else {
-      // optimal
-      filter = `
-        brightness(1.2)
-        drop-shadow(0 0 12px rgba(0,242,254,0.6))
-        drop-shadow(0 0 30px rgba(0,242,254,0.35))
-      `;
+// ===============================
+// DIET LOGIC
+// ===============================
+function generateDiet(bmi) {
+    if (bmi < 20) {
+        return "🔹 Focus on caloric surplus, complex carbs, protein 2.0 g/kg.";
     }
-
-    modelViewer.style.filter = filter;
-  }
-
-  /* ===============================
-     UI UPDATE
-  =============================== */
-  function updateUI(weight, height, age) {
-    const bmi = (weight / ((height / 100) ** 2)).toFixed(1);
-    document.getElementById("bmi-value").textContent = bmi;
-
-    let statusText = "---";
-    if (bmi < 18.5) statusText = "UNDERWEIGHT";
-    else if (bmi < 25) statusText = "OPTIMAL";
-    else statusText = "OVERLOAD";
-
-    document.getElementById("bmi-status-text").textContent = statusText;
-
-    const fat = Math.max(3, (1.2 * bmi) + (0.23 * age) - 16.2);
-    document.getElementById("fat-percentage-value").textContent =
-      fat.toFixed(1) + "%";
-
-    setHologramStyle(bmi);
-
-    const dietBox = document.getElementById("diet-plan-content");
-    if (bmi < 18.5) {
-      dietBox.innerHTML =
-        "<strong>Hypertrophy:</strong><br>+500 kcal, високий білок, контроль відновлення.";
-    } else if (bmi < 25) {
-      dietBox.innerHTML =
-        "<strong>Athletic balance:</strong><br>Поточна форма оптимальна.";
-    } else {
-      dietBox.innerHTML =
-        "<strong>Recomposition:</strong><br>Дефіцит калорій + силова робота.";
+    if (bmi < 25) {
+        return "✅ Maintain balance: protein 1.6–1.8 g/kg, hydration, recovery.";
     }
-  }
+    return "⚠️ Mild caloric deficit, protein priority, reduce sugar & alcohol.";
+}
 
-  /* ===============================
-     CHART.JS
-  =============================== */
-  let weightChart = null;
-
-  function renderChart(data) {
+// ===============================
+// CHART
+// ===============================
+function initChart() {
     const ctx = document.getElementById("weightChart").getContext("2d");
-    if (weightChart) weightChart.destroy();
 
-    weightChart = new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: data.map(d => d.date),
-        datasets: [{
-          data: data.map(d => d.weight),
-          borderWidth: 2,
-          tension: 0.4,
-          fill: false
-        }]
-      },
-      options: {
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: false } }
-      }
+    chart = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: [],
+            datasets: [{
+                label: "Weight (kg)",
+                data: [],
+                borderWidth: 2,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false
+                }
+            }
+        }
     });
-  }
+}
 
-  /* ===============================
-     LOAD USER DATA
-  =============================== */
-  auth.onAuthStateChanged(async user => {
-    if (!user) return;
+// ===============================
+// MODEL VIEWER CONTROL
+// ===============================
+function updateAthleteModel(bodyFat) {
+    const model = document.getElementById("athlete-model");
+    if (!model) return;
 
-    currentUserId = user.uid;
+    // simple visual feedback via exposure
+    if (bodyFat < 12) model.exposure = 1.5;
+    else if (bodyFat < 18) model.exposure = 1.3;
+    else model.exposure = 1.1;
+}
 
-    const userDoc = await db.collection(COLL_USERS).doc(user.uid).get();
-    if (userDoc.exists) {
-      document.getElementById("user-height").value = userDoc.data().height || 180;
-      document.getElementById("user-age").value = userDoc.data().age || 25;
-    }
-
-    const snap = await db
-      .collection(COLL_HISTORY)
-      .where("userId", "==", user.uid)
-      .orderBy("date", "asc")
-      .get();
-
-    if (!snap.empty) {
-      const history = snap.docs.map(d => d.data());
-      renderChart(history);
-
-      const last = history[history.length - 1];
-      updateUI(
-        last.weight,
-        document.getElementById("user-height").value,
-        document.getElementById("user-age").value
-      );
-    }
-  });
-
-  /* ===============================
-     FORM SUBMIT
-  =============================== */
-  document.getElementById("weight-form").addEventListener("submit", async e => {
+// ===============================
+// FORM SUBMIT
+// ===============================
+form.addEventListener("submit", (e) => {
     e.preventDefault();
 
-    const weight = +document.getElementById("weight-value").value;
-    const height = +document.getElementById("user-height").value;
-    const age = +document.getElementById("user-age").value;
+    const weight = parseFloat(weightInput.value);
+    const height = parseFloat(heightInput.value);
+    const age = parseInt(ageInput.value);
 
-    if (!currentUserId) return;
+    if (!weight || !height || !age) return;
 
-    await db.collection(COLL_HISTORY).add({
-      userId: currentUserId,
-      weight,
-      date: new Date().toISOString().split("T")[0]
-    });
+    const bmi = calculateBMI(weight, height);
+    const bodyFat = calculateBodyFat(bmi, age);
 
-    await db.collection(COLL_USERS).doc(currentUserId).set(
-      { height, age },
-      { merge: true }
-    );
+    const [status, color] = getBMIStatus(bmi);
 
-    location.reload();
-  });
+    bmiValue.textContent = bmi.toFixed(1);
+    bmiStatusText.textContent = status;
+    bmiStatusText.style.color = color;
 
-})();
+    fatValue.textContent = bodyFat.toFixed(1) + "%";
+    dietContent.textContent = generateDiet(bmi);
+
+    // chart
+    weightHistory.push(weight);
+    chart.data.labels.push(`Day ${weightHistory.length}`);
+    chart.data.datasets[0].data.push(weight);
+    chart.update();
+
+    // 3D athlete reaction
+    updateAthleteModel(bodyFat);
+
+    weightInput.value = "";
+});
+
+// ===============================
+initChart();
