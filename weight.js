@@ -11,13 +11,14 @@
             loadBaseData();
             loadHistory();
         } else {
-            firebase.auth().signInAnonymously();
+            firebase.auth().signInAnonymously().catch(e => console.error("Auth error:", e));
         }
     });
 
     document.addEventListener('DOMContentLoaded', () => {
         initChart();
-        document.getElementById('weight-form').addEventListener('submit', handleAthleteAnalysis);
+        const form = document.getElementById('weight-form');
+        if (form) form.addEventListener('submit', handleAthleteAnalysis);
     });
 
     async function handleAthleteAnalysis(e) {
@@ -31,60 +32,82 @@
 
         // 1. РОЗРАХУНОК BMI ТА СТАТУСУ
         const bmi = (w / ((h / 100) ** 2)).toFixed(1);
-        let status = "";
-        let recommendation = "";
+        let status, recommendation, color;
 
         if (bmi < 18.5) {
-            status = "UNDERWEIGHT (Дефіцит маси)";
-            recommendation = "Weight Gain: Профіцит калорій +500 ккал. Акцент на складні вуглеводи та білок (2г/кг).";
+            status = "UNDERWEIGHT (Muscle Gain Mode)";
+            recommendation = "Ціль: Гіпертрофія. Профіцит +15%. Білок: 2.2г/кг.";
+            color = "#00BFFF"; // Блакитний
         } else if (bmi < 25) {
-            status = "NORMAL (Норма)";
-            recommendation = "Maintenance: Підтримка поточної форми. Баланс БЖВ: 30/30/40.";
+            status = "ATHLETIC FORM (Maintenance)";
+            recommendation = "Ціль: Рекімпозиція. Підтримка форми. Білок: 2.0г/кг.";
+            color = "#FFC72C"; // Золотий
         } else {
-            status = "WEIGHT LOSS (Надлишкова маса)";
-            recommendation = "Fat Loss: Дефіцит калорій -15% від норми. Збільшити інтенсивність кардіо.";
+            status = "WEIGHT LOSS (Fat Burn Mode)";
+            recommendation = "Ціль: Дефіцит -20%. Акцент на інтенсивність. Білок: 2.5г/кг.";
+            color = "#DA3E52"; // Червоний
         }
 
         // 2. ПРОФЕСІЙНИЙ РОЗРАХУНОК КАЛОРІЙ (Mifflin-St Jeor)
-        // Для чоловіків: (10 × вага) + (6.25 × зріст) - (5 × вік) + 5
         const bmr = (10 * w) + (6.25 * h) - (5 * a) + 5;
-        const maintenance = Math.round(bmr * 1.55); // Коефіцієнт середньої активності атлета
+        const tdee = Math.round(bmr * 1.55); // Середня активність атлета
+
+        // Розрахунок БЖВ (професійна пропорція для атлетів 30/30/40)
+        const protein = Math.round((tdee * 0.30) / 4);
+        const fats = Math.round((tdee * 0.25) / 9);
+        const carbs = Math.round((tdee * 0.45) / 4);
 
         // 3. ВИСНОВОК В ІНТЕРФЕЙС
+        // Оновлюємо коло SCAN
         const fatDisplay = document.getElementById('fat-percentage-value');
-        if (fatDisplay) fatDisplay.textContent = w + " kg";
+        if (fatDisplay) fatDisplay.textContent = w + "kg";
 
         const bmiDisplay = document.getElementById('bmi-value');
         if (bmiDisplay) bmiDisplay.textContent = bmi;
 
-        // Висновок рекомендацій у підпис під сканером (athlete-rank)
+        // Оновлюємо статус та калорії (у блок під сканером)
         const rankElement = document.getElementById('athlete-rank');
         if (rankElement) {
-            rankElement.innerHTML = `<span style="color:#FFC72C">${status}</span><br>
-                                     <small>BMR: ${maintenance} kcal/day</small>`;
+            rankElement.style.color = color;
+            rankElement.innerHTML = `
+                <div style="font-size: 16px; margin-bottom: 5px;">${status}</div>
+                <div style="font-size: 20px; color: #fff;">${tdee} kcal</div>
+                <div style="font-size: 11px; color: #888; margin-top: 5px;">
+                    P: ${protein}g | F: ${fats}g | C: ${carbs}g
+                </div>
+            `;
+        }
+
+        // Додаємо детальні рекомендації в блок нотаток (якщо він є у вашому шаблоні)
+        const dietNote = document.getElementById('diet-plan-content');
+        if (dietNote) {
+            dietNote.style.display = 'block';
+            dietNote.innerHTML = `<strong>ПЛАН:</strong> ${recommendation}`;
         }
 
         // 4. ЗБЕРЕЖЕННЯ
-        await firebase.firestore().collection('weight_history').add({
-            userId: currentUserId,
-            weight: w,
-            bmi: bmi,
-            calories_norm: maintenance,
-            date: new Date().toISOString().split('T')[0],
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        
-        await firebase.firestore().collection('users').doc(currentUserId).set({ height: h, age: a }, { merge: true });
-        loadHistory();
+        try {
+            await firebase.firestore().collection('weight_history').add({
+                userId: currentUserId,
+                weight: w,
+                bmi: bmi,
+                daily_kcal: tdee,
+                macros: { p: protein, f: fats, c: carbs },
+                date: new Date().toISOString().split('T')[0],
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            await firebase.firestore().collection('users').doc(currentUserId).set({ height: h, age: a }, { merge: true });
+            loadHistory();
+        } catch (e) { console.error(e); }
     }
 
-    // --- Решта функцій initChart, loadBaseData, loadHistory залишаються без змін як у минулому коді ---
     function initChart() {
         const canvas = document.getElementById('weightChart');
         if (!canvas) return;
         weightChart = new Chart(canvas.getContext('2d'), {
             type: 'line',
-            data: { labels: [], datasets: [{ label: 'Вага (кг)', data: [], borderColor: '#FFC72C', tension: 0.4 }] },
+            data: { labels: [], datasets: [{ label: 'Вага', data: [], borderColor: '#FFC72C', tension: 0.4, fill: true, backgroundColor: 'rgba(255,199,44,0.05)' }] },
             options: { responsive: true, maintainAspectRatio: false }
         });
     }
@@ -100,7 +123,7 @@
 
     async function loadHistory() {
         const snap = await firebase.firestore().collection('weight_history')
-            .where('userId', '==', currentUserId).orderBy('date', 'asc').limit(10).get();
+            .where('userId', '==', currentUserId).orderBy('date', 'asc').limit(15).get();
         if (!snap.empty) {
             const docs = snap.docs.map(d => d.data());
             weightChart.data.labels = docs.map(d => d.date.split('-').reverse().slice(0,2).join('.'));
