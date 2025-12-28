@@ -10,6 +10,7 @@
     const urlParams = new URLSearchParams(window.location.search);
     const viewUserId = urlParams.get('userId');
 
+    // Константи кольорів ProAtletCare
     const GOLD = '#FFC72C';
     const ACUTE_RED = '#FF4136';   
     const CHRONIC_ORANGE = '#FF851B'; 
@@ -103,7 +104,6 @@
         }
     }
 
-    // Допоміжна функція для отримання номера тижня
     function getWeekNumber(d) {
         d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
         d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
@@ -112,7 +112,21 @@
     }
 
     function renderCharts(finalAcute, finalChronic) {
-        // --- 1. ГРАФІК НАВАНТАЖЕННЯ (ACUTE vs CHRONIC) ---
+        // Налаштування для усунення проблем зі скролом
+        const commonOptions = {
+            responsive: true,
+            maintainAspectRatio: true, // Забезпечує стабільну висоту контейнера
+            aspectRatio: 2, // Ширина вдвічі більша за висоту (ідеально для мобільних)
+            plugins: {
+                legend: { 
+                    display: true, 
+                    position: 'top', 
+                    labels: { color: '#ccc', font: { size: 11 }, padding: 10 } 
+                }
+            }
+        };
+
+        // --- 1. ГРАФІК НАВАНТАЖЕННЯ (Acute vs Chronic) ---
         const ctxL = document.getElementById('loadChart');
         if (ctxL && typeof Chart !== 'undefined') {
             if (loadChart) loadChart.destroy();
@@ -147,26 +161,24 @@
                     ]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
+                    ...commonOptions,
                     plugins: {
-                        legend: { display: true, position: 'top', labels: { color: '#ccc', font: { size: 11 } } },
+                        ...commonOptions.plugins,
                         tooltip: { mode: 'index', intersect: false }
                     },
                     scales: {
-                        y: { grid: { color: GRID_COLOR }, ticks: { color: '#666' } },
-                        x: { grid: { display: false }, ticks: { color: '#888' } }
+                        y: { grid: { color: GRID_COLOR }, ticks: { color: '#666', font: { size: 10 } } },
+                        x: { grid: { display: false }, ticks: { color: '#888', font: { size: 10 } } }
                     }
                 }
             });
         }
         
-        // --- 2. ГРАФІК ДИСТАНЦІЇ (ГРУПУВАННЯ ПО ТИЖНЯХ) ---
+        // --- 2. ГРАФІК ДИСТАНЦІЇ (Групування по тижнях) ---
         const ctxD = document.getElementById('distanceChart');
         if (ctxD && typeof Chart !== 'undefined') {
             if (distanceChart) distanceChart.destroy();
 
-            // Групуємо км по тижнях
             const weeklyGroups = {};
             dailyLoadData.forEach(d => {
                 const dateObj = new Date(d.date);
@@ -177,7 +189,7 @@
                 weeklyGroups[key] += Number(d.distance || 0);
             });
 
-            const weekLabels = Object.keys(weeklyGroups).slice(-8); // Останні 8 тижнів
+            const weekLabels = Object.keys(weeklyGroups).slice(-8);
             const weekSums = weekLabels.map(key => weeklyGroups[key]);
 
             distanceChart = new Chart(ctxD, {
@@ -188,8 +200,8 @@
                         label: 'Сума км за тиждень',
                         data: weekSums,
                         borderColor: GOLD,
-                        backgroundColor: 'rgba(255, 199, 44, 0.2)', // Тінь без пробілів
-                        fill: 'start', // Заповнення до осі (прибирає пробіли)
+                        backgroundColor: 'rgba(255, 199, 44, 0.2)',
+                        fill: 'start',
                         tension: 0.4,
                         pointRadius: 5,
                         pointBackgroundColor: GOLD,
@@ -197,19 +209,18 @@
                     }]
                 },
                 options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false,
+                    ...commonOptions,
                     plugins: { 
-                        legend: { display: true, labels: { color: '#888' } },
+                        ...commonOptions.plugins,
                         tooltip: { backgroundColor: '#111', titleColor: GOLD }
                     },
                     scales: {
                         y: { 
-                            beginAtZero: true, // Важливо для тіні без пробілів
+                            beginAtZero: true, 
                             grid: { color: GRID_COLOR }, 
-                            ticks: { color: '#666' } 
+                            ticks: { color: '#666', font: { size: 10 } } 
                         },
-                        x: { grid: { display: false }, ticks: { color: '#888' } }
+                        x: { grid: { display: false }, ticks: { color: '#888', font: { size: 10 } } }
                     }
                 }
             });
