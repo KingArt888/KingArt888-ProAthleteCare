@@ -1,84 +1,123 @@
-/* Гнучка сітка */
+/* Базовий контейнер як у injury.css */
 .dashboard-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    display: flex;
     gap: 20px;
-    align-items: stretch;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
-/* Картки у твоєму стилі Injury Story */
 .form-card, .chart-card {
     background-color: #0d0d0d;
     border: 1px solid #1a1a1a;
     border-radius: 10px;
     padding: 20px;
+    flex: 1;
+    min-width: 320px;
+    max-width: 450px;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.6);
-    min-height: 480px;
 }
 
-.card-header {
-    color: #FFC72C;
-    font-size: 0.9rem;
-    font-weight: bold;
-    letter-spacing: 1.5px;
-    border-bottom: 1px solid #333;
-    padding-bottom: 10px;
+/* ВИПРАВЛЕННЯ ПОЛІВ (ВІК / ЗРІСТ) */
+.input-row-top {
+    display: flex;
+    gap: 15px;
     margin-bottom: 20px;
-    text-align: left;
 }
 
-/* Форма */
-.input-row { display: flex; gap: 15px; margin-bottom: 20px; }
-.input-field { flex: 1; display: flex; flex-direction: column; }
-.input-field label { font-size: 0.75rem; color: #888; margin-bottom: 5px; text-transform: uppercase; }
-.input-field input { background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 4px; }
+.field-box { flex: 1; }
 
-.main-weight-section { text-align: center; margin: 10px 0; }
-.main-weight-section label { color: #FFC72C; font-size: 0.8rem; font-weight: bold; display: block; margin-bottom: 10px; }
-.weight-display-input { 
-    width: 100%; background: #000; border: 1px solid #FFC72C; color: #FFC72C; 
-    font-size: 2.2rem; text-align: center; padding: 15px; border-radius: 8px; font-weight: 200;
+.field-box label {
+    display: block;
+    color: #666;
+    font-size: 11px;
+    margin-bottom: 6px;
+    letter-spacing: 1px;
 }
 
-.gold-button-submit {
-    background: #FFC72C; color: #000; border: none; padding: 15px; border-radius: 4px;
-    font-weight: 800; cursor: pointer; margin-top: auto; transition: 0.3s;
+.field-box input {
+    width: 100%;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    color: #fff;
+    padding: 10px; /* Акуратний відступ */
+    border-radius: 4px;
+    font-size: 16px;
+    box-sizing: border-box;
 }
 
-/* Голограма */
-.hologram-box {
-    position: relative; flex-grow: 1; background: radial-gradient(circle, rgba(255,199,44,0.05) 0%, transparent 80%);
-    border: 1px solid #1a1a1a; border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden;
+/* ВИПРАВЛЕННЯ ВАГИ (ВЕЛИКЕ ПОЛЕ) */
+.weight-focus-area {
+    text-align: center;
+    margin-bottom: 20px;
 }
-.scanner-line {
-    position: absolute; width: 100%; height: 2px; background: #FFC72C; box-shadow: 0 0 15px #FFC72C;
-    top: 0; animation: scanMove 4s infinite linear;
+
+.weight-focus-area label {
+    color: #FFC72C;
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 10px;
+    display: block;
 }
+
+.weight-focus-area input {
+    width: 100%;
+    background: #000;
+    border: 1px solid #FFC72C;
+    color: #FFC72C;
+    font-size: 40px; /* Великі цифри */
+    padding: 15px 0; /* Контрольована висота */
+    text-align: center;
+    border-radius: 6px;
+    font-weight: 200;
+}
+
+/* КНОПКА */
+.gold-button {
+    background: #FFC72C;
+    color: #000;
+    border: none;
+    padding: 14px;
+    width: 100%;
+    font-weight: bold;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: 0.2s;
+}
+
+.bmi-result-badge {
+    margin-top: 15px;
+    background: #151515;
+    padding: 10px;
+    text-align: center;
+    border-left: 3px solid #FFC72C;
+    font-size: 13px;
+    color: #aaa;
+}
+
+/* ГОЛОГРАМА ТА ГРАФІК */
+.hologram-viewport {
+    flex-grow: 1;
+    position: relative;
+    background: radial-gradient(circle, rgba(255,199,44,0.05) 0%, transparent 80%);
+    border: 1px solid #1a1a1a;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.scan-beam {
+    position: absolute; width: 100%; height: 2px; background: #FFC72C;
+    top: 0; animation: scanMove 3s infinite linear; box-shadow: 0 0 10px #FFC72C;
+}
+
 @keyframes scanMove { 0% { top: 0; } 100% { top: 100%; } }
 
-.hologram-data { text-align: center; z-index: 2; }
-.circle-metric { 
-    width: 130px; height: 130px; border: 2px solid #FFC72C; border-radius: 50%; 
-    display: flex; flex-direction: column; justify-content: center; margin: 0 auto 15px;
-    box-shadow: 0 0 20px rgba(255,199,44,0.1);
-}
-.circle-metric .label { font-size: 0.6rem; color: #888; }
-.circle-metric .value { font-size: 1.8rem; font-weight: bold; }
+.chart-container { height: 200px; width: 100%; }
 
-.bmi-badge, .rank-badge {
-    background: #1a1a1a; padding: 10px; border-radius: 4px; text-align: center; 
-    margin-top: 15px; font-size: 0.8rem; border-left: 3px solid #FFC72C;
-}
-.gold { color: #FFC72C; }
-
-/* Графік */
-.chart-container { flex-grow: 1; min-height: 200px; margin-bottom: 15px; }
-.ai-box { background: rgba(255,199,44,0.03); padding: 12px; border: 1px dashed #333; font-size: 0.85rem; color: #ccc; }
-
-/* Адаптація */
-@media (max-width: 768px) {
-    .dashboard-container { grid-template-columns: 1fr; }
-    .form-card, .chart-card { min-height: auto; }
+@media (max-width: 600px) {
+    .form-card { max-width: 100%; }
 }
