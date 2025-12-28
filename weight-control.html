@@ -12,7 +12,7 @@
 <body>
     <header>
         <a href="index.html" class="logo-link">
-            <img src="AK_logo.png" alt="ProAthleteCare Logo" class="logo">
+            <img src="AK_logo.png" alt="Logo" class="logo">
         </a>
         <h1 class="project-title">ProAthleteCare</h1>
         <button class="menu-toggle" id="menu-toggle-button">☰</button>
@@ -26,7 +26,7 @@
         </nav>
 
         <main class="main-content">
-            <h2 style="color: #6C7A89;">⚖️ Weight Analysis & Body Composition</h2>
+            <h2 style="color: #6C7A89; margin-bottom: 20px;">⚖️ Weight Analysis & Body Composition</h2>
             
             <div class="dashboard-container">
                 <div class="form-card">
@@ -43,12 +43,12 @@
                             </div>
                         </div>
                         <label style="margin-top: 15px; display: block;">Сьогоднішня вага (кг):</label>
-                        <input type="number" id="weight-value" step="0.1" required style="border: 1px solid #FFC72C; font-size: 1.2em;">
-                        <button type="submit" id="submit-btn" class="gold-button">Записати та Розрахувати</button>
+                        <input type="number" id="weight-value" step="0.1" required style="border: 1px solid #FFC72C; text-align: center; font-size: 1.2em;">
+                        <button type="submit" id="submit-btn" class="gold-button">Записати результат</button>
                     </form>
                 </div>
 
-                <div class="form-card" style="display: flex; flex-direction: column; align-items: center;">
+                <div class="form-card hologram-container">
                     <h3>Body Composition Scan</h3>
                     <div class="hologram-wrapper">
                         <div class="scan-line"></div>
@@ -60,12 +60,19 @@
                     </div>
                 </div>
 
-                <div class="chart-card" style="max-width: 1000px; width: 100%;">
-                    <h3>Аналітика прогресу</h3>
-                    <div class="bmi-badge">
-                        Ваш ІМТ: <span id="bmi-value">0.0</span> <span id="bmi-status">---</span>
+                <div class="form-card diet-card">
+                    <h3>Рекомендації та Дієта</h3>
+                    <div id="diet-plan-content" class="placeholder-text">
+                        Введіть дані для розрахунку...
                     </div>
-                    <div class="chart-area" style="height: 250px; margin-top: 20px;">
+                </div>
+
+                <div class="chart-card">
+                    <h3>Аналітика прогресу</h3>
+                    <div class="bmi-status-bar">
+                        ІМТ: <span id="bmi-value">0.0</span> <span id="bmi-status-text">---</span>
+                    </div>
+                    <div class="chart-area" style="height: 200px; margin-top: 15px;">
                         <canvas id="weightChart"></canvas>
                     </div>
                 </div>
