@@ -6,83 +6,70 @@
     <title>Weight Control | ProAthleteCare</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="weight-control.css">
-    <link rel="stylesheet" href="navigation-mobile.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <header>
         <a href="index.html" class="logo-link"><img src="AK_logo.png" alt="Logo" class="logo"></a>
         <h1 class="project-title">ProAthleteCare</h1>
-        <button class="menu-toggle" id="menu-toggle-button">☰</button>
     </header>
 
     <div class="content-wrapper">
-        <nav class="sidebar" id="main-sidebar">
-            <a href="wellness.html">Wellness Control <img src="AK_logo.png" class="menu-icon"></a>
-            <a href="injury.html">Injury Story <img src="AK_logo.png" class="menu-icon"></a>
-            <a href="load-season.html">Load Season <img src="AK_logo.png" class="menu-icon"></a>
-            <a href="weight-control.html" class="active">Weight Control <img src="AK_logo.png" class="menu-icon"></a>
-            <a href="velocity-control.html">Velocity Control <img src="AK_logo.png" class="menu-icon"></a>
-        </nav>
-
         <main class="main-content">
-            <h2 class="page-title">⚖️ Weight & Body Analytics</h2>
+            <h2 class="page-title">⚖️ Weight Analysis</h2>
             
             <div class="dashboard-container">
                 <div class="form-card">
-                    <div class="card-header">📍 ПАРАМЕТРИ ТІЛА</div>
-                    <form id="weight-form" class="standard-form">
-                        <div class="input-row">
-                            <div class="input-field">
-                                <label>Вік</label>
-                                <input type="number" id="user-age" placeholder="25" required>
+                    <h3>📍 ПАРАМЕТРИ ТІЛА</h3>
+                    <form id="weight-form">
+                        <div class="input-row-top">
+                            <div class="field-box">
+                                <label>ВІК</label>
+                                <input type="number" id="user-age" placeholder="33" required>
                             </div>
-                            <div class="input-field">
-                                <label>Зріст (см)</label>
-                                <input type="number" id="user-height" placeholder="180" required>
+                            <div class="field-box">
+                                <label>ЗРІСТ (СМ)</label>
+                                <input type="number" id="user-height" placeholder="178" required>
                             </div>
                         </div>
 
-                        <div class="main-weight-section">
+                        <div class="weight-focus-area">
                             <label>Сьогоднішня вага (кг)</label>
-                            <input type="number" id="weight-value" step="0.1" required class="weight-display-input">
+                            <input type="number" id="weight-value" step="0.1" placeholder="0" required>
                         </div>
                         
-                        <button type="submit" class="gold-button-submit">ЗБЕРЕГТИ ТА АНАЛІЗУВАТИ</button>
+                        <button type="submit" class="gold-button">ЗБЕРЕГТИ ТА АНАЛІЗУВАТИ</button>
                     </form>
-                    <div class="bmi-badge">
-                        BMI: <span id="bmi-value">--</span> | <span id="bmi-status-text">READY</span>
+                    
+                    <div class="bmi-result-badge">
+                        BMI: <span id="bmi-value">0.0</span> | <span id="bmi-status">READY</span>
                     </div>
                 </div>
 
                 <div class="form-card">
-                    <div class="card-header">🧬 BODY COMPOSITION</div>
-                    <div class="hologram-box">
-                        <div class="scanner-line"></div>
-                        <div class="hologram-data">
-                            <div class="circle-metric">
-                                <span class="label">FAT %</span>
-                                <span id="fat-percentage-value" class="value gold">--</span>
+                    <h3>🧬 COMPOSITION SCAN</h3>
+                    <div class="hologram-viewport">
+                        <div class="scan-beam"></div>
+                        <div class="data-display">
+                            <div class="main-circle">
+                                <small>FAT %</small>
+                                <strong id="fat-percentage-value">--</strong>
                             </div>
-                            <div class="linear-metric">
-                                <span class="label">LEAN MASS:</span>
-                                <span id="lbm-value" class="value">-- KG</span>
+                            <div class="sub-stat">
+                                <span>LEAN MASS:</span>
+                                <b id="lbm-value">-- KG</b>
                             </div>
                         </div>
                     </div>
-                    <div class="rank-badge">
-                        ATHLETE RANK: <span id="athlete-rank" class="gold">INITIALIZING</span>
-                    </div>
+                    <div class="rank-info">RANK: <span id="athlete-rank">---</span></div>
                 </div>
 
                 <div class="chart-card">
-                    <div class="card-header">📉 PROGRESS CHART</div>
+                    <h3>📉 PROGRESS</h3>
                     <div class="chart-container">
                         <canvas id="weightChart"></canvas>
                     </div>
-                    <div id="diet-plan-content" class="ai-box">
-                        Очікування даних для формування атлетичного звіту...
-                    </div>
+                    <div id="diet-plan-content" class="ai-note">Введіть дані...</div>
                 </div>
             </div>
         </main>
