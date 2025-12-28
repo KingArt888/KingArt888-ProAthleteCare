@@ -5,12 +5,13 @@
     const urlParams = new URLSearchParams(window.location.search);
     const viewUserId = urlParams.get('userId');
 
+    // 1. АВТОРИЗАЦІЯ ТА РЕЖИМ АДМІНА
     firebase.auth().onAuthStateChanged(async (user) => {
         if (user) {
             currentUserId = viewUserId || user.uid;
             console.log("ProAthleteCare Active ID:", currentUserId);
             loadBaseData();
-            loadHistory();
+            loadHistory(); // Завантажує і графік, і список під ним
         } else {
             firebase.auth().signInAnonymously().catch(e => console.error("Auth error:", e));
         }
@@ -24,6 +25,7 @@
         }
     });
 
+    // 2. АНАЛІЗ ТА ЗБЕРЕЖЕННЯ
     async function handleAthleteAnalysis(e) {
         e.preventDefault();
         
@@ -34,7 +36,6 @@
         if (!w || !h || !a) return;
 
         const bmi = (w / ((h / 100) ** 2)).toFixed(1);
-        
         let status, recommendation, statusColor, calorieModifier, pRatio, fRatio, cRatio;
 
         if (bmi < 20.5) { 
@@ -60,46 +61,14 @@
         const bmr = (10 * w) + (6.25 * h) - (5 * a) + 5;
         const maintenance = Math.round(bmr * 1.55); 
         const targetCalories = Math.round(maintenance * calorieModifier);
-
         const prot = Math.round((targetCalories * pRatio) / 4);
         const fat = Math.round((targetCalories * fRatio) / 9);
         const carb = Math.round((targetCalories * cRatio) / 4);
 
-        const mainCircleValue = document.getElementById('fat-percentage-value');
-        if (mainCircleValue) {
-            mainCircleValue.textContent = bmi;
-            mainCircleValue.style.color = statusColor;
-        }
-        
-        const smallLabel = document.querySelector('.main-circle small');
-        if (smallLabel) smallLabel.textContent = "BMI INDEX";
+        // Оновлення UI Сканера
+        updateScannerUI(bmi, status, targetCalories, prot, fat, carb, statusColor, recommendation);
 
-        const bmiBadge = document.getElementById('bmi-value');
-        if (bmiBadge) bmiBadge.textContent = bmi;
-
-        let rankElement = document.getElementById('athlete-rank');
-        if (!rankElement) {
-            rankElement = document.createElement('div');
-            rankElement.id = 'athlete-rank';
-            rankElement.style.textAlign = 'center';
-            rankElement.style.marginTop = '15px';
-            const scanCard = document.querySelector('.form-card:nth-child(2)');
-            if (scanCard) scanCard.appendChild(rankElement);
-        }
-
-        if (rankElement) {
-            rankElement.innerHTML = `
-                <div style="color:${statusColor}; font-size: 18px; font-weight: bold; margin-bottom: 5px;">${status}</div>
-                <div style="color:#fff; font-size: 24px; font-weight: bold;">${targetCalories} ккал</div>
-                <div style="color:#aaa; font-size: 13px; margin-top: 5px;">
-                    Б: ${prot}г | Ж: ${fat}г | В: ${carb}г
-                </div>
-                <div style="color:#FFC72C; font-size: 11px; margin-top: 10px; padding: 10px; background: rgba(255,199,44,0.05); border-radius: 6px; border: 1px dashed rgba(255,199,44,0.2);">
-                    ${recommendation}
-                </div>
-            `;
-        }
-
+        // Збереження в Firebase
         try {
             await firebase.firestore().collection('weight_history').add({
                 userId: currentUserId,
@@ -112,8 +81,7 @@
             });
             
             await firebase.firestore().collection('users').doc(currentUserId).set({
-                height: h,
-                age: a
+                height: h, age: a
             }, { merge: true });
             
             loadHistory();
@@ -122,11 +90,35 @@
         }
     }
 
+    function updateScannerUI(bmi, status, kcal, p, f, c, color, rec) {
+        const mainCircleValue = document.getElementById('fat-percentage-value');
+        if (mainCircleValue) {
+            mainCircleValue.textContent = bmi;
+            mainCircleValue.style.color = color;
+        }
+        
+        let rankElement = document.getElementById('athlete-rank');
+        if (!rankElement) {
+            rankElement = document.createElement('div');
+            rankElement.id = 'athlete-rank';
+            rankElement.style.textAlign = 'center';
+            rankElement.style.marginTop = '15px';
+            document.querySelector('.form-card:nth-child(2)').appendChild(rankElement);
+        }
+
+        rankElement.innerHTML = `
+            <div style="color:${color}; font-size: 18px; font-weight: bold;">${status}</div>
+            <div style="color:#fff; font-size: 24px; font-weight: bold;">${kcal} ккал</div>
+            <div style="color:#aaa; font-size: 12px;">Б: ${p}г | Ж: ${f}г | В: ${c}г</div>
+            <div style="color:#FFC72C; font-size: 11px; margin-top: 10px; border-top: 1px solid #222; padding-top: 5px;">${rec}</div>
+        `;
+    }
+
+    // 3. ГРАФІК ТА ІСТОРІЯ (СПИСОК)
     function initChart() {
         const canvas = document.getElementById('weightChart');
         if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        weightChart = new Chart(ctx, {
+        weightChart = new Chart(canvas.getContext('2d'), {
             type: 'line',
             data: { 
                 labels: [], 
@@ -136,21 +128,75 @@
                     borderColor: '#FFC72C', 
                     backgroundColor: 'rgba(255,199,44,0.05)',
                     borderWidth: 2,
-                    pointBackgroundColor: '#FFC72C',
                     tension: 0.4,
                     fill: true 
                 }] 
             },
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false,
-                scales: {
-                    y: { grid: { color: '#1a1a1a' }, ticks: { color: '#666' } },
-                    x: { grid: { display: false }, ticks: { color: '#666' } }
-                },
-                plugins: { legend: { display: false } }
-            }
+            options: { responsive: true, maintainAspectRatio: false }
         });
+    }
+
+    async function loadHistory() {
+        if (!currentUserId || !weightChart) return;
+        
+        const snap = await firebase.firestore().collection('weight_history')
+            .where('userId', '==', currentUserId)
+            .orderBy('date', 'desc').limit(20).get();
+        
+        const historyContainer = getOrCreateHistoryContainer();
+        historyContainer.innerHTML = ""; // Очистка списку
+
+        if (!snap.empty) {
+            const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            
+            // Оновлення графіка (треба реверснути для хронології зліва направо)
+            const chartData = [...docs].reverse();
+            weightChart.data.labels = chartData.map(d => d.date.split('-').reverse().slice(0,2).join('.'));
+            weightChart.data.datasets[0].data = chartData.map(d => d.weight);
+            weightChart.update();
+
+            // Побудова списку (як в Injury)
+            docs.forEach(entry => {
+                const item = document.createElement('div');
+                item.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#0d0d0d; padding:12px; margin-bottom:8px; border-radius:6px; border-left:3px solid #FFC72C;";
+                item.innerHTML = `
+                    <div>
+                        <span style="color:#FFC72C; font-weight:bold; font-size:16px;">${entry.weight} kg</span>
+                        <div style="color:#666; font-size:11px;">${entry.date} | BMI: ${entry.bmi}</div>
+                    </div>
+                    <button onclick="deleteWeightEntry('${entry.id}')" style="background:none; border:none; color:#DA3E52; cursor:pointer; font-size:18px;">🗑</button>
+                `;
+                historyContainer.appendChild(item);
+            });
+        }
+    }
+
+    // Функція видалення (глобальна для onclick)
+    window.deleteWeightEntry = async (id) => {
+        if (confirm("Видалити цей запис ваги?")) {
+            try {
+                await firebase.firestore().collection('weight_history').doc(id).delete();
+                loadHistory();
+            } catch (e) { console.error(e); }
+        }
+    };
+
+    function getOrCreateHistoryContainer() {
+        let container = document.getElementById('weight-history-list');
+        if (!container) {
+            const mainContent = document.querySelector('.main-content');
+            const historyTitle = document.createElement('h3');
+            historyTitle.textContent = "📜 ІСТОРІЯ ЗАПИСІВ";
+            historyTitle.style.cssText = "color:#FFC72C; margin-top:30px; font-size:16px; letter-spacing:1px;";
+            
+            container = document.createElement('div');
+            container.id = 'weight-history-list';
+            container.style.marginTop = "15px";
+            
+            mainContent.appendChild(historyTitle);
+            mainContent.appendChild(container);
+        }
+        return container;
     }
 
     async function loadBaseData() {
@@ -160,20 +206,6 @@
             const data = doc.data();
             if (document.getElementById('user-height')) document.getElementById('user-height').value = data.height || "";
             if (document.getElementById('user-age')) document.getElementById('user-age').value = data.age || "";
-        }
-    }
-
-    async function loadHistory() {
-        if (!currentUserId || !weightChart) return;
-        const snap = await firebase.firestore().collection('weight_history')
-            .where('userId', '==', currentUserId)
-            .orderBy('date', 'asc').limit(15).get();
-        
-        if (!snap.empty) {
-            const docs = snap.docs.map(d => d.data());
-            weightChart.data.labels = docs.map(d => d.date.split('-').reverse().slice(0,2).join('.'));
-            weightChart.data.datasets[0].data = docs.map(d => d.weight);
-            weightChart.update();
         }
     }
 })();
