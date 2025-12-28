@@ -11,9 +11,7 @@
 </head>
 <body>
     <header>
-        <a href="index.html" class="logo-link">
-            <img src="AK_logo.png" alt="Logo" class="logo">
-        </a>
+        <a href="index.html" class="logo-link"><img src="AK_logo.png" alt="Logo" class="logo"></a>
         <h1 class="project-title">ProAthleteCare</h1>
         <button class="menu-toggle" id="menu-toggle-button">☰</button>
     </header>
@@ -28,67 +26,54 @@
         </nav>
 
         <main class="main-content">
-            <h2 class="page-title">⚖️ Body Composition Analytics</h2>
+            <h2 class="page-title">⚖️ Weight & Body Analytics</h2>
             
-            <div class="dashboard-grid">
-                <div class="glass-card">
+            <div class="dashboard-container">
+                <div class="form-card gold-border">
                     <h3>Input Metrics</h3>
                     <form id="weight-form">
-                        <div class="form-row">
-                            <div class="input-box">
+                        <div class="input-row">
+                            <div class="input-group">
                                 <label>Вік</label>
                                 <input type="number" id="user-age" placeholder="25" required>
                             </div>
-                            <div class="input-box">
+                            <div class="input-group">
                                 <label>Зріст (см)</label>
                                 <input type="number" id="user-height" placeholder="180" required>
                             </div>
                         </div>
-                        <div class="input-box main-input">
-                            <label>Сьогоднішня вага (кг)</label>
-                            <input type="number" id="weight-value" step="0.1" required>
-                        </div>
-                        <button type="submit" class="gold-btn">Analyze Composition</button>
+                        <label class="main-label">Сьогоднішня вага (кг)</label>
+                        <input type="number" id="weight-value" step="0.1" required class="big-input">
+                        <button type="submit" class="gold-button">Save & Analyze</button>
                     </form>
                 </div>
 
-                <div class="glass-card pro-status-card">
-                    <h3>Body Composition</h3>
-                    <div class="bio-display">
-                        <div class="circle-container">
-                            <svg viewBox="0 0 100 100" class="bio-circle">
-                                <circle cx="50" cy="50" r="45" class="bg-circle"></circle>
-                                <circle cx="50" cy="50" r="45" id="fat-progress" class="fg-circle"></circle>
-                            </svg>
-                            <div class="circle-content">
-                                <span class="c-label">FAT %</span>
-                                <span id="fat-percentage-value" class="c-value">0%</span>
-                            </div>
+                <div class="form-card metrics-summary-card">
+                    <h3>Athlete Status</h3>
+                    <div class="pro-metrics-grid">
+                        <div class="m-item">
+                            <span class="m-label">LEAN MASS (LBM)</span>
+                            <span id="lbm-value" class="m-value">-- KG</span>
                         </div>
-                        <div class="side-metrics">
-                            <div class="m-item">
-                                <span class="m-label">LEAN MASS</span>
-                                <span id="lbm-value" class="m-value">-- KG</span>
-                            </div>
-                            <div class="m-item">
-                                <span class="m-label">STATUS</span>
-                                <span id="athlete-rank" class="m-value gold-text">INIT...</span>
-                            </div>
+                        <div class="m-item">
+                            <span class="m-label">BODY FAT EST.</span>
+                            <span id="fat-percentage-value" class="m-value">-- %</span>
+                        </div>
+                        <div class="m-item">
+                            <span class="m-label">BMI INDEX</span>
+                            <span id="bmi-value" class="m-value">--</span>
+                        </div>
+                        <div class="m-item">
+                            <span class="m-label">CONDITION</span>
+                            <span id="athlete-rank" class="m-value gold-text">READY</span>
                         </div>
                     </div>
+                    <div id="diet-plan-content" class="ai-insight-box">Введіть дані для аналізу складу тіла...</div>
                 </div>
 
-                <div class="glass-card full-width">
-                    <h3>Performance Insights</h3>
-                    <div class="insight-row">
-                        <div class="bmi-badge">ІМТ: <span id="bmi-value">0.0</span> <span id="bmi-status-text"></span></div>
-                        <div id="diet-plan-content" class="insight-text">Система готова до аналізу даних.</div>
-                    </div>
-                </div>
-
-                <div class="glass-card full-width chart-card">
-                    <h3>Weight Trend</h3>
-                    <div class="chart-wrapper">
+                <div class="chart-card full-width">
+                    <h3>Weight Performance Trend</h3>
+                    <div class="chart-container">
                         <canvas id="weightChart"></canvas>
                     </div>
                 </div>
