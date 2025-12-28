@@ -1,19 +1,13 @@
-// ==========================================
-// Weight Control – ProAthleteCare (FINAL)
-// ==========================================
-
 (function() {
     const COLL_HISTORY = "weight_history";
     const COLL_USERS = "users";
-    const db = window.db;
-
     const GOLD = '#FFC72C';
     const GRID_COLOR = 'rgba(255, 255, 255, 0.05)';
 
     let weightChart = null;
     let currentUserId = null;
 
-    // DOM Елементи
+    // DOM Elements
     const form = document.getElementById("weight-form");
     const weightInput = document.getElementById("weight-value");
     const heightInput = document.getElementById("user-height");
@@ -26,98 +20,55 @@
     document.addEventListener('DOMContentLoaded', () => {
         initChart();
         
-        window.auth.onAuthStateChanged(async (user) => {
+        // Перевірка авторизації
+        firebase.auth().onAuthStateChanged(async (user) => {
             if (user) {
                 const urlParams = new URLSearchParams(window.location.search);
                 currentUserId = urlParams.get('userId') || user.uid;
-                await loadUserData();
-                await loadWeightHistory();
+                await loadBaseData();
+                await loadHistory();
             } else {
-                await window.auth.signInAnonymously();
+                firebase.auth().signInAnonymously();
             }
         });
 
-        if (form) form.addEventListener("submit", handleFormSubmit);
+        if (form) form.addEventListener("submit", handleSubmission);
     });
 
-    // --- РОЗРАХУНКИ ---
-    function calculateBMI(w, hCm) {
-        const hM = hCm / 100;
-        return (w / (hM * hM)).toFixed(1);
-    }
+    // --- Розрахунки ---
+    function getBMI(w, h) { return (w / ((h / 100) ** 2)).toFixed(1); }
+    function getFat(bmi, age) { return ((1.20 * bmi) + (0.23 * age) - 16.2).toFixed(1); }
 
-    function calculateBodyFat(bmi, age) {
-        // Deurenberg formula: (1.20 * BMI) + (0.23 * Age) - 16.2
-        return ((1.20 * bmi) + (0.23 * age) - 16.2).toFixed(1);
-    }
+    function updateUI(bmi, fat) {
+        bmiValue.textContent = bmi;
+        fatValue.textContent = (fat > 0 ? fat : 0) + "%";
+        
+        let status = { text: "Оптимально", color: GOLD, diet: "✅ Пріоритет на підтримку м'язової маси та гідратацію." };
+        if (bmi < 18.5) status = { text: "Дефіцит", color: "#3498db", diet: "🔹 Акцент на профіцит калорій та білок 2.0г/кг." };
+        else if (bmi >= 25) status = { text: "Надмірна вага", color: "#f1c40f", diet: "⚠️ Помірний дефіцит калорій. Збільште споживання овочів." };
 
-    function getBMIInfo(bmi) {
-        if (bmi < 18.5) return { status: "Underweight", color: "#3498db", diet: "🔹 Focus on caloric surplus, complex carbs, protein 2.0 g/kg." };
-        if (bmi < 25)   return { status: "Optimal", color: GOLD, diet: "✅ Maintain balance: protein 1.6–1.8 g/kg, hydration, recovery." };
-        if (bmi < 30)   return { status: "Overweight", color: "#f1c40f", diet: "⚠️ Mild caloric deficit, protein priority, reduce sugar & alcohol." };
-        return { status: "High Risk", color: "#e74c3c", diet: "🚨 Focus on fat loss, high protein, and low glycemic index foods." };
-    }
+        bmiStatusText.textContent = `(${status.text})`;
+        bmiStatusText.style.color = status.color;
+        dietContent.textContent = status.diet;
 
-    // --- ГРАФІК (З ФІКСОМ СКРОЛУ) ---
-    function initChart() {
-        const ctx = document.getElementById("weightChart");
-        if (!ctx) return;
-
-        weightChart = new Chart(ctx, {
-            type: "line",
-            data: {
-                labels: [],
-                datasets: [{
-                    label: "Weight (kg)",
-                    data: [],
-                    borderColor: GOLD,
-                    backgroundColor: 'rgba(255, 199, 44, 0.1)',
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 4,
-                    pointBackgroundColor: GOLD
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false, // Запобігає "стрибкам" скролу
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { 
-                        grid: { color: GRID_COLOR },
-                        ticks: { color: '#666', font: { size: 10 } },
-                        beginAtZero: false 
-                    },
-                    x: { 
-                        grid: { display: false },
-                        ticks: { color: '#888', font: { size: 10 } }
-                    }
-                }
-            }
-        });
-    }
-
-    // --- ОНОВЛЕННЯ 3D МОДЕЛІ ---
-    function updateAthleteModel(bodyFat) {
-        const model = document.getElementById("athlete-model");
-        if (!model) return;
-        // Візуальна реакція на % жиру через освітлення
-        if (bodyFat < 12) model.exposure = 1.6;
-        else if (bodyFat < 18) model.exposure = 1.2;
-        else model.exposure = 0.8;
-    }
-
-    // --- FIREBASE ОПЕРАЦІЇ ---
-    async function loadUserData() {
-        const doc = await db.collection(COLL_USERS).doc(currentUserId).get();
-        if (doc.exists) {
-            heightInput.value = doc.data().height || "";
-            ageInput.value = doc.data().age || "";
+        // Візуалізація SVG
+        const svg = document.getElementById("athlete-svg");
+        if (svg) {
+            svg.style.filter = `drop-shadow(0 0 ${fat < 15 ? '15px' : '5px'} ${status.color})`;
+            svg.style.fill = status.color;
         }
     }
 
-    async function loadWeightHistory() {
+    // --- Firebase ---
+    async function loadBaseData() {
+        const doc = await db.collection(COLL_USERS).doc(currentUserId).get();
+        if (doc.exists) {
+            heightInput.value = doc.data().height || "180";
+            ageInput.value = doc.data().age || "25";
+        }
+    }
+
+    async function loadHistory() {
         const snap = await db.collection(COLL_HISTORY)
             .where("userId", "==", currentUserId)
             .orderBy("date", "asc")
@@ -125,66 +76,54 @@
             .get();
 
         if (!snap.empty) {
-            const weights = [];
-            const labels = [];
-            snap.forEach(d => {
-                weights.push(d.data().weight);
-                const datePart = d.data().date.split('-').slice(1).reverse().join('.');
-                labels.push(datePart);
-            });
-
-            weightChart.data.labels = labels;
-            weightChart.data.datasets[0].data = weights;
+            const data = snap.docs.map(d => d.data());
+            weightChart.data.labels = data.map(d => d.date.split('-').slice(1).reverse().join('.'));
+            weightChart.data.datasets[0].data = data.map(d => d.weight);
             weightChart.update();
 
-            // Оновлюємо UI останніми даними
-            const lastWeight = weights[weights.length - 1];
-            refreshUI(lastWeight, heightInput.value, ageInput.value);
+            const last = data[data.length - 1];
+            const bmi = getBMI(last.weight, heightInput.value);
+            updateUI(bmi, getFat(bmi, ageInput.value));
         }
     }
 
-    function refreshUI(w, h, a) {
-        if (!w || !h || !a) return;
-        const bmi = calculateBMI(w, h);
-        const fat = calculateBodyFat(bmi, a);
-        const info = getBMIInfo(bmi);
-
-        bmiValue.textContent = bmi;
-        bmiStatusText.textContent = `(${info.status})`;
-        bmiStatusText.style.color = info.color;
-        fatValue.textContent = (fat > 0 ? fat : 0) + "%";
-        dietContent.textContent = info.diet;
-        
-        updateAthleteModel(fat);
-    }
-
-    async function handleFormSubmit(e) {
+    async function handleSubmission(e) {
         e.preventDefault();
-        const weight = parseFloat(weightInput.value);
-        const height = parseFloat(heightInput.value);
-        const age = parseInt(ageInput.value);
-        const dateStr = new Date().toISOString().split("T")[0];
+        const w = parseFloat(weightInput.value);
+        const h = parseFloat(heightInput.value);
+        const a = parseInt(ageInput.value);
+        if (!w || !h || !a) return;
 
-        if (!weight || !height || !age) return;
-
-        refreshUI(weight, height, age);
+        const bmi = getBMI(w, h);
+        updateUI(bmi, getFat(bmi, a));
 
         try {
             await db.collection(COLL_HISTORY).add({
                 userId: currentUserId,
-                weight,
-                date: dateStr,
+                weight: w,
+                date: new Date().toISOString().split('T')[0],
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
-
-            await db.collection(COLL_USERS).doc(currentUserId).set({
-                height, age
-            }, { merge: true });
-
-            await loadWeightHistory();
+            await db.collection(COLL_USERS).doc(currentUserId).set({ height: h, age: a }, { merge: true });
+            loadHistory();
             weightInput.value = "";
-        } catch (err) {
-            console.error("Save error:", err);
-        }
+        } catch (err) { console.error("Помилка збереження:", err); }
+    }
+
+    function initChart() {
+        const ctx = document.getElementById("weightChart").getContext("2d");
+        weightChart = new Chart(ctx, {
+            type: "line",
+            data: { labels: [], datasets: [{ label: "кг", data: [], borderColor: GOLD, backgroundColor: 'rgba(255, 199, 44, 0.1)', fill: true, tension: 0.4 }] },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { grid: { color: GRID_COLOR }, ticks: { color: '#666' } },
+                    x: { grid: { display: false }, ticks: { color: '#888' } }
+                }
+            }
+        });
     }
 })();
