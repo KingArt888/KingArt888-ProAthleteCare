@@ -4,16 +4,17 @@
     color: #000000 !important; 
     border-left: 2px solid #000000 !important;
 }
+
 .sidebar a.active img {
     filter: none !important; 
 }
 
-/* --- КОМПАКТНА ТА ФУНКЦІОНАЛЬНА КНОПКА --- */
+/* --- КОМПАКТНА ТА ГАРНА КНОПКА --- */
 .gold-button {
     background-color: #FFC72C;
     color: #000;
     border: none;
-    padding: 10px 25px; /* Зменшені відступи для компактності */
+    padding: 10px 24px; /* Компактні відступи */
     font-size: 14px;
     font-weight: 800;
     text-transform: uppercase;
@@ -22,14 +23,15 @@
     transition: all 0.3s ease;
     display: block;
     margin: 20px auto 0; /* Центрування */
-    width: fit-content; /* Кнопка підлаштовується під текст, а не на всю ширину */
+    width: fit-content; /* Кнопка не на всю ширину */
+    min-width: 180px; /* Мінімальна ширина для солідності */
     letter-spacing: 0.5px;
     box-shadow: 0 4px 10px rgba(255, 199, 44, 0.2);
 }
 
 .gold-button:hover {
     background-color: #e6b327;
-    transform: translateY(-2px); /* Легкий ефект підйому */
+    transform: translateY(-2px); /* Ефект при наведенні */
     box-shadow: 0 6px 15px rgba(255, 199, 44, 0.3);
 }
 
@@ -37,12 +39,39 @@
     transform: translateY(0);
 }
 
-/* --- ГЕОМЕТРІЯ ІНПУТІВ --- */
+/* --- ГЕОМЕТРІЯ ТА СТИЛЬ КАРТОК --- */
+.dashboard-container {
+    display: flex;
+    gap: 25px;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: stretch;
+}
+
+.form-card, .chart-card {
+    background-color: #0d0d0d;
+    border: 1px solid #1a1a1a;
+    border-radius: 10px;
+    padding: 25px;
+    flex: 1;
+    min-width: 320px;
+    max-width: 480px;
+}
+
+/* --- ВІЗУАЛІЗАЦІЯ ІНПУТІВ --- */
 .input-row-top {
     display: flex;
     gap: 15px;
     margin-bottom: 20px;
 }
+
+.field-box label {
+    display: block;
+    color: #666;
+    font-size: 11px;
+    margin-bottom: 5px;
+}
+
 .field-box input {
     width: 100%;
     background: #1a1a1a;
@@ -54,30 +83,78 @@
     box-sizing: border-box;
 }
 
+.weight-focus-area label {
+    color: #FFC72C;
+    font-size: 13px;
+    display: block;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
 .weight-focus-area input {
     width: 100%;
     background: #000;
     border: 2px solid #FFC72C;
     color: #FFC72C;
     font-size: 42px;
-    padding: 15px 0;
+    padding: 10px 0;
     text-align: center;
+    border-radius: 8px;
+    font-weight: 300;
+}
+
+/* --- BMI БЕЙДЖ --- */
+.bmi-result-badge {
+    background: #151515;
+    padding: 8px 15px;
+    text-align: center;
+    border-left: 3px solid #FFC72C;
+    margin-top: 20px;
+    font-size: 12px;
+    color: #aaa;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+/* --- ЕФЕКТ СКАНУВАННЯ --- */
+.hologram-viewport {
+    position: relative;
+    background: radial-gradient(circle, rgba(255,199,44,0.05) 0%, transparent 80%);
+    min-height: 240px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px solid #1a1a1a;
     border-radius: 8px;
 }
 
-/* --- КАРТКИ ТА ГРАФІК --- */
-.dashboard-container {
+.scan-beam {
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    background: #FFC72C;
+    top: 0;
+    animation: scanMove 3s infinite linear;
+    box-shadow: 0 0 15px #FFC72C;
+}
+
+@keyframes scanMove {
+    0% { top: 0; }
+    100% { top: 100%; }
+}
+
+.main-circle {
+    width: 130px;
+    height: 130px;
+    border: 2px solid #FFC72C;
+    border-radius: 50%;
     display: flex;
-    gap: 25px;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
 }
-.form-card, .chart-card {
-    background-color: #0d0d0d;
-    border: 1px solid #1a1a1a;
-    border-radius: 10px;
-    padding: 25px;
-    flex: 1;
-    min-width: 320px;
-    max-width: 480px;
+
+.chart-container {
+    height: 250px;
 }
