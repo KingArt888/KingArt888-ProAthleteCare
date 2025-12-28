@@ -8,56 +8,49 @@
         if (user) {
             currentUserId = user.uid;
             
-            // Налаштування маленької кнопки (не чіпаючи CSS)
-            const btn = document.getElementById('submit-btn');
-            if (btn) {
-                btn.style.width = 'auto';
-                btn.style.padding = '6px 15px';
-                btn.style.fontSize = '0.85em';
-                btn.style.borderRadius = '20px';
-                btn.style.margin = '10px auto 0';
-                btn.style.display = 'block';
-            }
-
             await loadUserProfile(); 
-            await checkDailyEntry(); // Тут основна логіка приховування та виводу BMI
+            await checkDailyEntry(); // Приховує форму та показує результат
             await initWeightChart(); 
-            await loadWeightHistoryTable();
         } else {
             await firebase.auth().signInAnonymously();
         }
     });
 
-    // --- 1. ФУНКЦІЯ РОЗРАХУНКУ ТА ВИВОДУ РЕЗУЛЬТАТУ ---
+    // --- 1. РОЗРАХУНОК ТА ВИВІД BMI (ЗАМІСТЬ НУЛІВ) ---
     function displayBMIResult(weight, height) {
         const bmi = (weight / ((height / 100) ** 2)).toFixed(1);
         
         const bmiValEl = document.getElementById('bmi-value');
         const bmiStatusEl = document.getElementById('bmi-status');
         const adviceEl = document.getElementById('nutrition-advice');
-        const panel = document.getElementById('bmi-result-panel');
+        const card = document.getElementById('bmi-result-card');
 
-        if (!panel) return;
-        
-        panel.style.display = 'block'; // Показуємо панель
-        bmiValEl.textContent = bmi; // Записуємо число замість 0
+        if (!card) return;
 
+        // Вставляємо реальне число BMI
+        bmiValEl.textContent = bmi;
+
+        // Налаштовуємо статус та колір залежно від результату
         if (bmi < 18.5) {
-            bmiStatusEl.textContent = `Статус: Недостатня вага ⚠️`;
-            bmiStatusEl.style.color = "#FFD700";
-            adviceEl.textContent = "Рекомендовано: Профіцит калорій та збільшення білків.";
+            bmiStatusEl.textContent = "Недостатня вага";
+            card.style.borderLeft = "5px solid #FFD700"; // Золотий
+            adviceEl.textContent = "Рекомендовано: Збільшити калорійність раціону та силові тренування.";
         } else if (bmi < 25) {
-            bmiStatusEl.textContent = `Статус: Норма ✅`;
-            bmiStatusEl.style.color = "#4CAF50";
-            adviceEl.textContent = "Ваша вага в ідеальній нормі. Підтримуйте поточний режим.";
+            bmiStatusEl.textContent = "Норма";
+            card.style.borderLeft = "5px solid #4CAF50"; // Зелений
+            adviceEl.textContent = "Ваш показник в нормі. Продовжуйте підтримувати поточний режим.";
         } else {
-            bmiStatusEl.textContent = `Статус: WEIGHT LOSS Needed 📉`;
-            bmiStatusEl.style.color = "#DA3E52";
-            adviceEl.textContent = "Рекомендовано: Дефіцит калорій та низьковуглеводні рецепти.";
+            bmiStatusEl.textContent = "Weight Loss Needed";
+            card.style.borderLeft = "5px solid #DA3E52"; // Червоний
+            adviceEl.textContent = "Рекомендовано: Дефіцит калорій та перегляд плану харчування.";
         }
+        
+        // Показуємо кнопку рецептів, якщо вона була прихована
+        const recipeBtn = document.getElementById('recipe-link-container');
+        if (recipeBtn) recipeBtn.style.display = 'block';
     }
 
-    // --- 2. ПЕРЕВІРКА ЗАПИСУ ТА ПРИХОВУВАННЯ ФОРМИ ---
+    // --- 2. ПЕРЕВІРКА: ПРИХОВАТИ ВІКНО ВАГИ ТА ПОКАЗАТИ РЕЗУЛЬТАТ ---
     async function checkDailyEntry() {
         const today = new Date().toISOString().split('T')[0];
         const snap = await db.collection(COLL_HISTORY)
@@ -66,21 +59,22 @@
             .orderBy("timestamp", "desc").limit(1).get();
 
         if (!snap.empty) {
-            // Приховуємо вікно додавання ваги
+            // ПРИХОВУЄМО форму (form-card), щоб не займала місце
             const formCard = document.querySelector('.form-card');
             if (formCard) formCard.style.display = 'none';
             
-            // Отримуємо дані для BMI (вага з сьогоднішнього запису + зріст з профілю)
+            // Отримуємо сьогоднішню вагу та зріст з профілю для виводу BMI
             const todayData = snap.docs[0].data();
             const userDoc = await db.collection(COLL_USERS).doc(currentUserId).get();
             
             if (userDoc.exists && userDoc.data().height) {
-                // ВИКЛИКАЄМО РЕЗУЛЬТАТ (замість нулів)
+                // ТЕПЕР ТУТ З'ЯВЛЯЄТЬСЯ РЕЗУЛЬТАТ ЗАМІСТЬ 0.0
                 displayBMIResult(todayData.weight, userDoc.data().height);
             }
         }
     }
 
+    // --- 3. ЗАВАНТАЖЕННЯ ДАНИХ КОРИСТУВАЧА ---
     async function loadUserProfile() {
         if (!window.db) return;
         const doc = await db.collection(COLL_USERS).doc(currentUserId).get();
@@ -91,36 +85,10 @@
         }
     }
 
-    // --- 3. ТАБЛИЦЯ ІСТОРІЇ ПІД ГРАФІКОМ ---
-    async function loadWeightHistoryTable() {
-        const container = document.getElementById('weight-history-list');
-        if (!container) return;
-
-        const snap = await db.collection(COLL_HISTORY)
-            .where("userId", "==", currentUserId)
-            .orderBy("date", "desc").limit(10).get();
-
-        let tableHtml = `<table style="width:100%; color:#888; border-collapse:collapse; margin-top:20px;">
-            <tr style="border-bottom:1px solid #333; color:#FFC72C; font-size:0.8em; text-transform:uppercase;">
-                <th style="text-align:left; padding:10px;">Дата</th>
-                <th style="text-align:right; padding:10px;">Вага</th>
-            </tr>`;
-        
-        snap.forEach(doc => {
-            const d = doc.data();
-            tableHtml += `<tr style="border-bottom:1px solid #111;">
-                <td style="padding:10px;">${d.date}</td>
-                <td style="text-align:right; padding:10px; color:#fff;">${d.weight} кг</td>
-            </tr>`;
-        });
-        tableHtml += `</table>`;
-        container.innerHTML = tableHtml;
-    }
-
-    // --- 4. ЗБЕРЕЖЕННЯ ---
-    const form = document.getElementById('weight-form');
-    if (form) {
-        form.addEventListener('submit', async (e) => {
+    // --- 4. ОБРОБКА ФОРМИ ТА ЗБЕРЕЖЕННЯ ---
+    const weightForm = document.getElementById('weight-form');
+    if (weightForm) {
+        weightForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const w = parseFloat(document.getElementById('weight-value').value);
             const h = parseFloat(document.getElementById('user-height').value);
@@ -139,8 +107,8 @@
                     height: h, age: a, lastWeight: w
                 }, { merge: true });
 
-                location.reload(); 
-            } catch (err) { alert(err.message); }
+                location.reload(); // Перезавантаження активує checkDailyEntry()
+            } catch (err) { alert("Помилка: " + err.message); }
         });
     }
 
@@ -150,10 +118,10 @@
             .where("userId", "==", currentUserId)
             .orderBy("date", "asc").limit(14).get();
 
-        const labels = [], data = [];
+        const labels = [], values = [];
         snap.forEach(d => {
             labels.push(d.data().date.split('-').slice(1).join('/'));
-            data.push(d.data().weight);
+            values.push(d.data().weight);
         });
 
         const ctx = document.getElementById('weightChart');
@@ -164,8 +132,8 @@
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Вага',
-                        data: data,
+                        label: 'Вага (кг)',
+                        data: values,
                         borderColor: '#FFC72C',
                         backgroundColor: 'rgba(255, 199, 44, 0.1)',
                         fill: true,
@@ -176,7 +144,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        y: { ticks: { color: '#666' }, grid: { color: '#1a1a1a' } },
+                        y: { ticks: { color: '#666' }, grid: { color: 'rgba(255,255,255,0.05)' } },
                         x: { ticks: { color: '#666' }, grid: { display: false } }
                     },
                     plugins: { legend: { display: false } }
