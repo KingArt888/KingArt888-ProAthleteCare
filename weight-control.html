@@ -42,32 +42,28 @@
                                 <input type="number" id="user-height" placeholder="180" required>
                             </div>
                         </div>
-                        
-                        <label style="margin-top: 20px; display: block;">Поточна вага (кг):</label>
-                        <input type="number" id="weight-value" step="0.1" required style="border: 1px solid #FFC72C; font-size: 1.2em; text-align: center;">
-                        
+                        <label style="margin-top: 15px; display: block;">Сьогоднішня вага (кг):</label>
+                        <input type="number" id="weight-value" step="0.1" required style="border: 1px solid #FFC72C; font-size: 1.2em;">
                         <button type="submit" id="submit-btn" class="gold-button">Записати та Розрахувати</button>
                     </form>
                 </div>
 
-                <div class="form-card hologram-card-container">
+                <div class="form-card" style="display: flex; flex-direction: column; align-items: center;">
                     <h3>Body Composition Scan</h3>
                     <div class="hologram-wrapper">
                         <div class="scan-line"></div>
                         <img src="human_body_outline.jpg" id="body-hologram-img" alt="Anatomy Scan">
                     </div>
-                    <div class="fat-display-box">
-                        <span style="color: #888; font-size: 0.9em;">EST. BODY FAT:</span>
+                    <div class="fat-display-badge">
+                        <span>EST. BODY FAT:</span>
                         <span id="fat-percentage-value">0%</span>
                     </div>
                 </div>
 
-                <div class="chart-card">
+                <div class="chart-card" style="max-width: 1000px; width: 100%;">
                     <h3>Аналітика прогресу</h3>
-                    <div id="bmi-result-header">
-                        <span style="color: #aaa;">Ваш ІМТ: </span>
-                        <span id="bmi-value" style="color: #FFC72C; font-weight: bold; font-size: 1.4em;">0.0</span>
-                        <span id="bmi-status" style="margin-left: 15px; font-style: italic;">---</span>
+                    <div class="bmi-badge">
+                        Ваш ІМТ: <span id="bmi-value">0.0</span> <span id="bmi-status">---</span>
                     </div>
                     <div class="chart-area" style="height: 250px; margin-top: 20px;">
                         <canvas id="weightChart"></canvas>
