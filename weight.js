@@ -25,7 +25,10 @@
 
     async function handleAthleteAnalysis(e) {
         e.preventDefault();
-        const w = parseFloat(document.getElementById('weight-value').value);
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const weightInput = document.getElementById('weight-value');
+        
+        const w = parseFloat(weightInput.value);
         const h = parseFloat(document.getElementById('user-height').value);
         const a = parseInt(document.getElementById('user-age').value);
 
@@ -34,7 +37,8 @@
         const bmi = (w / ((h / 100) ** 2)).toFixed(1);
         const analysis = calculateAthleteData(w, bmi, h, a);
 
-        updateScannerUI(w, bmi, analysis.status, analysis.targetCalories, analysis.prot, analysis.fat, analysis.carb, analysis.statusColor, analysis.recommendation);
+        // Оновлюємо інтерфейс: тепер BMI з'являється після розрахунку
+        updateScannerUI(w, bmi, analysis.status, analysis.targetCalories, analysis.prot, analysis.fat, analysis.carb, analysis.statusColor, analysis.recommendation, true);
 
         try {
             await firebase.firestore().collection('weight_history').add({
@@ -49,9 +53,14 @@
                 date: new Date().toISOString().split('T')[0],
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
+
             await firebase.firestore().collection('users').doc(currentUserId).set({ height: h, age: a }, { merge: true });
+            
+            disableButtonUntilTomorrow(submitBtn);
             loadHistory();
-        } catch (error) { console.error("Firebase Error:", error); }
+        } catch (error) { 
+            console.error("Firebase Error:", error); 
+        }
     }
 
     function calculateAthleteData(w, bmi, h, a) {
@@ -82,21 +91,19 @@
         };
     }
 
-    function updateScannerUI(weight, bmi, status, kcal, p, f, c, color, rec) {
-        // Оновлюємо головне коло: тепер там ВАГА
+    // Параметр showBmi контролює, чи показувати цифру BMI
+    function updateScannerUI(weight, bmi, status, kcal, p, f, c, color, rec, showBmi = false) {
         const mainValue = document.getElementById('fat-percentage-value');
         if (mainValue) { 
-            mainValue.textContent = weight + "kg"; 
-            mainValue.style.color = "#FFC72C"; // Золотий для ваги
+            let content = `<span style="font-size: 36px; color: #FFC72C; font-weight: bold;">${weight}kg</span>`;
+            if (showBmi) {
+                content += `<div style="font-size: 14px; color: #888; margin-top: 5px; animation: fadeIn 0.5s;">BMI: ${bmi}</div>`;
+            }
+            mainValue.innerHTML = content;
         }
         
-        // Змінюємо підпис "FAT %" на "CURRENT WEIGHT"
         const smallLabel = document.querySelector('.main-circle small');
-        if (smallLabel) smallLabel.textContent = "CURRENT WEIGHT";
-
-        // BMI виводимо в маленьке поле знизу (де раніше був BMI)
-        const bmiBadge = document.getElementById('bmi-value');
-        if (bmiBadge) bmiBadge.textContent = bmi;
+        if (smallLabel) smallLabel.textContent = "CURRENTLY WEIGHT";
 
         let rankElement = document.getElementById('athlete-rank');
         if (!rankElement) {
@@ -106,10 +113,26 @@
             rankElement.style.marginTop = '15px';
             document.querySelector('.form-card:nth-child(2)').appendChild(rankElement);
         }
-        rankElement.innerHTML = `<div style="color:${color}; font-size:18px; font-weight:bold;">${status}</div>
-            <div style="color:#fff; font-size:24px; font-weight:bold;">${kcal} ккал</div>
-            <div style="color:#aaa; font-size:11px;">Б: ${p}г | Ж: ${f}г | В: ${c}г</div>
-            <div style="color:#FFC72C; font-size:11px; margin-top:10px; border-top:1px solid #222; padding-top:5px;">${rec}</div>`;
+
+        // Відображаємо аналіз лише якщо BMI активовано (після розрахунку)
+        if (showBmi) {
+            rankElement.innerHTML = `
+                <div style="color:${color}; font-size:18px; font-weight:bold; animation: fadeIn 0.8s;">${status}</div>
+                <div style="color:#fff; font-size:24px; font-weight:bold;">${kcal} ккал</div>
+                <div style="color:#aaa; font-size:11px;">Б: ${p}г | Ж: ${f}г | В: ${c}г</div>
+                <div style="color:#FFC72C; font-size:11px; margin-top:10px; border-top:1px solid #222; padding-top:5px;">${rec}</div>`;
+        } else {
+            rankElement.innerHTML = `<div style="color:#444; font-size:12px;">Натисніть "Розрахувати", щоб отримати аналіз</div>`;
+        }
+    }
+
+    function disableButtonUntilTomorrow(btn) {
+        if (!btn) return;
+        btn.disabled = true;
+        btn.style.opacity = "0.5";
+        btn.style.cursor = "not-allowed";
+        btn.textContent = "ДАНІ ОНОВЛЕНО";
+        localStorage.setItem('weight_updated_date', new Date().toDateString());
     }
 
     async function loadHistory() {
@@ -120,12 +143,24 @@
         const historyContainer = getOrCreateCompactHistory();
         historyContainer.innerHTML = "";
 
+        const lastUpdate = localStorage.getItem('weight_updated_date');
+        const today = new Date().toDateString();
+
         if (!snap.empty) {
             const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            
-            // Завантажуємо останню вагу в сканер
             const last = docs[0];
-            updateScannerUI(last.weight, last.bmi, last.status, last.target_kcal, last.macros.p, last.macros.f, last.macros.c, last.statusColor, last.recommendation);
+            
+            // Якщо сьогодні вже оновлювали - показуємо все з BMI
+            const isAlreadyUpdated = (lastUpdate === today);
+            updateScannerUI(last.weight, last.bmi, last.status, last.target_kcal, last.macros.p, last.macros.f, last.macros.c, last.statusColor, last.recommendation, isAlreadyUpdated);
+            
+            if (isAlreadyUpdated) {
+                const submitBtn = document.querySelector('#weight-form button[type="submit"]');
+                disableButtonUntilTomorrow(submitBtn);
+            }
+
+            const weightInput = document.getElementById('weight-value');
+            if (weightInput) weightInput.value = last.weight;
 
             const chartData = [...docs].reverse();
             weightChart.data.labels = chartData.map(d => d.date.split('-').reverse().slice(0,2).join('.'));
@@ -156,8 +191,11 @@
 
     window.deleteWeightEntry = async (id) => {
         if (confirm("Видалити запис?")) {
-            try { await firebase.firestore().collection('weight_history').doc(id).delete(); loadHistory(); }
-            catch (e) { console.error(e); }
+            try { 
+                await firebase.firestore().collection('weight_history').doc(id).delete(); 
+                localStorage.removeItem('weight_updated_date');
+                location.reload(); 
+            } catch (e) { console.error(e); }
         }
     };
 
