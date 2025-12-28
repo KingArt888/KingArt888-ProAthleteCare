@@ -1,4 +1,4 @@
-// daily-individual.js — ProAtletCare (PREMIUM FINAL ULTIMATE)
+// daily-individual.js — ProAtletCare (PREMIUM FINAL STRUCTURE)
 
 (function() {
     const YOUTUBE_BASE = 'https://www.youtube.com/embed/';
@@ -41,14 +41,14 @@
 
             if (welcomeBox) {
                 welcomeBox.innerHTML = `
-                    <div style="margin-bottom: 25px;">
+                    <div style="margin-bottom: 20px;">
                         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
                             <div id="status-pill" style="background: #d4af37; color: #000; padding: 8px 12px; border-radius: 10px; font-weight: 900; font-size: 1rem; min-width: 50px; text-align: center;">...</div>
                             <h2 style="color: #fff; margin: 0; font-size: 1.1rem; font-weight: 800; line-height: 1.3;">Привіт, ${firstName}! <br><span style="color:#666; font-size:0.9rem; font-weight:600;">${getFullDateString()}</span></h2>
                         </div>
                         <div style="background: rgba(212, 175, 55, 0.05); border-left: 3px solid #d4af37; padding: 12px 15px; border-radius: 0 10px 10px 0;">
-                             <p id="advice-text" style="margin: 0; font-size: 0.85rem; line-height: 1.4;">
-                                <span style="color:#d4af37; font-weight:900; text-transform:uppercase; font-size:0.65rem; letter-spacing:1px; display:block; margin-bottom:2px;">Порада тренера:</span>
+                             <p id="advice-text" style="margin: 0; font-size: 0.82rem; line-height: 1.4;">
+                                <span style="color:#d4af37; font-weight:900; text-transform:uppercase; font-size:0.6rem; letter-spacing:1px; display:block; margin-bottom:2px;">Порада тренера:</span>
                                 <span style="color: #fff; font-style: italic; opacity: 0.9;">Завантаження...</span>
                              </p>
                         </div>
@@ -72,7 +72,7 @@
     }
 
     function renderExercises(exercises, container) {
-        if (!exercises.length) { container.innerHTML = "<p style='color:#444;text-align:center;padding:40px;font-weight:700;'>Відпочинок</p>"; return; }
+        if (!exercises.length) { container.innerHTML = "<p style='color:#444;text-align:center;padding:40px;font-weight:700;'>REST DAY</p>"; return; }
         container.innerHTML = STAGES_LIST.map(stage => {
             const stageExs = exercises.filter(ex => ex.stage === stage);
             if (!stageExs.length) return '';
@@ -83,30 +83,34 @@
                     </div>
                     <div style="display:none; padding:10px 0;">
                         ${stageExs.map(ex => `
-                            <div class="ex-card" style="background: linear-gradient(145deg, #070707 0%, #020202 100%); border:1px solid #111; border-radius:16px; padding:15px; margin-bottom:12px; display:flex; flex-direction:column; gap:12px; transition: all 0.4s ease;">
+                            <div class="ex-card" style="background: linear-gradient(145deg, #070707 0%, #020202 100%); border:1px solid #111; border-radius:16px; padding:15px; margin-bottom:12px; transition: all 0.4s ease;">
                                 
-                                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                <div style="display:flex; gap:12px; align-items:flex-start;">
+                                    
                                     <div style="flex:1;">
                                         <h4 style="color:#fff; margin:0 0 4px 0; font-size:1rem; font-weight:800;">${ex.name}</h4>
-                                        <p style="color:#d4af37; margin:0; font-size:0.75rem; font-weight:700; text-transform:uppercase;">${ex.sets || '3'} SETS × ${ex.reps || '12'} REPS</p>
+                                        <p style="color:#d4af37; margin:0 8px 0 0; font-size:0.7rem; font-weight:700; text-transform:uppercase;">${ex.sets || '3'} SETS × ${ex.reps || '12'} REPS</p>
+                                        ${ex.description ? `
+                                            <div style="margin-top:8px; background:rgba(255,255,255,0.02); padding:8px; border-radius:8px; border-left:2px solid #333;">
+                                                <p style="color:#aaa; font-size:0.75rem; margin:0; line-height:1.3;">${ex.description}</p>
+                                            </div>
+                                        ` : ''}
                                     </div>
-                                    <label style="cursor:pointer; display:flex; align-items:center; gap:6px; background:#111; padding:6px 10px; border-radius:8px; border:1px solid #222;">
-                                        <input type="checkbox" style="accent-color:#d4af37;" onchange="const card = this.closest('.ex-card'); card.style.opacity = this.checked ? '0.15' : '1'; card.style.filter = this.checked ? 'grayscale(100%)' : 'none';">
-                                        <span style="color:#666; font-size:0.6rem; font-weight:900; text-transform:uppercase;">Done</span>
-                                    </label>
+
+                                    <div style="width:120px; display:flex; flex-direction:column; gap:8px; align-items:center;">
+                                        ${ex.videoKey ? `
+                                            <div style="width:120px; aspect-ratio:16/9; border-radius:8px; overflow:hidden; border:1px solid #222;">
+                                                <iframe src="${YOUTUBE_BASE}${ex.videoKey}" style="width:100%; height:100%; border:0;" allowfullscreen></iframe>
+                                            </div>
+                                        ` : ''}
+                                        
+                                        <label style="cursor:pointer; display:flex; align-items:center; gap:5px; background:#111; padding:4px 8px; border-radius:6px; border:1px solid #222; width:fit-content;">
+                                            <input type="checkbox" style="accent-color:#d4af37; width:12px; height:12px;" onchange="const card = this.closest('.ex-card'); card.style.opacity = this.checked ? '0.15' : '1'; card.style.filter = this.checked ? 'grayscale(100%)' : 'none';">
+                                            <span style="color:#666; font-size:0.55rem; font-weight:900; text-transform:uppercase;">Done</span>
+                                        </label>
+                                    </div>
+
                                 </div>
-
-                                ${ex.description ? `
-                                    <div style="background:rgba(255,255,255,0.02); padding:10px; border-radius:8px; border-left:2px solid #333;">
-                                        <p style="color:#aaa; font-size:0.8rem; margin:0; line-height:1.4;">${ex.description}</p>
-                                    </div>
-                                ` : ''}
-
-                                ${ex.videoKey ? `
-                                    <div style="width:100%; max-width:250px; align-self:center; aspect-ratio:16/9; border-radius:10px; overflow:hidden; border:1px solid #222;">
-                                        <iframe src="${YOUTUBE_BASE}${ex.videoKey}" style="width:100%; height:100%; border:0;" allowfullscreen></iframe>
-                                    </div>
-                                ` : ''}
                             </div>
                         `).join('')}
                     </div>
