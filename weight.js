@@ -4,78 +4,60 @@
     let currentUserId = null;
     let weightChartInstance = null;
 
-    // --- 1. АВТОРИЗАЦІЯ ТА СТИЛЬ КНОПКИ ---
     firebase.auth().onAuthStateChanged(async (user) => {
         if (user) {
             currentUserId = user.uid;
             
+            // Стилізація кнопки відправки
             const btn = document.getElementById('submit-btn');
             if (btn) {
-                btn.style.width = 'auto'; // Маленька кнопка
+                btn.style.width = 'auto';
                 btn.style.padding = '6px 15px';
                 btn.style.fontSize = '0.85em';
                 btn.style.borderRadius = '20px';
-                btn.style.margin = '10px auto 0';
                 btn.style.display = 'block';
+                btn.style.margin = '10px auto';
             }
 
             await loadUserProfile(); 
             await checkDailyEntry(); 
             await initWeightChart(); 
+            await loadWeightHistoryTable(); // Завантаження історії під графіком
         } else {
             await firebase.auth().signInAnonymously();
         }
     });
 
-    // --- 2. BMI: РОЗРАХУНОК ТА ВІДОБРАЖЕННЯ ---
-    function updateBMIAnalysis(w, h) {
-        // Розрахунок Body Mass Index: вага / (зріст у метрах)^2
+    // --- 1. РОЗРАХУНОК ТА ВІДОБРАЖЕННЯ BODY MASS INDEX (ІМТ) ---
+    function displayBMI(w, h) {
         const bmi = (w / ((h / 100) ** 2)).toFixed(1);
-        
-        const bmiVal = document.getElementById('bmi-value');
-        const bmiStatus = document.getElementById('bmi-status');
-        const advice = document.getElementById('nutrition-advice');
         const panel = document.getElementById('bmi-result-panel');
+        const bmiValEl = document.getElementById('bmi-value');
+        const bmiStatusEl = document.getElementById('bmi-status');
+        const adviceEl = document.getElementById('nutrition-advice');
 
         if (!panel) return;
-        panel.style.display = 'block';
         
-        // Виводимо число BMI
-        bmiVal.textContent = bmi; 
+        panel.style.display = 'block';
+        panel.style.borderLeft = "4px solid #FFC72C";
+        bmiValEl.textContent = bmi;
 
         if (bmi < 18.5) {
-            bmiStatus.textContent = `BMI: ${bmi} — Недостатня вага ⚠️`;
-            bmiStatus.style.color = "#FFD700"; // GOLD_COLOR
-            advice.textContent = "Ваш ІМТ нижче норми. Рекомендується збільшити калорійність раціону.";
+            bmiStatusEl.textContent = `ІМТ: ${bmi} — Недостатня вага`;
+            bmiStatusEl.style.color = "#FFD700";
+            adviceEl.textContent = "Рекомендовано: Профіцит калорій та силові тренування.";
         } else if (bmi < 25) {
-            bmiStatus.textContent = `BMI: ${bmi} — Норма ✅`;
-            bmiStatus.style.color = "#4CAF50"; 
-            advice.textContent = "Ідеальний показник. Підтримуйте поточний баланс БЖУ.";
+            bmiStatusEl.textContent = `ІМТ: ${bmi} — Норма`;
+            bmiStatusEl.style.color = "#4CAF50";
+            adviceEl.textContent = "Ваша вага в нормі. Підтримуйте поточний баланс харчування.";
         } else {
-            // Використовуємо колір для Weight Loss з вашого CSS
-            bmiStatus.textContent = `BMI: ${bmi} — Weight Loss Needed 📉`;
-            bmiStatus.style.color = "#DA3E52"; 
-            advice.textContent = "Ваш ІМТ вказує на надмірну вагу. Рекомендується дефіцит калорій.";
+            bmiStatusEl.textContent = `ІМТ: ${bmi} — Weight Loss Needed`;
+            bmiStatusEl.style.color = "#DA3E52";
+            adviceEl.textContent = "Рекомендовано: Помірний дефіцит калорій та кардіо-навантаження.";
         }
     }
 
-    // --- 3. ЗАВАНТАЖЕННЯ ДАНИХ (Зріст/Вік) ---
-    async function loadUserProfile() {
-        if (!window.db) return;
-        const doc = await db.collection(COLL_USERS).doc(currentUserId).get();
-        if (doc.exists) {
-            const data = doc.data();
-            if (data.height) document.getElementById('user-height').value = data.height;
-            if (data.age) document.getElementById('user-age').value = data.age;
-            
-            // Якщо є зріст і вага, виводимо BMI
-            if (data.lastWeight && data.height) {
-                updateBMIAnalysis(data.lastWeight, data.height);
-            }
-        }
-    }
-
-    // --- 4. ОБМЕЖЕННЯ (1 РАЗ НА ДЕНЬ) ---
+    // --- 2. ПЕРЕВІРКА ЗАПИСУ (ПРИХОВУВАННЯ ФОРМИ) ---
     async function checkDailyEntry() {
         const today = new Date().toISOString().split('T')[0];
         const snap = await db.collection(COLL_HISTORY)
@@ -83,16 +65,56 @@
             .where("date", "==", today).get();
 
         if (!snap.empty) {
-            const btn = document.getElementById('submit-btn');
-            if (btn) {
-                btn.disabled = true;
-                btn.textContent = "Записано";
-                btn.classList.add('disabled-button'); // Клас з вашого CSS
+            // ПРИХОВУЄМО форму, якщо запис вже є
+            const formCard = document.querySelector('.form-card');
+            if (formCard) formCard.style.display = 'none';
+            
+            // Розраховуємо BMI на основі останнього запису
+            const lastData = snap.docs[0].data();
+            const userDoc = await db.collection(COLL_USERS).doc(currentUserId).get();
+            if (userDoc.exists && userDoc.data().height) {
+                displayBMI(lastData.weight, userDoc.data().height);
             }
         }
     }
 
-    // --- 5. ЗБЕРЕЖЕННЯ ---
+    async function loadUserProfile() {
+        if (!window.db) return;
+        const doc = await db.collection(COLL_USERS).doc(currentUserId).get();
+        if (doc.exists) {
+            const data = doc.data();
+            if (data.height) document.getElementById('user-height').value = data.height;
+            if (data.age) document.getElementById('user-age').value = data.age;
+        }
+    }
+
+    // --- 3. ІСТОРІЯ ЗАПИСІВ ПІД ГРАФІКОМ ---
+    async function loadWeightHistoryTable() {
+        const historyContainer = document.getElementById('weight-history-list'); // Має бути в HTML під графіком
+        if (!historyContainer) return;
+
+        const snap = await db.collection(COLL_HISTORY)
+            .where("userId", "==", currentUserId)
+            .orderBy("date", "desc").limit(7).get();
+
+        let html = `<table style="width:100%; color:#ccc; border-collapse:collapse; margin-top:15px; font-size:0.9em;">
+                    <tr style="border-bottom:1px solid #333; color:#FFC72C;">
+                        <th style="text-align:left; padding:8px;">Дата</th>
+                        <th style="text-align:right; padding:8px;">Вага</th>
+                    </tr>`;
+        
+        snap.forEach(doc => {
+            const d = doc.data();
+            html += `<tr style="border-bottom:1px solid #1a1a1a;">
+                        <td style="padding:8px;">${d.date}</td>
+                        <td style="text-align:right; padding:8px;">${d.weight} кг</td>
+                    </tr>`;
+        });
+        html += `</table>`;
+        historyContainer.innerHTML = html;
+    }
+
+    // --- 4. ЗБЕРЕЖЕННЯ ---
     const form = document.getElementById('weight-form');
     if (form) {
         form.addEventListener('submit', async (e) => {
@@ -114,17 +136,17 @@
                     height: h, age: a, lastWeight: w
                 }, { merge: true });
 
-                alert("Дані збережено!");
-                location.reload();
-            } catch (err) { alert(err.message); }
+                alert("Вагу успішно записано!");
+                location.reload(); 
+            } catch (err) { alert("Помилка: " + err.message); }
         });
     }
 
-    // --- 6. ГРАФІК ---
+    // --- 5. ГРАФІК ---
     async function initWeightChart() {
         const snap = await db.collection(COLL_HISTORY)
             .where("userId", "==", currentUserId)
-            .orderBy("date", "asc").limit(10).get();
+            .orderBy("date", "asc").limit(14).get();
 
         const labels = [], data = [];
         snap.forEach(d => {
@@ -142,10 +164,11 @@
                     datasets: [{
                         label: 'Вага',
                         data: data,
-                        borderColor: 'rgb(255, 215, 0)', // GOLD_COLOR
-                        backgroundColor: 'rgba(255, 215, 0, 0.1)',
+                        borderColor: '#FFC72C',
+                        backgroundColor: 'rgba(255, 199, 44, 0.1)',
                         fill: true,
-                        tension: 0.4
+                        tension: 0.4,
+                        pointRadius: 4
                     }]
                 },
                 options: {
