@@ -1,4 +1,9 @@
-/* Додаткові стилі до injury.css */
+/* Вирівнювання голограми */
+.hologram-card-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
 
 .hologram-wrapper {
     position: relative;
@@ -9,15 +14,15 @@
     justify-content: center;
     align-items: center;
     overflow: hidden;
-    border-radius: 8px; /* як у injury.css */
+    border-radius: 8px;
     border: 1px solid #1a1a1a;
 }
 
 #body-hologram-img {
     height: 95%;
-    width: auto;
-    filter: drop-shadow(0 0 10px #FFC72C) brightness(1.1);
-    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Золоте світіння м'язів */
+    filter: drop-shadow(0 0 12px #FFC72C) brightness(1.2);
+    transition: transform 0.6s ease-in-out;
 }
 
 .scan-line {
@@ -36,26 +41,20 @@
     100% { top: 100%; opacity: 0; }
 }
 
-.fat-display-badge {
+.fat-display-box {
     margin-top: 15px;
-    padding: 8px 20px;
+    padding: 10px 25px;
     background: #1a1a1a;
-    border-radius: 20px;
+    border-radius: 30px;
     border: 1px solid #333;
     color: #FFC72C;
     font-weight: bold;
-    font-size: 1.1em;
 }
 
 .bmi-badge {
     padding: 10px;
     background: #1a1a1a;
-    border-left: 3px solid #FFC72C; /* стиль як у notes-section */
+    border-left: 3px solid #FFC72C;
     border-radius: 5px;
-    margin-bottom: 10px;
-}
-
-#bmi-value {
-    font-weight: bold;
-    font-size: 1.3em;
+    margin-bottom: 15px;
 }
