@@ -6,15 +6,12 @@
     let selectedRPE = 0;
     let selectedStars = 0;
 
-    // Рекомендації тепер підтягуються з exercise_library.js через window.MD_RECS
-    const getAdvice = (status) => {
-        const libRecs = window.MD_RECS || {};
-        const defaultRecs = {
-            'MD': 'День гри! Максимальна концентрація.',
-            'TRAIN': 'Стандартне тренування: якість понад усе.',
-            'REST': 'Повне відновлення.'
-        };
-        return libRecs[status] || defaultRecs[status] || 'Працюй згідно з планом.';
+    const MD_RECS = {
+        'MD': 'День гри! Максимальна концентрація. Тільки цільові рухи.',
+        'MD+1': 'Відновлення: акцент на мобільності та легкому русі.',
+        'MD-1': 'Активація: короткі вибухові рухи, робота над швидкістю.',
+        'TRAIN': 'Стандартне тренування: якість понад усе.',
+        'REST': 'Повне відновлення. Тіло будується під час спокою.'
     };
 
     function getFullDateString() {
@@ -66,8 +63,7 @@
                 const mdStatus = calculateStatus(fbData, todayIdx);
                 
                 document.getElementById('status-pill').textContent = mdStatus;
-                // Встановлюємо пораду з бібліотеки
-                document.getElementById('advice-text').querySelector('span:last-child').textContent = getAdvice(mdStatus);
+                document.getElementById('advice-text').querySelector('span:last-child').textContent = MD_RECS[mdStatus] || MD_RECS['TRAIN'];
 
                 renderExercises(fbData[`status_plan_${mdStatus}`]?.exercises || [], listContainer);
                 renderFeedbackForm(feedbackContainer, user.uid, weekId, todayIdx);
