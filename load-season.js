@@ -12,7 +12,8 @@
 
     // Кольори ProAtletCare
     const GOLD = '#FFC72C';
-    const WHITE_SUBTLE = 'rgba(255, 255, 255, 0.4)';
+    const ACUTE_RED = '#FF4136';   // ЧЕРВОНИЙ
+    const CHRONIC_ORANGE = '#FF851B'; // ОРАНЖЕВИЙ
     const GRID_COLOR = 'rgba(255, 255, 255, 0.05)';
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -46,7 +47,6 @@
             dailyLoadData = [];
             snapshot.forEach(doc => dailyLoadData.push(doc.data()));
             
-            // Сортуємо дані по даті
             dailyLoadData.sort((a, b) => new Date(a.date) - new Date(b.date));
             
             if (dailyLoadData.length === 0) {
@@ -114,7 +114,6 @@
         if (ctxL && typeof Chart !== 'undefined') {
             if (loadChart) loadChart.destroy();
             
-            // Беремо останні 14 записів для демонстрації перетину ліній
             const lastData = dailyLoadData.slice(-14);
             const labels = lastData.map(d => d.date.split('-').slice(1).join('.'));
 
@@ -126,18 +125,17 @@
                         {
                             label: 'Acute (Гостре)',
                             data: lastData.map(d => (d.duration * (d.rpe || 0))),
-                            borderColor: GOLD,
+                            borderColor: ACUTE_RED,
                             borderWidth: 3,
-                            tension: 0.15, // Ломана лінія
+                            tension: 0.15,
                             pointRadius: 4,
-                            pointBackgroundColor: GOLD,
+                            pointBackgroundColor: ACUTE_RED,
                             zIndex: 10
                         },
                         {
                             label: 'Chronic (Хронічне)',
-                            // Малюємо лінію середнього хронічного для порівняння
                             data: lastData.map(() => finalChronic.toFixed(0)),
-                            borderColor: WHITE_SUBTLE,
+                            borderColor: CHRONIC_ORANGE,
                             borderDash: [5, 5], 
                             borderWidth: 2,
                             fill: false,
