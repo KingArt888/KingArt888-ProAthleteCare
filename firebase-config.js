@@ -7,14 +7,14 @@ const firebaseConfig = {
   appId: "1:769667753086:web:c2dde1935f80596758a42f"
 };
 
+// Ініціалізація
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 
-const db = firebase.firestore();
-const auth = firebase.auth();
+// Глобальні змінні (важливо для роботи скриптів)
+window.db = firebase.firestore();
+window.auth = firebase.auth();
+window.storage = typeof firebase.storage === "function" ? firebase.storage() : null;
 
-// Безпечне підключення Storage (щоб не було TypeError)
-const storage = typeof firebase.storage === "function" ? firebase.storage() : null;
-
-console.log("✅ ProAtletCare: Firebase System Ready");
+console.log("✅ ProAtletCare: Firebase Ready");
