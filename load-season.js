@@ -10,10 +10,9 @@
     const urlParams = new URLSearchParams(window.location.search);
     const viewUserId = urlParams.get('userId');
 
-    // Кольори ProAtletCare
     const GOLD = '#FFC72C';
-    const ACUTE_RED = '#FF4136';   // ЧЕРВОНИЙ
-    const CHRONIC_ORANGE = '#FF851B'; // ОРАНЖЕВИЙ
+    const ACUTE_RED = '#FF4136';   
+    const CHRONIC_ORANGE = '#FF851B'; 
     const GRID_COLOR = 'rgba(255, 255, 255, 0.05)';
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -46,7 +45,6 @@
             
             dailyLoadData = [];
             snapshot.forEach(doc => dailyLoadData.push(doc.data()));
-            
             dailyLoadData.sort((a, b) => new Date(a.date) - new Date(b.date));
             
             if (dailyLoadData.length === 0) {
@@ -65,7 +63,6 @@
 
     function calculateMetrics() {
         if (dailyLoadData.length === 0) return { acute: 0, chronic: 0, acwr: 0 };
-
         const sorted = [...dailyLoadData];
         const lastDate = new Date(sorted[sorted.length - 1].date);
 
@@ -80,7 +77,6 @@
         const acute = getAvgWeeklyLoad(7);
         const chronic = getAvgWeeklyLoad(28);
         const acwr = (chronic > 0) ? (acute / chronic) : 1.0;
-
         return { acute, chronic, acwr };
     }
 
@@ -88,12 +84,10 @@
         const needle = document.getElementById('gauge-needle');
         const display = document.getElementById('acwr-value');
         const statusText = document.getElementById('acwr-status');
-
         if (!needle || !display) return;
 
         let displayVal = Math.min(acwrValue, 2);
         let degree = -180 + (displayVal / 2) * 180;
-        
         needle.style.transform = `translateX(-50%) rotate(${degree}deg)`;
         display.textContent = acwrValue.toFixed(2);
         
@@ -109,11 +103,19 @@
         }
     }
 
+    // Допоміжна функція для отримання номера тижня
+    function getWeekNumber(d) {
+        d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+        d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+        var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+        return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    }
+
     function renderCharts(finalAcute, finalChronic) {
+        // --- 1. ГРАФІК НАВАНТАЖЕННЯ (ACUTE vs CHRONIC) ---
         const ctxL = document.getElementById('loadChart');
         if (ctxL && typeof Chart !== 'undefined') {
             if (loadChart) loadChart.destroy();
-            
             const lastData = dailyLoadData.slice(-14);
             const labels = lastData.map(d => d.date.split('-').slice(1).join('.'));
 
@@ -148,52 +150,65 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { 
-                            display: true, 
-                            position: 'top',
-                            labels: { color: '#ccc', boxWidth: 12, font: { size: 11 } } 
-                        },
+                        legend: { display: true, position: 'top', labels: { color: '#ccc', font: { size: 11 } } },
                         tooltip: { mode: 'index', intersect: false }
                     },
                     scales: {
-                        y: { 
-                            grid: { color: GRID_COLOR }, 
-                            ticks: { color: '#666', font: { size: 10 } } 
-                        },
-                        x: { 
-                            grid: { display: false }, 
-                            ticks: { color: '#888', font: { size: 10 } } 
-                        }
+                        y: { grid: { color: GRID_COLOR }, ticks: { color: '#666' } },
+                        x: { grid: { display: false }, ticks: { color: '#888' } }
                     }
                 }
             });
         }
         
+        // --- 2. ГРАФІК ДИСТАНЦІЇ (ГРУПУВАННЯ ПО ТИЖНЯХ) ---
         const ctxD = document.getElementById('distanceChart');
         if (ctxD && typeof Chart !== 'undefined') {
             if (distanceChart) distanceChart.destroy();
-            const last7 = dailyLoadData.slice(-7);
+
+            // Групуємо км по тижнях
+            const weeklyGroups = {};
+            dailyLoadData.forEach(d => {
+                const dateObj = new Date(d.date);
+                const year = dateObj.getFullYear();
+                const week = getWeekNumber(dateObj);
+                const key = `W${week} (${year})`;
+                if (!weeklyGroups[key]) weeklyGroups[key] = 0;
+                weeklyGroups[key] += Number(d.distance || 0);
+            });
+
+            const weekLabels = Object.keys(weeklyGroups).slice(-8); // Останні 8 тижнів
+            const weekSums = weekLabels.map(key => weeklyGroups[key]);
+
             distanceChart = new Chart(ctxD, {
                 type: 'line',
                 data: {
-                    labels: last7.map(d => d.date.split('-').slice(1).join('.')),
+                    labels: weekLabels,
                     datasets: [{
-                        label: 'км',
-                        data: last7.map(d => d.distance),
+                        label: 'Сума км за тиждень',
+                        data: weekSums,
                         borderColor: GOLD,
-                        backgroundColor: 'rgba(255, 199, 44, 0.1)',
-                        fill: true,
+                        backgroundColor: 'rgba(255, 199, 44, 0.2)', // Тінь без пробілів
+                        fill: 'start', // Заповнення до осі (прибирає пробіли)
                         tension: 0.4,
-                        pointRadius: 4,
-                        pointBackgroundColor: GOLD
+                        pointRadius: 5,
+                        pointBackgroundColor: GOLD,
+                        borderWidth: 3
                     }]
                 },
                 options: { 
                     responsive: true, 
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
+                    plugins: { 
+                        legend: { display: true, labels: { color: '#888' } },
+                        tooltip: { backgroundColor: '#111', titleColor: GOLD }
+                    },
                     scales: {
-                        y: { grid: { color: GRID_COLOR }, ticks: { color: '#666' } },
+                        y: { 
+                            beginAtZero: true, // Важливо для тіні без пробілів
+                            grid: { color: GRID_COLOR }, 
+                            ticks: { color: '#666' } 
+                        },
                         x: { grid: { display: false }, ticks: { color: '#888' } }
                     }
                 }
@@ -204,10 +219,8 @@
     async function handleFormSubmit(e) {
         e.preventDefault();
         if (viewUserId) return;
-
         const user = window.auth.currentUser;
         if (!user) return alert("Помилка авторизації");
-
         const form = e.target;
         const rpeInput = form.querySelector('input[name="rpe"]:checked');
         if (!rpeInput) return alert("Оберіть RPE");
