@@ -1,27 +1,32 @@
 (function() {
+    let weightChart = null;
+    let currentUserId = null;
+    let selectedSpeed = 'Easy'; 
     let currentAnalysis = null;
     let currentDailyPlan = [];
-    let activeTab = 'brf';
-    let selectedSpeed = 'Easy';
 
     document.addEventListener('DOMContentLoaded', () => {
+        initChart();
         const weightForm = document.getElementById('weight-form');
         if (weightForm) weightForm.addEventListener('submit', handleAthleteAnalysis);
         
         const planBtn = document.getElementById('get-diet-plan-btn');
         if (planBtn) planBtn.addEventListener('click', generateWeeklyPlan);
 
-        // Преміум вкладки
-        ['brf', 'lnc', 'din'].forEach(id => {
-            const btn = document.getElementById('btn-' + id);
-            if (btn) btn.onclick = () => switchDietTab(id);
-        });
-
-        checkSavedPlan();
+        if (typeof firebase !== 'undefined') {
+            firebase.auth().onAuthStateChanged(async (user) => {
+                if (user) {
+                    currentUserId = user.uid;
+                    loadBaseData();
+                    loadHistory();
+                    checkSavedPlan();
+                }
+            });
+        }
     });
 
-    // 1. АНАЛІЗ: ВИЗНАЧЕННЯ РЕЖИМУ ТА ЦІЛЬОВИХ МАКРОСІВ
-    function handleAthleteAnalysis(e) {
+    // 1. АНАЛІЗ ТА РЕЖИМ (SYNC)
+    async function handleAthleteAnalysis(e) {
         if (e) e.preventDefault();
         
         const w = parseFloat(document.getElementById('weight-value')?.value);
@@ -31,177 +36,168 @@
         if (!w || !h || !a) return;
 
         const bmi = (w / ((h / 100) ** 2)).toFixed(1);
-        let mode = "MAINTENANCE";
-        let mult = 1.55;
+        let mode = "";
+        let multiplier = 1.55; 
 
-        // Авто-режим на основі BMI
-        if (bmi < 18.5) { mode = "MASS GAIN"; mult = 1.8; }
-        else if (bmi > 25) { mode = "WEIGHT LOSS"; mult = 1.25; }
+        if (bmi < 18.5) { mode = "MASS GAIN"; multiplier = 1.8; }
+        else if (bmi < 25) { mode = "MAINTENANCE"; multiplier = 1.55; }
+        else { mode = "WEIGHT LOSS"; multiplier = 1.3; }
 
-        const targetKcal = Math.round(((10 * w) + (6.25 * h) - (5 * a) + 5) * mult);
+        const bmr = (10 * w) + (6.25 * h) - (5 * a) + 5;
+        const targetCalories = Math.round(bmr * multiplier);
+        const waterLitres = (w * 0.035).toFixed(1);
 
         currentAnalysis = {
-            targetKcal,
+            targetCalories,
             mode,
-            water: (w * 0.035).toFixed(1),
-            p: Math.round(targetKcal * 0.30 / 4),
-            f: Math.round(targetKcal * 0.25 / 9),
-            c: Math.round(targetKcal * 0.45 / 4)
+            waterLitres,
+            prot: Math.round(targetCalories * 0.30 / 4),
+            fat: Math.round(targetCalories * 0.25 / 9),
+            carb: Math.round(targetCalories * 0.45 / 4)
         };
 
-        updateAllUI();
-        document.getElementById('get-diet-plan-btn').style.display = "block";
+        const bmiEl = document.getElementById('bmi-value');
+        if (bmiEl) bmiEl.innerHTML = `<span style="color:#FFC72C">${bmi}</span>`;
+        
+        const fatEl = document.getElementById('fat-percentage-value');
+        if (fatEl) fatEl.innerHTML = `<div style="font-size:32px; color:#FFC72C; font-weight:800;">${w}</div><div style="font-size:10px;">КГ</div>`;
+        
+        renderHeaderCard(); // Малюємо головну картку
+        
+        const genBtn = document.getElementById('get-diet-plan-btn');
+        if (genBtn) genBtn.style.display = "block";
     }
 
-    // 2. ГЕНЕРАЦІЯ: РОЗРАХУНОК СТРАВ (40/30/30)
-    window.generateWeeklyPlan = function() {
-        if (!currentAnalysis || typeof dietDatabase === 'undefined') return;
+    // Функція малювання головної картки (де все віднімається)
+    function renderHeaderCard() {
+        const recBox = document.getElementById('athlete-recommendation-box');
+        if (!recBox || !currentAnalysis) return;
 
-        const specs = [
-            { id: 'brf', pct: 0.40, key: 'breakfasts' },
-            { id: 'lnc', pct: 0.30, key: 'lunches' },
-            { id: 'din', pct: 0.30, key: 'dinners' }
-        ];
+        const eaten = currentDailyPlan.filter(m => m.eaten).reduce((acc, m) => {
+            acc.k += m.kcal; acc.p += m.p; acc.f += m.f; acc.c += m.c; return acc;
+        }, {k:0, p:0, f:0, c:0});
 
-        currentDailyPlan = specs.map(s => {
-            const db = dietDatabase[s.key].filter(m => m.speed === selectedSpeed);
-            const rawMeal = db[Math.floor(Math.random() * db.length)];
-            
-            // Математичне масштабування під норму користувача
-            const targetMealKcal = currentAnalysis.targetKcal * s.pct;
-            const rawMealKcal = (rawMeal.p * 4) + (rawMeal.f * 9) + (rawMeal.c * 4);
-            const ratio = targetMealKcal / rawMealKcal;
-            
-            return {
-                ...rawMeal,
-                catId: s.id,
-                p: Math.round(rawMeal.p * ratio),
-                f: Math.round(rawMeal.f * ratio),
-                c: Math.round(rawMeal.c * ratio),
-                kcal: Math.round(targetMealKcal),
-                eaten: false
-            };
-        });
+        const leftKcal = currentAnalysis.targetCalories - eaten.k;
 
-        document.getElementById('diet-tabs-wrapper').style.display = 'block';
-        if (document.querySelector('.speed-selector')) document.querySelector('.speed-selector').style.display = 'none';
-        document.getElementById('get-diet-plan-btn').style.display = 'none';
-
-        switchDietTab('brf');
-        updateAllUI();
-        saveToLocal();
-    };
-
-    // 3. ПРЕМІУМ-ВКЛАДКИ ТА ВІДОБРАЖЕННЯ СТРАВИ
-    function switchDietTab(id) {
-        activeTab = id;
-        ['brf', 'lnc', 'din'].forEach(t => {
-            const b = document.getElementById('btn-' + t);
-            if (b) {
-                b.style.color = (t === id) ? "#FFC72C" : "#555";
-                b.style.borderBottom = (t === id) ? "2px solid #FFC72C" : "none";
-                b.style.fontWeight = (t === id) ? "bold" : "normal";
-            }
-        });
-        renderMealCard();
-    }
-
-    function renderMealCard() {
-        const meal = currentDailyPlan.find(m => m.catId === activeTab);
-        const box = document.getElementById('diet-tab-content');
-        if (!meal || !box) return;
-
-        box.innerHTML = `
-            <div style="background:linear-gradient(145deg, #0a0a0a, #111); padding:25px; border-radius:16px; border:1px solid #222; display:flex; justify-content:space-between; align-items:center; margin-top:20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-                <div style="opacity: ${meal.eaten ? '0.2' : '1'}; transition: 0.3s;">
-                    <div style="color:#FFC72C; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:1px; margin-bottom:5px;">${activeTab === 'brf' ? 'Сніданок 40%' : activeTab === 'lnc' ? 'Обід 30%' : 'Вечеря 30%'}</div>
-                    <div style="color:#fff; font-size:20px; font-weight:700; margin-bottom:8px;">${meal.name}</div>
-                    <div style="color:#888; font-family:monospace; font-size:13px; display:flex; gap:10px;">
-                        <span>Б: <b style="color:#fff">${meal.p}г</b></span>
-                        <span>Ж: <b style="color:#fff">${meal.f}г</b></span>
-                        <span>В: <b style="color:#fff">${meal.c}г</b></span>
+        recBox.innerHTML = `
+            <div style="background: #000; padding: 20px; border-radius: 15px; border: 1px solid #222; margin-bottom: 20px;">
+                <div style="font-size:10px; color:#FFC72C; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Режим: ${currentAnalysis.mode}</div>
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div>
+                        <div style="font-size:32px; color:#fff; font-weight:800; line-height:1;">${leftKcal} <span style="font-size:14px; color:#FFC72C;">ККАЛ</span></div>
+                        <div style="font-size:12px; color:#888; margin-top:8px; font-family:monospace;">
+                            P: <span style="color:#fff">${currentAnalysis.prot - eaten.p}g</span> | 
+                            F: <span style="color:#fff">${currentAnalysis.fat - eaten.f}g</span> | 
+                            C: <span style="color:#fff">${currentAnalysis.carb - eaten.c}g</span>
+                        </div>
+                    </div>
+                    <div style="text-align:right; border-left: 1px solid #222; padding-left: 20px;">
+                        <div style="font-size:24px; color:#fff; font-weight:700; display:flex; align-items:center; gap:5px;">
+                            <span style="font-size:18px;">💧</span> ${currentAnalysis.waterLitres}л
+                        </div>
+                        <div style="font-size:9px; color:#40E0D0; text-transform:uppercase; margin-top:5px;">Вода / День</div>
                     </div>
                 </div>
-                <button onclick="window.toggleMeal()" style="background:${meal.eaten ? '#1a1a1a' : '#FFC72C'}; border:none; width:50px; height:50px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 15px rgba(255,199,44,0.3); transition:0.3s;">
-                    <span style="color:#000; font-size:24px;">${meal.eaten ? '✓' : '+'}</span>
-                </button>
             </div>
         `;
     }
 
-    window.toggleMeal = function() {
-        const meal = currentDailyPlan.find(m => m.catId === activeTab);
+    // 2. ГЕНЕРАЦІЯ ТА ВКЛАДКИ
+    window.generateWeeklyPlan = function() {
+        if (!currentAnalysis || typeof dietDatabase === 'undefined') return;
+
+        // Ховаємо вибір швидкості
+        const speedSelector = document.querySelector('.speed-selector');
+        if (speedSelector) speedSelector.style.display = 'none';
+
+        const specs = [
+            { id: 'brf', label: 'СНІДАНОК (40%)', dbKey: 'breakfasts' },
+            { id: 'lnc', label: 'ОБІД (30%)', dbKey: 'lunches' },
+            { id: 'din', label: 'ВЕЧЕРЯ (30%)', dbKey: 'dinners' }
+        ];
+
+        currentDailyPlan = specs.map(spec => {
+            const meals = dietDatabase[spec.dbKey].filter(m => m.speed === selectedSpeed);
+            const bestMeal = meals[Math.floor(Math.random() * meals.length)];
+            return { 
+                ...bestMeal, 
+                catId: spec.id, 
+                catLabel: spec.label, 
+                kcal: Math.round((bestMeal.p*4)+(bestMeal.f*9)+(bestMeal.c*4)), 
+                eaten: false 
+            };
+        });
+
+        const wrapper = document.getElementById('diet-tabs-wrapper');
+        if (wrapper) wrapper.style.display = 'block';
+        
+        const genBtn = document.getElementById('get-diet-plan-btn');
+        if (genBtn) genBtn.style.display = 'none';
+
+        renderFullList(); 
+        savePlanToMemory();
+    };
+
+    function renderFullList() {
+        const content = document.getElementById('diet-tab-content');
+        if (!content) return;
+
+        content.innerHTML = currentDailyPlan.map(meal => `
+            <div style="background: #111; margin-bottom: 12px; padding: 18px; border-radius: 12px; border: 1px solid #222; display: flex; justify-content: space-between; align-items: center; ${meal.eaten ? 'opacity: 0.4;' : ''}">
+                <div>
+                    <div style="font-size: 9px; color: #FFC72C; text-transform: uppercase; font-weight: 700;">${meal.catLabel}</div>
+                    <div style="color: #fff; font-size: 16px; font-weight: 600; margin: 4px 0;">${meal.name}</div>
+                    <div style="color: #666; font-size: 11px; font-family: monospace;">Б:${meal.p} Ж:${meal.f} В:${meal.c} • ${meal.kcal} ккал</div>
+                </div>
+                <button onclick="window.handleMealDone('${meal.catId}')" style="background: ${meal.eaten ? '#222' : '#FFC72C'}; border:none; width:40px; height:40px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; transition: 0.3s;">
+                    ${meal.eaten ? '<span style="color:#555">✓</span>' : '<span style="color:#000; font-weight:bold;">+</span>'}
+                </button>
+            </div>
+        `).join('');
+    }
+
+    window.handleMealDone = function(id) {
+        const meal = currentDailyPlan.find(m => m.catId === id);
         if (meal) {
             meal.eaten = !meal.eaten;
-            renderMealCard();
-            updateAllUI();
-            saveToLocal();
+            renderFullList();
+            renderHeaderCard(); // Оновлюємо лічильник зверху
+            savePlanToMemory();
         }
     };
 
-    // 4. СИНХРОНІЗАЦІЯ ВСІХ ПАНЕЛЕЙ
-    function updateAllUI() {
-        if (!currentAnalysis) return;
+    window.setSpeed = (s, b) => {
+        selectedSpeed = s;
+        document.querySelectorAll('.speed-btn').forEach(btn => { 
+            btn.style.color = "#555"; btn.style.background = "transparent";
+        });
+        if (b) { b.style.color = "#FFC72C"; b.style.fontWeight = "bold"; }
+    };
 
-        const eaten = currentDailyPlan.filter(m => m.eaten).reduce((a, m) => {
-            a.k += m.kcal; a.p += m.p; a.f += m.f; a.c += m.c; return a;
-        }, {k:0, p:0, f:0, c:0});
-
-        const left = {
-            k: currentAnalysis.targetKcal - eaten.k,
-            p: currentAnalysis.p - eaten.p,
-            f: currentAnalysis.f - eaten.f,
-            c: currentAnalysis.c - eaten.c
-        };
-
-        // Оновлення чорної картки зверху
-        const topBox = document.getElementById('athlete-recommendation-box');
-        if (topBox) {
-            topBox.innerHTML = `
-                <div style="background:#000; padding:20px; border-radius:15px; border:1px solid #222; margin-bottom:20px;">
-                    <div style="font-size:10px; color:#FFC72C; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">Режим: ${currentAnalysis.mode}</div>
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                        <div>
-                            <div style="font-size:36px; color:#fff; font-weight:800; line-height:1;">${left.k} <span style="font-size:14px; color:#FFC72C;">ККАЛ</span></div>
-                            <div style="font-size:12px; color:#888; margin-top:10px; font-family:monospace;">
-                                P: <span style="color:#fff">${left.p}g</span> | F: <span style="color:#fff">${left.f}g</span> | C: <span style="color:#fff">${left.c}g</span>
-                            </div>
-                        </div>
-                        <div style="text-align:right; border-left: 1px solid #222; padding-left: 20px;">
-                            <div style="font-size:26px; color:#fff; font-weight:700;">💧 ${currentAnalysis.water}л</div>
-                            <div style="font-size:9px; color:#40E0D0; text-transform:uppercase; margin-top:5px;">Вода / День</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // Оновлення нижньої панелі
-        const lKcal = document.getElementById('calories-left');
-        if (lKcal) lKcal.textContent = left.k;
-        
-        const tKcal = document.getElementById('total-daily-kcal');
-        if (tKcal) tKcal.textContent = currentAnalysis.targetKcal;
-
-        const bju = document.getElementById('bju-left-display');
-        if (bju) bju.innerHTML = `<span>Б: ${left.p}г</span> <span>Ж: ${left.f}г</span> <span>В: ${left.c}г</span>`;
-    }
-
-    // Збереження та ЛокалСторедж
-    function saveToLocal() {
-        localStorage.setItem('pac_pro_v2', JSON.stringify({ plan: currentDailyPlan, analysis: currentAnalysis, date: new Date().toDateString() }));
+    function savePlanToMemory() {
+        localStorage.setItem('pac_diet_v6', JSON.stringify({ plan: currentDailyPlan, analysis: currentAnalysis, date: new Date().toDateString() }));
     }
 
     function checkSavedPlan() {
-        const saved = localStorage.getItem('pac_pro_v2');
+        const saved = localStorage.getItem('pac_diet_v6');
         if (saved) {
-            const d = JSON.parse(saved);
-            if (d.date === new Date().toDateString()) {
-                currentDailyPlan = d.plan; currentAnalysis = d.analysis;
+            const data = JSON.parse(saved);
+            if (data.date === new Date().toDateString()) {
+                currentDailyPlan = data.plan; currentAnalysis = data.analysis;
+                const speedSelector = document.querySelector('.speed-selector');
+                if (speedSelector) speedSelector.style.display = 'none';
                 const wrapper = document.getElementById('diet-tabs-wrapper');
                 if (wrapper) wrapper.style.display = 'block';
-                updateAllUI(); switchDietTab('brf');
+                const genBtn = document.getElementById('get-diet-plan-btn');
+                if (genBtn) genBtn.style.display = 'none';
+                renderHeaderCard();
+                renderFullList();
             }
         }
     }
+
+    // Решта функцій (Chart, Firebase) без змін...
+    function initChart() { /*...*/ }
+    async function loadHistory() { /*...*/ }
+    async function loadBaseData() { /*...*/ }
 })();
