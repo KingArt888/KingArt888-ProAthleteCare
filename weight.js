@@ -11,7 +11,6 @@
         const planBtn = document.getElementById('get-diet-plan-btn');
         if (planBtn) planBtn.addEventListener('click', generateWeeklyPlan);
 
-        // Налаштування вкладок Сніданок/Обід/Вечеря
         ['brf', 'lnc', 'din'].forEach(id => {
             const btn = document.getElementById('btn-' + id);
             if (btn) btn.onclick = () => switchDietTab(id);
@@ -50,7 +49,7 @@
         if (genBtn) genBtn.style.display = "block";
     }
 
-    // 2. ГЕНЕРАЦІЯ БЕЗ ДУБЛІКАТІВ (ЛОГІКА ДІЄТОЛОГА)
+    // 2. ГЕНЕРАЦІЯ (ПРИХОВУЄ КНОПКИ ШВИДКОСТІ)
     window.generateWeeklyPlan = function() {
         if (!currentAnalysis || typeof dietDatabase === 'undefined') return;
 
@@ -61,36 +60,12 @@
         ];
 
         slots.forEach(slot => {
-            let targetKcal = currentAnalysis.targetKcal * slot.pct;
-            let currentKcal = 0;
-            let selectedMeals = [];
-            
-            // Копіюємо доступні страви для конкретної швидкості
-            let availableMeals = [...dietDatabase[slot.key].filter(m => m.speed === selectedSpeed)];
-
-            // Набираємо різні страви, доки не досягнемо калоражу
-            while (currentKcal < targetKcal && availableMeals.length > 0) {
-                let randomIndex = Math.floor(Math.random() * availableMeals.length);
-                let meal = availableMeals.splice(randomIndex, 1)[0]; // Видаляємо з тимчасового списку, щоб не було дублів
-
-                let mealKcal = (meal.p * 4) + (meal.f * 9) + (meal.c * 4);
-                
-                selectedMeals.push({
-                    ...meal,
-                    kcal: Math.round(mealKcal),
-                    eaten: false,
-                    uid: Math.random().toString(36).substr(2, 9)
-                });
-                currentKcal += mealKcal;
-            }
-            currentDailyPlan[slot.id] = selectedMeals;
+            currentDailyPlan[slot.id] = pickMealsForKcal(slot.key, currentAnalysis.targetKcal * slot.pct);
         });
 
-        // ПРИХОВУЄМО ТІЛЬКИ ВИБІР ШВИДКОСТІ
         const speedSelector = document.querySelector('.speed-selector');
         if (speedSelector) speedSelector.style.display = 'none';
 
-        // Показуємо вкладки та приховуємо кнопку генерації
         const tabsWrapper = document.getElementById('diet-tabs-wrapper');
         if (tabsWrapper) tabsWrapper.style.display = 'block';
         
@@ -102,7 +77,78 @@
         saveToLocal();
     };
 
-    // 3. ПЕРЕМИКАННЯ ВКЛАДОК
+    // Допоміжна функція підбору страв
+    function pickMealsForKcal(key, target) {
+        let currentKcal = 0;
+        let selected = [];
+        let available = [...dietDatabase[key].filter(m => m.speed === selectedSpeed)];
+
+        while (currentKcal < target && available.length > 0) {
+            let randomIndex = Math.floor(Math.random() * available.length);
+            let meal = available.splice(randomIndex, 1)[0];
+            let kcal = (meal.p * 4) + (meal.f * 9) + (meal.c * 4);
+            selected.push({ ...meal, kcal: Math.round(kcal), eaten: false, uid: Math.random().toString(36).substr(2, 9) });
+            currentKcal += kcal;
+        }
+        return selected;
+    }
+
+    // 3. ТОЧКОВА ЗАМІНА ІНГРЕДІЄНТА 🔄
+    window.replaceOneMeal = function(uid) {
+        const slotKeyMap = { 'brf': 'breakfasts', 'lnc': 'lunches', 'din': 'dinners' };
+        const dbKey = slotKeyMap[activeTab];
+        
+        // Знаходимо індекс страви, яку хочемо замінити
+        const index = currentDailyPlan[activeTab].findIndex(m => m.uid === uid);
+        if (index === -1) return;
+
+        // Список страв, яких ще немає в поточному прийомі (щоб не було дублів)
+        const currentUids = currentDailyPlan[activeTab].map(m => m.name);
+        let available = dietDatabase[dbKey].filter(m => m.speed === selectedSpeed && !currentUids.includes(m.name));
+
+        if (available.length > 0) {
+            let randomIndex = Math.floor(Math.random() * available.length);
+            let meal = available[randomIndex];
+            let kcal = (meal.p * 4) + (meal.f * 9) + (meal.c * 4);
+            
+            // Замінюємо тільки один елемент масиву
+            currentDailyPlan[activeTab][index] = { 
+                ...meal, 
+                kcal: Math.round(kcal), 
+                eaten: false, 
+                uid: Math.random().toString(36).substr(2, 9) 
+            };
+            
+            renderMealList();
+            updateAllUI();
+            saveToLocal();
+        }
+    };
+
+    // 4. ВІДОБРАЖЕННЯ З КНОПКОЮ ЗАМІНИ
+    function renderMealList() {
+        const meals = currentDailyPlan[activeTab];
+        const box = document.getElementById('diet-tab-content');
+        if (!box) return;
+
+        box.innerHTML = meals.map(meal => `
+            <div style="background:#111; padding:15px; border-radius:12px; border:1px solid #222; display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <div style="opacity: ${meal.eaten ? '0.2' : '1'}; transition: 0.3s; flex: 1;">
+                    <div style="color:#fff; font-size:16px; font-weight:600;">${meal.name}</div>
+                    <div style="color:#888; font-size:12px; font-family:monospace;">Б:${meal.p} Ж:${meal.f} В:${meal.c} • ${meal.kcal} ккал</div>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button onclick="window.replaceOneMeal('${meal.uid}')" style="background:transparent; border:1px solid #333; color:#FFC72C; width:35px; height:35px; border-radius:50%; cursor:pointer; font-size:14px;">🔄</button>
+                    
+                    <button onclick="window.toggleMealStatus('${meal.uid}')" style="background:${meal.eaten ? '#222' : '#FFC72C'}; border:none; width:40px; height:40px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; transition: 0.3s;">
+                        <span style="color:#000; font-weight:bold; font-size:18px;">${meal.eaten ? '✓' : '+'}</span>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // ПЕРЕМИКАННЯ ВКЛАДОК ТА ІНШЕ
     function switchDietTab(id) {
         activeTab = id;
         ['brf', 'lnc', 'din'].forEach(t => {
@@ -116,24 +162,6 @@
         renderMealList();
     }
 
-    function renderMealList() {
-        const meals = currentDailyPlan[activeTab];
-        const box = document.getElementById('diet-tab-content');
-        if (!box) return;
-
-        box.innerHTML = meals.map(meal => `
-            <div style="background:#111; padding:15px; border-radius:12px; border:1px solid #222; display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <div style="opacity: ${meal.eaten ? '0.2' : '1'}; transition: 0.3s;">
-                    <div style="color:#fff; font-size:16px; font-weight:600;">${meal.name}</div>
-                    <div style="color:#888; font-size:12px; font-family:monospace;">Б:${meal.p} Ж:${meal.f} В:${meal.c} • ${meal.kcal} ккал</div>
-                </div>
-                <button onclick="window.toggleMealStatus('${meal.uid}')" style="background:${meal.eaten ? '#222' : '#FFC72C'}; border:none; width:40px; height:40px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; transition: 0.3s;">
-                    <span style="color:#000; font-weight:bold; font-size:18px;">${meal.eaten ? '✓' : '+'}</span>
-                </button>
-            </div>
-        `).join('');
-    }
-
     window.toggleMealStatus = function(uid) {
         const meal = currentDailyPlan[activeTab].find(m => m.uid === uid);
         if (meal) {
@@ -144,10 +172,8 @@
         }
     };
 
-    // 4. СИНХРОНІЗАЦІЯ ВЕРХУ ТА НИЗУ
     function updateAllUI() {
         if (!currentAnalysis) return;
-
         const allMeals = [...currentDailyPlan.brf, ...currentDailyPlan.lnc, ...currentDailyPlan.din];
         const eaten = allMeals.filter(m => m.eaten).reduce((acc, m) => {
             acc.k += m.kcal; acc.p += m.p; acc.f += m.f; acc.c += m.c; return acc;
@@ -168,7 +194,6 @@
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
                         <div>
                             <div style="font-size:32px; color:#fff; font-weight:800;">${left.k} <span style="font-size:14px; color:#FFC72C;">ККАЛ</span></div>
-                            <div style="font-size:12px; color:#666; font-family:monospace;">P: ${left.p}g | F: ${left.f}g | C: ${left.c}g</div>
                         </div>
                         <div style="text-align:right; border-left:1px solid #222; padding-left:15px;">
                             <div style="font-size:24px; color:#fff; font-weight:700;">💧 ${currentAnalysis.water}л</div>
@@ -185,17 +210,26 @@
         if (bju) bju.innerHTML = `<span>Б: ${left.p}г</span> <span>Ж: ${left.f}г</span> <span>В: ${left.c}г</span>`;
     }
 
-    // ТЕХНІЧНІ ФУНКЦІЇ
     window.setSpeed = (s, btn) => {
         selectedSpeed = s;
         document.querySelectorAll('.speed-btn').forEach(b => {
             b.style.color = "#555"; b.style.background = "transparent";
+            b.classList.remove('active');
         });
-        if (btn) { btn.style.color = "#FFC72C"; btn.style.fontWeight = "bold"; }
+        if (btn) { 
+            btn.style.color = "#FFC72C"; 
+            btn.style.fontWeight = "bold"; 
+            btn.classList.add('active');
+        }
     };
 
     function saveToLocal() {
-        localStorage.setItem('pac_pro_v3', JSON.stringify({ plan: currentDailyPlan, analysis: currentAnalysis, date: new Date().toDateString() }));
+        localStorage.setItem('pac_pro_v3', JSON.stringify({ 
+            plan: currentDailyPlan, 
+            analysis: currentAnalysis, 
+            date: new Date().toDateString(),
+            speed: selectedSpeed 
+        }));
     }
 
     function checkSavedPlan() {
@@ -204,6 +238,7 @@
             const d = JSON.parse(saved);
             if (d.date === new Date().toDateString()) {
                 currentDailyPlan = d.plan; currentAnalysis = d.analysis;
+                selectedSpeed = d.speed || 'Easy';
                 const speedSelector = document.querySelector('.speed-selector');
                 if (speedSelector) speedSelector.style.display = 'none';
                 const wrapper = document.getElementById('diet-tabs-wrapper');
