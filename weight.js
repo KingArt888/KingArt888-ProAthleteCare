@@ -20,13 +20,18 @@
     document.addEventListener('DOMContentLoaded', () => {
         initChart();
         const form = document.getElementById('weight-form');
-        if (form) form.addEventListener('submit', handleAthleteAnalysis);
+        if (form) {
+            form.addEventListener('submit', handleAthleteAnalysis);
+        }
         
+        // Кнопка генерації плану
         const planBtn = document.getElementById('get-diet-plan-btn');
-        if (planBtn) planBtn.addEventListener('click', generateWeeklyPlan);
+        if (planBtn) {
+            planBtn.addEventListener('click', generateWeeklyPlan);
+        }
     });
 
-    // Вибір швидкості приготування
+    // Функція вибору швидкості (Швидко/Середньо/Маю час)
     window.setSpeed = function(speed, btn) {
         selectedSpeed = speed;
         document.querySelectorAll('.speed-btn').forEach(b => {
@@ -81,10 +86,10 @@
         return { status, statusColor: color, targetCalories: kcal };
     }
 
-    // Оновлення КРУГА (Composition Scan)
+    // Оновлення великого круга (SCANNER)
     function updateScannerUI(weight, bmi, data) {
-        const bmiDisplay = document.getElementById('bmi-value');
-        if (bmiDisplay) bmiDisplay.textContent = bmi;
+        const bmiValueSpan = document.getElementById('bmi-value');
+        if (bmiValueSpan) bmiValueSpan.textContent = bmi;
 
         const circle = document.getElementById('scan-main-circle');
         if (circle) {
@@ -97,7 +102,7 @@
         }
     }
 
-    // Оновлення АНАЛІЗУ ТА РЕКОМЕНДАЦІЙ
+    // Оновлення блоку РЕКОМЕНДАЦІЙ
     function updateRecommendationUI(data) {
         const box = document.getElementById('athlete-recommendation-box');
         const selector = document.getElementById('speed-selector-container');
@@ -112,7 +117,9 @@
                 </div>
             `;
         }
-        if (selector) selector.style.display = 'block';
+        if (selector) {
+            selector.style.display = 'block';
+        }
     }
 
     async function generateWeeklyPlan() {
@@ -129,13 +136,20 @@
             }, { merge: true });
             
             const dietContainer = document.getElementById('diet-container');
+            const kcalBalance = document.getElementById('kcal-balance');
+            const caloriesLeft = document.getElementById('calories-left');
+
             if (dietContainer) {
                 dietContainer.innerHTML = `
                     <div style="background:#111; padding:12px; border-radius:6px; border:1px solid #222; margin-top:10px; text-align:center;">
-                        <p style="color:#FFC72C; font-size:12px; margin:0;">✅ План на 7 днів сформовано!</p>
-                        <p style="color:#666; font-size:10px;">Режим: ${selectedSpeed}</p>
+                        <p style="color:#FFC72C; font-size:12px; margin:0;">✅ ПЛАН НА 7 ДНІВ СФОРМОВАНО!</p>
+                        <p style="color:#666; font-size:10px;">Режим приготування: ${selectedSpeed}</p>
                     </div>`;
             }
+
+            if (kcalBalance) kcalBalance.style.display = 'block';
+            if (caloriesLeft) caloriesLeft.textContent = currentAnalysis.targetCalories;
+
             btn.textContent = "ГЕНЕРУВАТИ ПЛАН НА ТИЖДЕНЬ";
         } catch (e) { console.error(e); }
     }
@@ -159,7 +173,7 @@
             const docs = snap.docs.map(d => d.data());
             const last = docs[0];
             
-            // Викликаємо оновлення інтерфейсу останніми даними з бази
+            // Завантажуємо останній аналіз при відкритті
             const analysis = calculateAthleteData(last.weight, last.bmi, 180, 25);
             currentAnalysis = analysis;
             updateScannerUI(last.weight, last.bmi, analysis);
