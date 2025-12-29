@@ -1,8 +1,29 @@
-// admin.js — Панель моніторингу ProAtletCare з демо-даними
+// admin.js — Головна панель ProAtletCare (ACWR + Wellness + Weight)
 const USERS_COL = 'users';
 const WEIGHT_COL = 'weight_history';
+const LOAD_COL = 'load_season_reports';
 
-// 1. Кольорові статуси Wellness
+// 1. Створення міні-спідометра (SVG)
+function createMiniGauge(value, color) {
+    const val = parseFloat(value) || 0;
+    const percent = Math.min(Math.max(val / 2, 0), 1);
+    const rotation = -90 + (percent * 180);
+
+    return `
+        <div style="position: relative; width: 60px; height: 35px; margin: 0 auto;">
+            <svg viewBox="0 0 100 50" style="width: 100%; height: 100%;">
+                <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#222" stroke-width="10" />
+                <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="${color}" stroke-width="10" 
+                      stroke-dasharray="${percent * 126}, 126" />
+                <line x1="50" y1="50" x2="50" y2="15" stroke="#fff" stroke-width="3" 
+                      style="transform-origin: 50px 50px; transform: rotate(${rotation}deg); transition: 0.8s ease-out;" />
+            </svg>
+            <div style="font-size: 11px; font-weight: bold; color: ${color}; margin-top: -2px;">${value}</div>
+        </div>
+    `;
+}
+
+// 2. Кольорові статуси Wellness
 function getStatusEmoji(type, value) {
     if (value === '-' || value === undefined || value === null) return '<span style="opacity: 0.1;">➖</span>';
     const val = parseInt(value);
@@ -15,126 +36,129 @@ function getStatusEmoji(type, value) {
         color = (val <= 3) ? '#00ff00' : (val <= 6) ? '#FFC72C' : '#ff4d4d';
     }
     return `
-        <div style="display: inline-flex; flex-direction: column; align-items: center; justify-content: center; 
-                    width: 36px; height: 36px; border-radius: 8px; background: ${color}15; border: 1px solid ${color}44;">
+        <div style="display: inline-flex; align-items: center; justify-content: center; 
+                    width: 34px; height: 34px; border-radius: 8px; background: ${color}15; border: 1px solid ${color}44;">
             <span style="font-size: 1.1em; filter: drop-shadow(0 0 2px ${color});">${emoji}</span>
         </div>`;
 }
 
-// 2. Колір BMI (Світлофор)
-function getBmiColor(bmi) {
-    const val = parseFloat(bmi);
-    if (!val || isNaN(val)) return '#888';
-    if (val < 18.5) return '#00BFFF'; // Синій - недовага
-    if (val < 25) return '#00ff00';   // Зелений - норма
-    if (val < 30) return '#FFC72C';   // Жовтий - увага
-    return '#ff4d4d';                // Червоний - ожиріння
+// 3. Розрахунок метрик ACWR (твоя логіка)
+async function getAthleteLoadMetrics(uid, demoData = null) {
+    try {
+        let data = demoData;
+        if (!data) {
+            const snapshot = await db.collection(LOAD_COL).where("userId", "==", uid).get();
+            if (snapshot.empty) return { acwr: '1.0', status: 'НОРМА', color: '#666' };
+            data = snapshot.docs.map(d => d.data());
+        }
+        
+        data.sort((a, b) => new Date(a.date) - new Date(b.date));
+        const lastDate = new Date(data[data.length - 1].date);
+        
+        const getLoad = (days) => {
+            const startDate = new Date(lastDate);
+            startDate.setDate(lastDate.getDate() - days);
+            const periodData = data.filter(d => new Date(d.date) > startDate);
+            const total = periodData.reduce((sum, d) => sum + (Number(d.duration) * Number(d.rpe || 0)), 0);
+            return total / (days / 7);
+        };
+
+        const acute = getLoad(7);
+        const chronic = getLoad(28);
+        const acwr = (chronic > 0) ? (acute / chronic) : 1.0;
+
+        let status = 'ОПТИМАЛЬНО';
+        let color = '#00ff00';
+        if (acwr > 1.5) { status = 'РИЗИК'; color = '#ff4d4d'; }
+        else if (acwr > 1.3) { status = 'УВАГА'; color = '#FFC72C'; }
+        else if (acwr < 0.8) { status = 'НЕДОТРЕН.'; color = '#888'; }
+
+        return { acwr: acwr.toFixed(2), status, color };
+    } catch (e) { return { acwr: '1.0', status: '-', color: '#333' }; }
 }
 
-// 3. Функція малювання таблиці
-function renderAdminTable(athletesMap) {
+// 4. Малювання таблиці
+async function renderAdminTable(athletesMap) {
     const tbody = document.getElementById('athletes-tbody');
     if (!tbody) return;
 
-    tbody.innerHTML = Object.values(athletesMap).map(athlete => {
-        const stat = athlete.injuryStatus || { label: 'ЗДОРОВИЙ', color: '#00ff00', pain: 0 };
-        const weight = athlete.weightData?.weight || '-';
-        const bmi = athlete.weightData?.bmi || '-';
-        const bmiCol = getBmiColor(bmi);
+    let rows = "";
+    for (const athlete of Object.values(athletesMap)) {
+        const load = await getAthleteLoadMetrics(athlete.uid, athlete.demoLoad);
+        const stat = athlete.injuryStatus || { label: 'ЗДОРОВИЙ', color: '#00ff00' };
         
-        return `
-            <tr style="border-bottom: 1px solid #222;">
-                <td style="padding: 10px;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <img src="${athlete.photo}" style="width: 38px; height: 38px; border-radius: 50%; border: 1px solid #FFC72C; object-fit: cover;">
+        rows += `
+            <tr style="border-bottom: 1px solid #1a1a1a;">
+                <td style="padding-left: 25px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <img src="${athlete.photo}" style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid #FFC72C; object-fit: cover;">
                         <div>
-                            <div style="font-weight: bold; color: #FFC72C; font-size: 0.9em;">${athlete.name}</div>
-                            <div style="font-size: 0.7em; color: #888;">${athlete.club}</div>
+                            <div style="font-weight: bold; color: #FFC72C; font-size: 0.95em;">${athlete.name}</div>
+                            <div style="font-size: 0.7em; color: #666;">${athlete.club}</div>
                         </div>
                     </div>
                 </td>
-                <td>
-                    <div style="font-size: 0.7em; padding: 4px; border-radius: 4px; text-align: center; min-width: 90px;
-                        background: ${stat.color}15; color: ${stat.color}; border: 1px solid ${stat.color}44;">
-                        <div style="font-weight: bold; text-transform: uppercase;">${stat.label}</div>
-                        ${stat.pain > 0 ? `<div style="font-size: 0.85em; color: #fff;">${stat.bodyPart || 'Біль'} (${stat.pain})</div>` : ''}
-                    </div>
-                </td>
                 <td style="text-align: center;">
-                    <div style="line-height: 1.2;">
-                        <div style="color: #FFC72C; font-weight: bold; font-size: 0.9em;">${weight} kg</div>
-                        <div style="color: ${bmiCol}; font-size: 0.7em; font-weight: bold;">BMI: ${bmi}</div>
+                    <div style="font-size: 0.65em; padding: 4px 8px; border-radius: 4px; background: ${stat.color}15; color: ${stat.color}; border: 1px solid ${stat.color}44; font-weight: bold; text-transform: uppercase;">
+                        ${stat.label}
                     </div>
                 </td>
-                <td style="text-align: center;">${getStatusEmoji('sleep', athlete.wellness?.sleep)}</td>
-                <td style="text-align: center;">${getStatusEmoji('stress', athlete.wellness?.stress)}</td>
-                <td style="text-align: center;">${getStatusEmoji('soreness', athlete.wellness?.soreness)}</td>
-                <td style="text-align: center;">${getStatusEmoji('ready', athlete.wellness?.ready)}</td>
-                <td style="text-align: right; padding-right: 10px;">
-                    <div style="display: flex; gap: 6px; justify-content: flex-end;">
-                        <a href="weekly-individual.html?userId=${athlete.uid}" style="background: #111; color: #FFC72C; border: 1px solid #FFC72C; padding: 5px 10px; border-radius: 4px; text-decoration: none;">📅</a>
-                        <a href="injury.html?userId=${athlete.uid}" style="background: #FFC72C; color: #000; padding: 5px 10px; border-radius: 4px; text-decoration: none;">📊</a>
+                <td style="text-align: center; width: 110px;">
+                    ${createMiniGauge(load.acwr, load.color)}
+                    <div style="font-size: 0.6em; color: #555; text-transform: uppercase; margin-top: 2px;">${load.status}</div>
+                </td>
+                <td class="wellness-col">${getStatusEmoji('sleep', athlete.wellness?.sleep)}</td>
+                <td class="wellness-col">${getStatusEmoji('stress', athlete.wellness?.stress)}</td>
+                <td class="wellness-col">${getStatusEmoji('soreness', athlete.wellness?.soreness)}</td>
+                <td class="wellness-col">${getStatusEmoji('ready', athlete.wellness?.ready)}</td>
+                <td style="text-align: right; padding-right: 25px;">
+                    <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                        <a href="weekly-individual.html?userId=${athlete.uid}" class="btn-action" style="background: transparent; color: #FFC72C; border: 1px solid #FFC72C; padding: 6px 10px;">📅</a>
+                        <a href="injury.html?userId=${athlete.uid}" class="btn-action" style="padding: 6px 10px;">📊</a>
                     </div>
                 </td>
             </tr>`;
-    }).join('');
+    }
+    tbody.innerHTML = rows;
 }
 
-// 4. Завантаження даних + 10 Демо-атлетів
+// 5. Завантаження даних + Демо
 async function loadAdminDashboard() {
-    // Тимчасові 10 атлетів для редагування панелі
-    const demoAthletes = {
-        "d1": { uid: "d1", name: "Артем Кулик", club: "ProAtletCare", photo: "https://i.pravatar.cc/150?u=1", injuryStatus: { label: 'ЗДОРОВИЙ', color: '#00ff00', pain: 0 }, wellness: { sleep: 9, stress: 2, soreness: 1, ready: 10 }, weightData: { weight: 88, bmi: 24.1 } },
-        "d2": { uid: "d2", name: "Максим Регбі", club: "Paphos FC", photo: "https://i.pravatar.cc/150?u=2", injuryStatus: { label: 'УВАГА', color: '#FFC72C', pain: 4, bodyPart: 'Коліно' }, wellness: { sleep: 6, stress: 5, soreness: 6, ready: 7 }, weightData: { weight: 95, bmi: 28.3 } },
-        "d3": { uid: "d3", name: "Іван Бокс", club: "Fit/Box", photo: "https://i.pravatar.cc/150?u=3", injuryStatus: { label: 'ТРАВМА', color: '#ff4d4d', pain: 9, bodyPart: 'Плече' }, wellness: { sleep: 4, stress: 8, soreness: 9, ready: 2 }, weightData: { weight: 82, bmi: 23.5 } },
-        "d4": { uid: "d4", name: "Дмитро Сила", club: "Donetsk", photo: "https://i.pravatar.cc/150?u=4", injuryStatus: { label: 'ЗДОРОВИЙ', color: '#00ff00', pain: 0 }, wellness: { sleep: 8, stress: 3, soreness: 2, ready: 9 }, weightData: { weight: 105, bmi: 31.2 } },
-        "d5": { uid: "d5", name: "Олександр Швидкість", club: "Shakhtar", photo: "https://i.pravatar.cc/150?u=5", injuryStatus: { label: 'УВАГА', color: '#FFC72C', pain: 3, bodyPart: 'Ахілл' }, wellness: { sleep: 7, stress: 4, soreness: 4, ready: 6 }, weightData: { weight: 78, bmi: 21.8 } },
-        "d6": { uid: "d6", name: "Сергій Атлет", club: "ProAtletCare", photo: "https://i.pravatar.cc/150?u=6", injuryStatus: { label: 'ЗДОРОВИЙ', color: '#00ff00', pain: 0 }, wellness: { sleep: 10, stress: 1, soreness: 0, ready: 10 }, weightData: { weight: 85, bmi: 24.5 } },
-        "d7": { uid: "d7", name: "Андрій Крос", club: "Cyprus Run", photo: "https://i.pravatar.cc/150?u=7", injuryStatus: { label: 'ЗДОРОВИЙ', color: '#00ff00', pain: 0 }, wellness: { sleep: 5, stress: 6, soreness: 7, ready: 4 }, weightData: { weight: 70, bmi: 19.5 } },
-        "d8": { uid: "d8", name: "Микола ММА", club: "Fight Club", photo: "https://i.pravatar.cc/150?u=8", injuryStatus: { label: 'ТРАВМА', color: '#ff4d4d', pain: 7, bodyPart: 'Спина' }, wellness: { sleep: 6, stress: 7, soreness: 8, ready: 5 }, weightData: { weight: 90, bmi: 26.8 } },
-        "d9": { uid: "d9", name: "Віктор Тренер", club: "FitBox", photo: "https://i.pravatar.cc/150?u=9", injuryStatus: { label: 'ЗДОРОВИЙ', color: '#00ff00', pain: 0 }, wellness: { sleep: 8, stress: 2, soreness: 3, ready: 8 }, weightData: { weight: 84, bmi: 25.1 } },
-        "d10": { uid: "d10", name: "Олег Регбіст", club: "Paphos FC", photo: "https://i.pravatar.cc/150?u=10", injuryStatus: { label: 'УВАГА', color: '#FFC72C', pain: 2, bodyPart: 'Гомілка' }, wellness: { sleep: 7, stress: 3, soreness: 5, ready: 7 }, weightData: { weight: 98, bmi: 29.5 } }
-    };
+    // 10 Демо-атлетів
+    const demo = {};
+    for(let i=1; i<=10; i++) {
+        demo[`d${i}`] = {
+            uid: `d${i}`,
+            name: ["Артем Кулик", "Максим Регбі", "Дмитро Сила", "Іван Бокс", "Олег Швидкість", "Сергій Атлет", "Андрій Крос", "Микола ММА", "Віктор Тренер", "Олександр Р"][i-1],
+            club: i%2==0 ? "ProAtletCare" : "Paphos FC",
+            photo: `https://i.pravatar.cc/150?u=${i+20}`,
+            injuryStatus: i==3 ? {label:'ТРАВМА', color:'#ff4d4d'} : (i==2 ? {label:'УВАГА', color:'#FFC72C'} : {label:'ЗДОРОВИЙ', color:'#00ff00'}),
+            wellness: { sleep: 8, stress: 2, soreness: 3, ready: 9 },
+            demoLoad: [
+                {date: '2025-12-01', duration: 60, rpe: 7},
+                {date: '2025-12-28', duration: 90, rpe: i==2 ? 9 : 6} // Імітація навантаження
+            ]
+        };
+    }
 
-    renderAdminTable(demoAthletes); // Спочатку показуємо демо
+    renderAdminTable(demo);
 
     try {
         const usersSnap = await db.collection(USERS_COL).get();
-        const realAthletes = {};
-        
-        for (const userDoc of usersSnap.docs) {
-            const data = userDoc.data();
+        const real = {};
+        for (const doc of usersSnap.docs) {
+            const data = doc.data();
             if (data.role === 'admin') continue;
-
-            const weightSnap = await db.collection(WEIGHT_COL)
-                .where('userId', '==', userDoc.id)
-                .orderBy('timestamp', 'desc')
-                .limit(1).get();
-            
-            let weightData = { weight: '-', bmi: '-' };
-            if (!weightSnap.empty) {
-                const w = weightSnap.docs[0].data();
-                weightData = { weight: w.weight, bmi: w.bmi };
-            }
-
-            realAthletes[userDoc.id] = {
-                uid: userDoc.id,
+            real[doc.id] = {
+                uid: doc.id,
                 name: data.name || "Атлет",
                 photo: data.photoURL || `https://ui-avatars.com/api/?name=${data.name || 'A'}&background=FFC72C&color=000`,
                 club: data.club || "Клуб",
-                injuryStatus: data.injuryStatus || { label: 'ЗДОРОВИЙ', color: '#00ff00', pain: 0 },
-                wellness: data.lastWellness || { sleep: '-', stress: '-', soreness: '-', ready: '-' },
-                weightData: weightData
+                wellness: data.lastWellness || { sleep: '-', stress: '-', soreness: '-', ready: '-' }
             };
         }
-        
-        // Якщо є реальні атлети, додаємо їх до демо-списку або замінюємо його
-        if (Object.keys(realAthletes).length > 0) {
-            renderAdminTable({...demoAthletes, ...realAthletes});
-        }
-    } catch (e) { 
-        console.error("Admin Load Error:", e);
-    }
+        if (Object.keys(real).length > 0) renderAdminTable({...demo, ...real});
+    } catch (e) { console.warn(e); }
 }
 
 firebase.auth().onAuthStateChanged(user => {
