@@ -6,7 +6,11 @@
     <title>ProAtletCare Admin - Моніторинг</title>
     <style>
         body { background-color: #000; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; }
-        header { background: #111; padding: 20px 40px; border-bottom: 2px solid #FFC72C; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(255, 199, 44, 0.1); }
+        header { 
+            background: #111; padding: 20px 40px; border-bottom: 2px solid #FFC72C; 
+            display: flex; justify-content: space-between; align-items: center; 
+            box-shadow: 0 4px 15px rgba(255, 199, 44, 0.1); 
+        }
         .logo { color: #FFC72C; font-weight: bold; font-size: 1.6em; letter-spacing: 2px; }
         
         .container { padding: 30px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing: border-box; }
@@ -19,9 +23,14 @@
         .monitor-table td { padding: 12px 10px; border-bottom: 1px solid #1a1a1a; vertical-align: middle; transition: 0.2s; }
         .monitor-table tr:hover { background: #111; }
 
+        /* Компактні колонки Wellness */
         .wellness-col { width: 60px; text-align: center !important; padding: 12px 2px !important; }
         
-        .btn-action { background: #FFC72C; color: #000; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; text-decoration: none; font-size: 0.8em; transition: 0.3s; display: inline-block; }
+        .btn-action { 
+            background: #FFC72C; color: #000; border: none; border-radius: 6px; cursor: pointer; 
+            font-weight: bold; text-decoration: none; font-size: 0.8em; transition: 0.3s; 
+            display: inline-block; padding: 8px 12px;
+        }
         .btn-action:hover { background: #fff; transform: translateY(-2px); }
 
         ::-webkit-scrollbar { width: 8px; }
@@ -30,8 +39,8 @@
 </head>
 <body>
     <header>
-        <div class="logo">PRO ATLET CARE <span style="font-weight: 300; color: #fff;">| ADMIN</span></div>
-        <button onclick="firebase.auth().signOut()" class="btn-action" style="background:transparent; color:#FFC72C; border:1px solid #FFC72C; padding: 10px 20px;">ВИХІД</button>
+        <div class="logo">PRO ATLET CARE <span style="font-weight: 300; color: #fff;">| MONITORING</span></div>
+        <button onclick="firebase.auth().signOut()" class="btn-action" style="background:transparent; color:#FFC72C; border:1px solid #FFC72C;">ВИХІД</button>
     </header>
 
     <div class="container">
@@ -50,7 +59,7 @@
                 </tr>
             </thead>
             <tbody id="athletes-tbody">
-                <tr><td colspan="8" style="text-align: center; padding: 100px; color: #444;">Завантаження...</td></tr>
+                <tr><td colspan="8" style="text-align: center; padding: 100px; color: #444;">Завантаження профілів атлетів...</td></tr>
             </tbody>
         </table>
     </div>
