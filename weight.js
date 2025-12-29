@@ -20,7 +20,7 @@
         checkSavedPlan();
     });
 
-    // 1. АНАЛІЗ (БЕЗ ЗМІН)
+    // 1. АНАЛІЗ АТЛЕТА
     function handleAthleteAnalysis(e) {
         if (e) e.preventDefault();
         const w = parseFloat(document.getElementById('weight-value')?.value);
@@ -50,7 +50,7 @@
         if (genBtn) genBtn.style.display = "block";
     }
 
-    // 2. ГЕНЕРАЦІЯ ТА ПРИХОВУВАННЯ ВИБОРУ ШВИДКОСТІ
+    // 2. ГЕНЕРАЦІЯ БЕЗ ДУБЛІКАТІВ (ЛОГІКА ДІЄТОЛОГА)
     window.generateWeeklyPlan = function() {
         if (!currentAnalysis || typeof dietDatabase === 'undefined') return;
 
@@ -64,11 +64,15 @@
             let targetKcal = currentAnalysis.targetKcal * slot.pct;
             let currentKcal = 0;
             let selectedMeals = [];
+            
+            // Копіюємо доступні страви для конкретної швидкості
             let availableMeals = [...dietDatabase[slot.key].filter(m => m.speed === selectedSpeed)];
 
+            // Набираємо різні страви, доки не досягнемо калоражу
             while (currentKcal < targetKcal && availableMeals.length > 0) {
                 let randomIndex = Math.floor(Math.random() * availableMeals.length);
-                let meal = availableMeals.splice(randomIndex, 1)[0];
+                let meal = availableMeals.splice(randomIndex, 1)[0]; // Видаляємо з тимчасового списку, щоб не було дублів
+
                 let mealKcal = (meal.p * 4) + (meal.f * 9) + (meal.c * 4);
                 
                 selectedMeals.push({
@@ -82,11 +86,11 @@
             currentDailyPlan[slot.id] = selectedMeals;
         });
 
-        // ПРИХОВУЄМО ТІЛЬКИ ВИБІР ШВИДКОСТІ (⚡ 🥗 👨‍🍳)
+        // ПРИХОВУЄМО ТІЛЬКИ ВИБІР ШВИДКОСТІ
         const speedSelector = document.querySelector('.speed-selector');
         if (speedSelector) speedSelector.style.display = 'none';
 
-        // Показуємо результат
+        // Показуємо вкладки та приховуємо кнопку генерації
         const tabsWrapper = document.getElementById('diet-tabs-wrapper');
         if (tabsWrapper) tabsWrapper.style.display = 'block';
         
@@ -98,7 +102,7 @@
         saveToLocal();
     };
 
-    // 3. ПЕРЕМИКАННЯ ВКЛАДОК (СНІДАНОК, ОБІД, ВЕЧЕРЯ)
+    // 3. ПЕРЕМИКАННЯ ВКЛАДОК
     function switchDietTab(id) {
         activeTab = id;
         ['brf', 'lnc', 'din'].forEach(t => {
@@ -140,7 +144,7 @@
         }
     };
 
-    // 4. СИНХРОНІЗАЦІЯ ВЕРХУ ТА НИЗУ (БЕЗ ЗМІН)
+    // 4. СИНХРОНІЗАЦІЯ ВЕРХУ ТА НИЗУ
     function updateAllUI() {
         if (!currentAnalysis) return;
 
