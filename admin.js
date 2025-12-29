@@ -1,4 +1,4 @@
-// admin.js — Повна версія: Статус травми + Спідометр ACWR
+// admin.js — Повна версія: Статус травми + 10 Тестових атлетів + Спідометри
 
 const USERS_COL = 'users';
 const LOAD_COL = 'load_season_reports'; 
@@ -31,12 +31,15 @@ function createMiniGauge(value, color) {
 }
 
 // 2. Розрахунок ACWR (Ризик травми)
-async function getAthleteLoadMetrics(uid) {
+async function getAthleteLoadMetrics(uid, demoLoad = null) {
     try {
-        const snapshot = await db.collection(LOAD_COL).where("userId", "==", uid).get();
-        if (snapshot.empty) return { acwr: '1.00', status: 'OK', color: '#666' };
+        let data = demoLoad;
+        if (!data) {
+            const snapshot = await db.collection(LOAD_COL).where("userId", "==", uid).get();
+            if (snapshot.empty) return { acwr: '1.00', color: '#666' };
+            data = snapshot.docs.map(d => d.data());
+        }
         
-        const data = snapshot.docs.map(d => d.data());
         data.sort((a, b) => new Date(a.date) - new Date(b.date));
         const last = new Date(data[data.length - 1].date);
         
@@ -60,8 +63,7 @@ async function renderAdminTable(athletesMap) {
 
     let rows = "";
     for (const athlete of Object.values(athletesMap)) {
-        const load = await getAthleteLoadMetrics(athlete.uid);
-        // Повертаємо логіку відображення болю
+        const load = await getAthleteLoadMetrics(athlete.uid, athlete.demoLoad);
         const stat = athlete.injuryStatus || { label: 'ЗДОРОВИЙ', color: '#00ff00', pain: 0 };
         
         rows += `
@@ -89,8 +91,8 @@ async function renderAdminTable(athletesMap) {
                 <td style="text-align: center;">${getStatusEmoji('ready', athlete.wellness.ready)}</td>
                 <td style="text-align: right; padding-right: 10px;">
                     <div style="display: flex; gap: 6px; justify-content: flex-end;">
-                        <a href="weekly-individual.html?userId=${athlete.uid}" class="btn-action">📅</a>
-                        <a href="injury.html?userId=${athlete.uid}" class="btn-action" style="background:#FFC72C; color:#000;">📊</a>
+                        <a href="weekly-individual.html?userId=${athlete.uid}" style="background: #111; color: #FFC72C; border: 1px solid #FFC72C; padding: 5px 10px; border-radius: 4px; text-decoration: none;">📅</a>
+                        <a href="injury.html?userId=${athlete.uid}" style="background: #FFC72C; color: #000; padding: 5px 10px; border-radius: 4px; text-decoration: none;">📊</a>
                     </div>
                 </td>
             </tr>`;
@@ -98,4 +100,46 @@ async function renderAdminTable(athletesMap) {
     tbody.innerHTML = rows;
 }
 
-// Функції loadAdminDashboard та getStatusEmoji залишаємо (вони у тебе в файлі є)
+// 4. Завантаження даних + 10 Тестових атлетів
+async function loadAdminDashboard() {
+    const today = new Date().toISOString().split('T')[0];
+    const pastDate = "2025-11-01";
+
+    const athletesMap = {
+        "d1": { uid: "d1", name: "Артем Кулик", club: "ProAtletCare", photo: "https://i.pravatar.cc/150?u=1", injuryStatus: { label: 'ЗДОРОВИЙ', color: '#00ff00', pain: 0 }, wellness: { sleep: 9, stress: 2, soreness: 1, ready: 10 }, demoLoad: [{date: pastDate, duration: 60, rpe: 5}, {date: today, duration: 60, rpe: 5}] },
+        "d2": { uid: "d2", name: "Максим Тренер", club: "Paphos FC", photo: "https://i.pravatar.cc/150?u=3", injuryStatus: { label: 'УВАГА', color: '#FFC72C', pain: 4, bodyPart: 'Коліно' }, wellness: { sleep: 6, stress: 4, soreness: 5, ready: 7 }, demoLoad: [{date: pastDate, duration: 60, rpe: 5}, {date: today, duration: 90, rpe: 9}] },
+        "d3": { uid: "d3", name: "Дмитро Регбі", club: "Rugby UA", photo: "https://i.pravatar.cc/150?u=8", injuryStatus: { label: 'ТРАВМА', color: '#ff4d4d', pain: 9, bodyPart: 'Ахілл' }, wellness: { sleep: 4, stress: 9, soreness: 8, ready: 3 }, demoLoad: [{date: pastDate, duration: 30, rpe: 3}, {date: today, duration: 120, rpe: 10}] },
+        "d4": { uid: "d4", name: "Олександр Сила", club: "FitBox", photo: "https://i.pravatar.cc/150?u=4", injuryStatus: { label: 'ЗДОРОВИЙ', color: '#00ff00', pain: 0 }, wellness: { sleep: 8, stress: 3, soreness: 2, ready: 9 }, demoLoad: [{date: pastDate, duration: 60, rpe: 6}, {date: today, duration: 60, rpe: 6}] },
+        "d5": { uid: "d5", name: "Іван Боєць", club: "MMA Club", photo: "https://i.pravatar.cc/150?u=12", injuryStatus: { label: 'УВАГА', color: '#FFC72C', pain: 2, bodyPart: 'Плече' }, wellness: { sleep: 7, stress: 5, soreness: 4, ready: 6 }, demoLoad: [{date: pastDate, duration: 90, rpe: 8}, {date: today, duration: 40, rpe: 4}] },
+        "d6": { uid: "d6", name: "Микола Швидкий", club: "ProAtletCare", photo: "https://i.pravatar.cc/150?u=6", injuryStatus: { label: 'ЗДОРОВИЙ', color: '#00ff00', pain: 0 }, wellness: { sleep: 8, stress: 1, soreness: 1, ready: 10 }, demoLoad: [{date: pastDate, duration: 60, rpe: 5}, {date: today, duration: 65, rpe: 5}] },
+        "d7": { uid: "d7", name: "Олег Крос", club: "Paphos FC", photo: "https://i.pravatar.cc/150?u=7", injuryStatus: { label: 'ЗДОРОВИЙ', color: '#00ff00', pain: 0 }, wellness: { sleep: 9, stress: 2, soreness: 2, ready: 8 }, demoLoad: [{date: pastDate, duration: 60, rpe: 5}, {date: today, duration: 30, rpe: 3}] },
+        "d8": { uid: "d8", name: "Сергій Атлет", club: "Rugby UA", photo: "https://i.pravatar.cc/150?u=15", injuryStatus: { label: 'УВАГА', color: '#FFC72C', pain: 3, bodyPart: 'Спина' }, wellness: { sleep: 6, stress: 6, soreness: 6, ready: 5 }, demoLoad: [{date: pastDate, duration: 60, rpe: 5}, {date: today, duration: 100, rpe: 8}] },
+        "d9": { uid: "d9", name: "Віктор Бокс", club: "FitBox", photo: "https://i.pravatar.cc/150?u=19", injuryStatus: { label: 'ЗДОРОВИЙ', color: '#00ff00', pain: 0 }, wellness: { sleep: 8, stress: 3, soreness: 3, ready: 9 }, demoLoad: [{date: pastDate, duration: 60, rpe: 5}, {date: today, duration: 60, rpe: 5}] },
+        "d10": { uid: "d10", name: "Андрій ММА", club: "MMA Club", photo: "https://i.pravatar.cc/150?u=20", injuryStatus: { label: 'ТРАВМА', color: '#ff4d4d', pain: 7, bodyPart: 'Гомілка' }, wellness: { sleep: 5, stress: 7, soreness: 9, ready: 4 }, demoLoad: [{date: pastDate, duration: 40, rpe: 4}, {date: today, duration: 110, rpe: 9}] }
+    };
+
+    renderAdminTable(athletesMap);
+
+    try {
+        const usersSnap = await db.collection(USERS_COL).get();
+        usersSnap.forEach(doc => {
+            const data = doc.data();
+            if (data.role !== 'admin') {
+                athletesMap[doc.id] = {
+                    uid: doc.id,
+                    name: data.name || "Атлет",
+                    photo: data.photoURL || `https://ui-avatars.com/api/?name=${data.name || 'A'}&background=FFC72C&color=000`,
+                    club: data.club || "Клуб",
+                    injuryStatus: { label: 'ЗДОРОВИЙ', color: '#00ff00', pain: 0 },
+                    wellness: { sleep: '-', stress: '-', soreness: '-', ready: '-' }
+                };
+            }
+        });
+        renderAdminTable(athletesMap);
+    } catch (e) { console.warn(e); }
+}
+
+firebase.auth().onAuthStateChanged(user => {
+    if (user) loadAdminDashboard();
+    else window.location.href = "auth.html";
+});
