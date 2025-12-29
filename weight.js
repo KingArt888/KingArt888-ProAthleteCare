@@ -19,7 +19,6 @@
         checkSavedPlan();
     });
 
-    // 1. АНАЛІЗ АТЛЕТА
     function handleAthleteAnalysis(e) {
         if (e) e.preventDefault();
         const w = parseFloat(document.getElementById('weight-value')?.value);
@@ -49,7 +48,6 @@
         if (genBtn) genBtn.style.display = "block";
     }
 
-    // 2. ГЕНЕРАЦІЯ (ПРИХОВУЄ КНОПКИ ШВИДКОСТІ)
     window.generateWeeklyPlan = function() {
         if (!currentAnalysis || typeof dietDatabase === 'undefined') return;
 
@@ -63,6 +61,7 @@
             currentDailyPlan[slot.id] = pickMealsForKcal(slot.key, currentAnalysis.targetKcal * slot.pct);
         });
 
+        // Приховуємо вибір швидкості
         const speedSelector = document.querySelector('.speed-selector');
         if (speedSelector) speedSelector.style.display = 'none';
 
@@ -77,7 +76,6 @@
         saveToLocal();
     };
 
-    // Допоміжна функція підбору страв
     function pickMealsForKcal(key, target) {
         let currentKcal = 0;
         let selected = [];
@@ -93,25 +91,21 @@
         return selected;
     }
 
-    // 3. ТОЧКОВА ЗАМІНА ІНГРЕДІЄНТА 🔄
+    // ТА сама функція заміни, але з PAC Style
     window.replaceOneMeal = function(uid) {
         const slotKeyMap = { 'brf': 'breakfasts', 'lnc': 'lunches', 'din': 'dinners' };
         const dbKey = slotKeyMap[activeTab];
-        
-        // Знаходимо індекс страви, яку хочемо замінити
         const index = currentDailyPlan[activeTab].findIndex(m => m.uid === uid);
         if (index === -1) return;
 
-        // Список страв, яких ще немає в поточному прийомі (щоб не було дублів)
-        const currentUids = currentDailyPlan[activeTab].map(m => m.name);
-        let available = dietDatabase[dbKey].filter(m => m.speed === selectedSpeed && !currentUids.includes(m.name));
+        const currentNames = currentDailyPlan[activeTab].map(m => m.name);
+        let available = dietDatabase[dbKey].filter(m => m.speed === selectedSpeed && !currentNames.includes(m.name));
 
         if (available.length > 0) {
             let randomIndex = Math.floor(Math.random() * available.length);
             let meal = available[randomIndex];
             let kcal = (meal.p * 4) + (meal.f * 9) + (meal.c * 4);
             
-            // Замінюємо тільки один елемент масиву
             currentDailyPlan[activeTab][index] = { 
                 ...meal, 
                 kcal: Math.round(kcal), 
@@ -125,38 +119,40 @@
         }
     };
 
-    // 4. ВІДОБРАЖЕННЯ З КНОПКОЮ ЗАМІНИ
     function renderMealList() {
         const meals = currentDailyPlan[activeTab];
         const box = document.getElementById('diet-tab-content');
         if (!box) return;
 
         box.innerHTML = meals.map(meal => `
-            <div style="background:#111; padding:15px; border-radius:12px; border:1px solid #222; display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <div style="opacity: ${meal.eaten ? '0.2' : '1'}; transition: 0.3s; flex: 1;">
-                    <div style="color:#fff; font-size:16px; font-weight:600;">${meal.name}</div>
-                    <div style="color:#888; font-size:12px; font-family:monospace;">Б:${meal.p} Ж:${meal.f} В:${meal.c} • ${meal.kcal} ккал</div>
+            <div style="background:#0a0a0a; padding:18px; border-radius:12px; border:1px solid #1a1a1a; display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; position:relative;">
+                <div style="opacity: ${meal.eaten ? '0.15' : '1'}; transition: 0.4s; flex: 1;">
+                    <div style="color:#fff; font-size:15px; font-weight:600; letter-spacing:0.5px;">${meal.name.toUpperCase()}</div>
+                    <div style="color:#FFC72C; font-size:11px; font-family:monospace; margin-top:5px; opacity:0.8;">
+                        P:${meal.p} F:${meal.f} C:${meal.c} <span style="color:#444; margin:0 5px;">|</span> ${meal.kcal} KCAL
+                    </div>
                 </div>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <button onclick="window.replaceOneMeal('${meal.uid}')" style="background:transparent; border:1px solid #333; color:#FFC72C; width:35px; height:35px; border-radius:50%; cursor:pointer; font-size:14px;">🔄</button>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <button onclick="window.replaceOneMeal('${meal.uid}')" style="background:transparent; border:1px solid #333; color:#FFC72C; width:34px; height:34px; border-radius:8px; cursor:pointer; font-size:12px; display:flex; align-items:center; justify-content:center; transition:0.3s;" onmouseover="this.style.borderColor='#FFC72C'" onmouseout="this.style.borderColor='#333'">
+                        ALT
+                    </button>
                     
-                    <button onclick="window.toggleMealStatus('${meal.uid}')" style="background:${meal.eaten ? '#222' : '#FFC72C'}; border:none; width:40px; height:40px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; transition: 0.3s;">
-                        <span style="color:#000; font-weight:bold; font-size:18px;">${meal.eaten ? '✓' : '+'}</span>
+                    <button onclick="window.toggleMealStatus('${meal.uid}')" style="background:${meal.eaten ? '#FFC72C' : 'transparent'}; border:2px solid #FFC72C; width:38px; height:38px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; transition: 0.3s; box-shadow: ${meal.eaten ? '0 0 10px rgba(255,199,44,0.3)' : 'none'};">
+                        <span style="color:${meal.eaten ? '#000' : '#FFC72C'}; font-weight:900; font-size:16px;">${meal.eaten ? '✓' : ''}</span>
                     </button>
                 </div>
             </div>
         `).join('');
     }
 
-    // ПЕРЕМИКАННЯ ВКЛАДОК ТА ІНШЕ
     function switchDietTab(id) {
         activeTab = id;
         ['brf', 'lnc', 'din'].forEach(t => {
             const b = document.getElementById('btn-' + t);
             if (b) {
-                b.style.color = (t === id) ? "#FFC72C" : "#555";
-                b.style.borderBottom = (t === id) ? "2px solid #FFC72C" : "none";
-                b.style.fontWeight = (t === id) ? "bold" : "normal";
+                b.style.color = (t === id) ? "#FFC72C" : "#444";
+                b.style.borderBottom = (t === id) ? "3px solid #FFC72C" : "1px solid #222";
+                b.style.background = (t === id) ? "rgba(255,199,44,0.05)" : "transparent";
             }
         });
         renderMealList();
@@ -179,57 +175,49 @@
             acc.k += m.kcal; acc.p += m.p; acc.f += m.f; acc.c += m.c; return acc;
         }, {k:0, p:0, f:0, c:0});
 
-        const left = {
-            k: currentAnalysis.targetKcal - eaten.k,
-            p: currentAnalysis.p - eaten.p,
-            f: currentAnalysis.f - eaten.f,
-            c: currentAnalysis.c - eaten.c
-        };
+        const leftKcal = currentAnalysis.targetKcal - eaten.k;
 
         const topBox = document.getElementById('athlete-recommendation-box');
         if (topBox) {
             topBox.innerHTML = `
-                <div style="background:#000; padding:20px; border-radius:15px; border:1px solid #222; margin-bottom:20px;">
-                    <div style="font-size:10px; color:#FFC72C; text-transform:uppercase; letter-spacing:1px;">Режим: ${currentAnalysis.mode}</div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+                <div style="background:#000; padding:20px; border-radius:15px; border:1px solid #1a1a1a; margin-bottom:20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                    <div style="font-size:10px; color:#FFC72C; text-transform:uppercase; letter-spacing:2px; font-weight:bold;">PAC ANALYTICS • ${currentAnalysis.mode}</div>
+                    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:15px;">
                         <div>
-                            <div style="font-size:32px; color:#fff; font-weight:800;">${left.k} <span style="font-size:14px; color:#FFC72C;">ККАЛ</span></div>
+                            <div style="font-size:42px; color:#fff; font-weight:900; line-height:1;">${leftKcal}</div>
+                            <div style="font-size:12px; color:#FFC72C; text-transform:uppercase; margin-top:5px;">Remaining Kcal</div>
                         </div>
-                        <div style="text-align:right; border-left:1px solid #222; padding-left:15px;">
-                            <div style="font-size:24px; color:#fff; font-weight:700;">💧 ${currentAnalysis.water}л</div>
-                            <div style="font-size:9px; color:#40E0D0;">WATER GOAL</div>
+                        <div style="text-align:right; border-left:1px solid #1a1a1a; padding-left:20px;">
+                            <div style="font-size:22px; color:#fff; font-weight:700;">${currentAnalysis.water}L</div>
+                            <div style="font-size:9px; color:#444; letter-spacing:1px;">H2O TARGET</div>
                         </div>
                     </div>
                 </div>
             `;
         }
 
-        if (document.getElementById('calories-left')) document.getElementById('calories-left').textContent = left.k;
+        if (document.getElementById('calories-left')) document.getElementById('calories-left').textContent = leftKcal;
         if (document.getElementById('total-daily-kcal')) document.getElementById('total-daily-kcal').textContent = currentAnalysis.targetKcal;
         const bju = document.getElementById('bju-left-display');
-        if (bju) bju.innerHTML = `<span>Б: ${left.p}г</span> <span>Ж: ${left.f}г</span> <span>В: ${left.c}г</span>`;
+        if (bju) bju.innerHTML = `<span>P: ${currentAnalysis.p - eaten.p}g</span> <span>F: ${currentAnalysis.f - eaten.f}g</span> <span>C: ${currentAnalysis.c - eaten.c}g</span>`;
     }
 
     window.setSpeed = (s, btn) => {
         selectedSpeed = s;
         document.querySelectorAll('.speed-btn').forEach(b => {
-            b.style.color = "#555"; b.style.background = "transparent";
-            b.classList.remove('active');
+            b.style.color = "#444"; 
+            b.style.background = "#111";
+            b.style.borderColor = "#222";
         });
         if (btn) { 
-            btn.style.color = "#FFC72C"; 
-            btn.style.fontWeight = "bold"; 
-            btn.classList.add('active');
+            btn.style.color = "#000"; 
+            btn.style.background = "#FFC72C";
+            btn.style.borderColor = "#FFC72C";
         }
     };
 
     function saveToLocal() {
-        localStorage.setItem('pac_pro_v3', JSON.stringify({ 
-            plan: currentDailyPlan, 
-            analysis: currentAnalysis, 
-            date: new Date().toDateString(),
-            speed: selectedSpeed 
-        }));
+        localStorage.setItem('pac_pro_v3', JSON.stringify({ plan: currentDailyPlan, analysis: currentAnalysis, date: new Date().toDateString(), speed: selectedSpeed }));
     }
 
     function checkSavedPlan() {
