@@ -1,14 +1,16 @@
-// admin.js — ФІНАЛЬНА ВЕРСІЯ: 10 атлетів, унікальні спідометри та Wellness
+// admin.js — ПОВНА ВЕРСІЯ: 10 атлетів, унікальні ID та різні спідометри
 
 const USERS_COL = 'users';
 const LOAD_COL = 'load_season_reports'; 
 
-// 1. Створення спідометра з унікальним градієнтом для кожного атлета
-function createMiniGauge(value, color, uid) {
+// 1. Спідометр з ГАРАНТОВАНО унікальним ID градієнта
+function createMiniGauge(value, color, uniqueId) {
     const val = parseFloat(value) || 0;
     const percent = Math.min(Math.max(val / 2, 0), 1);
     const rotation = -90 + (percent * 180);
-    const gradId = `gauge_grad_${uid.replace(/\W/g, '')}`; // Унікальний ID градієнта
+    
+    // Створюємо унікальний ID для градієнта, щоб кольори не "злипалися"
+    const gradId = `grad_acwr_${uniqueId}`;
 
     return `
         <div style="position: relative; width: 75px; height: 42px; margin: 0 auto;">
@@ -28,45 +30,36 @@ function createMiniGauge(value, color, uid) {
                     <circle cx="50" cy="45" r="4" fill="#fff" />
                 </g>
             </svg>
-            <div style="font-size: 10px; font-weight: bold; color: ${color}; margin-top: -5px; letter-spacing: 0.5px;">${value}</div>
+            <div style="font-size: 10px; font-weight: bold; color: ${color}; margin-top: -5px;">${value}</div>
         </div>`;
 }
 
-// 2. Іконки Wellness
+// 2. Wellness іконки
 function getStatusEmoji(type, value) {
-    if (value === '-' || value === undefined || value === null) return '<span style="opacity: 0.1;">➖</span>';
+    if (value === '-' || value === undefined) return '<span style="opacity: 0.1;">➖</span>';
     const val = parseInt(value);
-    let color = '#00ff00';
-    let emoji = (type === 'sleep') ? '💤' : (type === 'stress') ? '🧠' : (type === 'soreness') ? '💪' : '⚡';
-
-    if (type === 'sleep' || type === 'ready') {
-        color = (val >= 8) ? '#00ff00' : (val >= 6) ? '#FFC72C' : '#ff4d4d';
-    } else {
-        color = (val <= 3) ? '#00ff00' : (val <= 6) ? '#FFC72C' : '#ff4d4d';
-    }
-    return `
-        <div style="display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 8px; background: ${color}15; border: 1px solid ${color}44;">
-            <span style="font-size: 1.1em; filter: drop-shadow(0 0 2px ${color});">${emoji}</span>
-        </div>`;
+    let color = (type === 'sleep' || type === 'ready') ? (val >= 7 ? '#00ff00' : '#ff4d4d') : (val <= 4 ? '#00ff00' : '#ff4d4d');
+    const emojis = { sleep: '💤', stress: '🧠', soreness: '💪', ready: '⚡' };
+    return `<div style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 6px; background: ${color}15; border: 1px solid ${color}44;"><span style="font-size: 1em;">${emojis[type]}</span></div>`;
 }
 
 // 3. Розрахунок ACWR
-async function getAthleteLoadMetrics(uid, demoLoad = null) {
+async function getAthleteLoadMetrics(uid, demoData = null) {
     try {
-        let data = demoLoad;
+        let data = demoData;
         if (!data) {
-            const snapshot = await db.collection(LOAD_COL).where("userId", "==", uid).get();
-            if (snapshot.empty) return { acwr: '1.00', color: '#00ff00' };
-            data = snapshot.docs.map(d => d.data());
+            const snap = await db.collection(LOAD_COL).where("userId", "==", uid).get();
+            if (snap.empty) return { acwr: '1.00', color: '#00ff00' };
+            data = snap.docs.map(d => d.data());
         }
         data.sort((a, b) => new Date(a.date) - new Date(b.date));
         const last = new Date(data[data.length - 1].date);
-        const getLoad = (days) => {
+        const getAvg = (days) => {
             const start = new Date(last); start.setDate(last.getDate() - days);
-            const pData = data.filter(d => d && d.date && new Date(d.date) > start);
-            return pData.reduce((s, d) => s + (Number(d.duration || 0) * Number(d.rpe || 0)), 0) / (days / 7);
+            const pData = data.filter(d => new Date(d.date) > start);
+            return pData.reduce((s, d) => s + (Number(d.duration) * Number(d.rpe || 0)), 0) / (days / 7);
         };
-        const acute = getLoad(7), chronic = getLoad(28);
+        const acute = getAvg(7), chronic = getAvg(28);
         const acwr = chronic > 0 ? (acute / chronic) : 1.0;
         let color = acwr > 1.5 ? '#ff4d4d' : acwr > 1.3 ? '#FFC72C' : acwr >= 0.8 ? '#00ff00' : '#888';
         return { acwr: acwr.toFixed(2), color };
@@ -74,87 +67,57 @@ async function getAthleteLoadMetrics(uid, demoLoad = null) {
 }
 
 // 4. Малювання таблиці
-async function renderAdminTable(athletesMap) {
+async function renderAdminTable(map) {
     const tbody = document.getElementById('athletes-tbody');
     if (!tbody) return;
-    let rows = "";
-    for (const [id, athlete] of Object.entries(athletesMap)) {
-        const load = await getAthleteLoadMetrics(athlete.uid, athlete.demoLoad);
-        const stat = athlete.injuryStatus || { label: 'ЗДОРОВИЙ', color: '#00ff00', pain: 0 };
-        const wellness = athlete.wellness || { sleep: '-', stress: '-', soreness: '-', ready: '-' };
-        
-        rows += `
-            <tr style="border-bottom: 1px solid #1a1a1a;">
-                <td style="padding: 12px 10px;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <img src="${athlete.photo}" style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid #FFC72C; object-fit: cover;">
-                        <div>
-                            <div style="font-weight: bold; color: #FFC72C; font-size: 0.9em;">${athlete.name}</div>
-                            <div style="font-size: 0.7em; color: #666;">${athlete.club}</div>
-                        </div>
+    let html = "";
+    for (const [key, a] of Object.entries(map)) {
+        const load = await getAthleteLoadMetrics(a.uid, a.demoLoad);
+        const st = a.injuryStatus || { label: 'ЗДОРОВИЙ', color: '#00ff00', pain: 0 };
+        html += `
+            <tr style="border-bottom: 1px solid #111;">
+                <td style="padding: 10px;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <img src="${a.photo}" style="width:38px; height:38px; border-radius:50%; border:1px solid #FFC72C;">
+                        <div><div style="font-weight:bold; color:#FFC72C; font-size:0.9em;">${a.name}</div><div style="font-size:0.7em; color:#666;">${a.club}</div></div>
                     </div>
                 </td>
                 <td>
-                    <div style="font-size: 0.65em; padding: 4px; border-radius: 4px; text-align: center; min-width: 90px;
-                        background: ${stat.color}15; color: ${stat.color}; border: 1px solid ${stat.color}44;">
-                        <div style="font-weight: bold; text-transform: uppercase;">${stat.label}</div>
-                        ${stat.pain > 0 ? `<div style="font-size: 0.9em; color: #fff;">${stat.bodyPart} (${stat.pain})</div>` : ''}
+                    <div style="font-size: 0.65em; padding: 4px; border-radius: 4px; text-align: center; background: ${st.color}15; color: ${st.color}; border: 1px solid ${st.color}44;">
+                        <div style="font-weight: bold; text-transform: uppercase;">${st.label}</div>
+                        ${st.pain > 0 ? `<div style="font-size: 0.9em; color: #fff;">${st.bodyPart} (${st.pain})</div>` : ''}
                     </div>
                 </td>
-                <td style="text-align: center;">${createMiniGauge(load.acwr, load.color, athlete.uid)}</td>
-                <td style="text-align: center;">${getStatusEmoji('sleep', wellness.sleep)}</td>
-                <td style="text-align: center;">${getStatusEmoji('stress', wellness.stress)}</td>
-                <td style="text-align: center;">${getStatusEmoji('soreness', wellness.soreness)}</td>
-                <td style="text-align: center;">${getStatusEmoji('ready', wellness.ready)}</td>
-                <td style="text-align: right; padding-right: 15px;">
-                    <a href="injury.html?userId=${athlete.uid}" style="background: #FFC72C; color: #000; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.8em;">АНАЛІЗ</a>
-                </td>
+                <td style="text-align:center;">${createMiniGauge(load.acwr, load.color, a.uid)}</td>
+                <td style="text-align:center;">${getStatusEmoji('sleep', a.wellness.sleep)}</td>
+                <td style="text-align:center;">${getStatusEmoji('stress', a.wellness.stress)}</td>
+                <td style="text-align:center;">${getStatusEmoji('soreness', a.wellness.soreness)}</td>
+                <td style="text-align:center;">${getStatusEmoji('ready', a.wellness.ready)}</td>
+                <td style="text-align: right; padding-right: 15px;"><a href="injury.html?userId=${a.uid}" style="background:#FFC72C; color:#000; padding:5px 10px; border-radius:4px; text-decoration:none; font-size:0.8em; font-weight:bold;">ДЕТАЛІ</a></td>
             </tr>`;
     }
-    tbody.innerHTML = rows;
+    tbody.innerHTML = html;
 }
 
-// 5. Запуск з 10 різними атлетами
+// 5. 10 атлетів з унікальними ID та даними
 async function loadAdminDashboard() {
     const today = new Date().toISOString().split('T')[0];
-    const past = "2025-12-01";
+    const past = "2025-11-20";
 
     const demo = {
-        "a1": { uid: "a1", name: "Артем Кулик", club: "ProAtletCare", photo: "https://i.pravatar.cc/150?u=a1", wellness: { sleep: 9, stress: 1, soreness: 1, ready: 10 }, demoLoad: [{date: past, duration: 60, rpe: 5}, {date: today, duration: 60, rpe: 5}] }, // 1.0 (Зелений)
-        "a2": { uid: "a2", name: "Максим Тренер", club: "Paphos FC", photo: "https://i.pravatar.cc/150?u=a2", injuryStatus: { label: 'УВАГА', color: '#FFC72C', pain: 4, bodyPart: 'Коліно' }, wellness: { sleep: 6, stress: 5, soreness: 5, ready: 6 }, demoLoad: [{date: past, duration: 60, rpe: 4}, {date: today, duration: 90, rpe: 8}] }, // 1.4 (Жовтий)
-        "a3": { uid: "a3", name: "Дмитро Регбі", club: "Rugby UA", photo: "https://i.pravatar.cc/150?u=a3", injuryStatus: { label: 'ТРАВМА', color: '#ff4d4d', pain: 8, bodyPart: 'Ахілл' }, wellness: { sleep: 4, stress: 8, soreness: 7, ready: 4 }, demoLoad: [{date: past, duration: 20, rpe: 2}, {date: today, duration: 120, rpe: 10}] }, // 1.8 (Червоний)
-        "a4": { uid: "a4", name: "Олександр Сила", club: "FitBox", photo: "https://i.pravatar.cc/150?u=a4", wellness: { sleep: 8, stress: 2, soreness: 2, ready: 9 }, demoLoad: [{date: past, duration: 90, rpe: 8}, {date: today, duration: 30, rpe: 2}] }, // 0.6 (Сірий - недотренованість)
-        "a5": { uid: "a5", name: "Іван Боєць", club: "MMA Club", photo: "https://i.pravatar.cc/150?u=a5", wellness: { sleep: 7, stress: 4, soreness: 4, ready: 7 }, demoLoad: [{date: past, duration: 60, rpe: 5}, {date: today, duration: 75, rpe: 6}] }, // 1.1 (Зелений)
-        "a6": { uid: "a6", name: "Микола Швидкий", club: "ProAtletCare", photo: "https://i.pravatar.cc/150?u=a6", wellness: { sleep: 10, stress: 1, soreness: 1, ready: 10 }, demoLoad: [{date: past, duration: 60, rpe: 4}, {date: today, duration: 60, rpe: 5}] }, // 1.2 (Зелений)
-        "a7": { uid: "a7", name: "Олег Крос", club: "Paphos FC", photo: "https://i.pravatar.cc/150?u=a7", injuryStatus: { label: 'УВАГА', color: '#FFC72C', pain: 2, bodyPart: 'Спина' }, wellness: { sleep: 7, stress: 3, soreness: 6, ready: 7 }, demoLoad: [{date: past, duration: 70, rpe: 6}, {date: today, duration: 100, rpe: 9}] }, // 1.5 (Червона межа)
-        "a8": { uid: "a8", name: "Сергій Атлет", club: "Rugby UA", photo: "https://i.pravatar.cc/150?u=a8", wellness: { sleep: 8, stress: 2, soreness: 3, ready: 8 }, demoLoad: [{date: past, duration: 40, rpe: 4}, {date: today, duration: 40, rpe: 4}] }, // 1.0 (Зелений)
-        "a9": { uid: "a9", name: "Віктор Бокс", club: "FitBox", photo: "https://i.pravatar.cc/150?u=a9", wellness: { sleep: 9, stress: 2, soreness: 2, ready: 9 }, demoLoad: [{date: past, duration: 100, rpe: 9}, {date: today, duration: 50, rpe: 4}] }, // 0.7 (Сірий)
-        "a10": { uid: "a10", name: "Андрій ММА", club: "MMA Club", photo: "https://i.pravatar.cc/150?u=a10", injuryStatus: { label: 'ТРАВМА', color: '#ff4d4d', pain: 6, bodyPart: 'Плече' }, wellness: { sleep: 5, stress: 6, soreness: 9, ready: 5 }, demoLoad: [{date: past, duration: 45, rpe: 4}, {date: today, duration: 115, rpe: 9}] } // 1.7 (Червоний)
+        "at_01": { uid: "id_artem", name: "Артем Кулик", club: "ProAtletCare", photo: "https://i.pravatar.cc/150?u=1", wellness: { sleep: 9, stress: 1, soreness: 1, ready: 10 }, demoLoad: [{date: past, duration: 60, rpe: 5}, {date: today, duration: 60, rpe: 5}] },
+        "at_02": { uid: "id_maxim", name: "Максим Тренер", club: "Paphos FC", photo: "https://i.pravatar.cc/150?u=2", injuryStatus: { label: 'УВАГА', color: '#FFC72C', pain: 4, bodyPart: 'Коліно' }, wellness: { sleep: 6, stress: 4, soreness: 5, ready: 7 }, demoLoad: [{date: past, duration: 60, rpe: 4}, {date: today, duration: 90, rpe: 8}] },
+        "at_03": { uid: "id_dmytro", name: "Дмитро Регбі", club: "Shakhtar", photo: "https://i.pravatar.cc/150?u=3", injuryStatus: { label: 'ТРАВМА', color: '#ff4d4d', pain: 9, bodyPart: 'Ахілл' }, wellness: { sleep: 4, stress: 9, soreness: 8, ready: 3 }, demoLoad: [{date: past, duration: 30, rpe: 3}, {date: today, duration: 120, rpe: 10}] },
+        "at_04": { uid: "id_oleks", name: "Олександр Сила", club: "FitBox", photo: "https://i.pravatar.cc/150?u=4", wellness: { sleep: 8, stress: 3, soreness: 2, ready: 9 }, demoLoad: [{date: past, duration: 100, rpe: 9}, {date: today, duration: 30, rpe: 2}] },
+        "at_05": { uid: "id_ivan", name: "Іван Бокс", club: "MMA Club", photo: "https://i.pravatar.cc/150?u=5", wellness: { sleep: 7, stress: 5, soreness: 4, ready: 6 }, demoLoad: [{date: past, duration: 60, rpe: 5}, {date: today, duration: 60, rpe: 6}] },
+        "at_06": { uid: "id_mykola", name: "Микола Р", club: "ProAtletCare", photo: "https://i.pravatar.cc/150?u=6", wellness: { sleep: 10, stress: 1, soreness: 1, ready: 10 }, demoLoad: [{date: past, duration: 45, rpe: 4}, {date: today, duration: 65, rpe: 6}] },
+        "at_07": { uid: "id_oleg", name: "Олег Швидкість", club: "Paphos FC", photo: "https://i.pravatar.cc/150?u=7", injuryStatus: { label: 'УВАГА', color: '#FFC72C', pain: 2, bodyPart: 'Спина' }, wellness: { sleep: 7, stress: 3, soreness: 6, ready: 7 }, demoLoad: [{date: past, duration: 80, rpe: 6}, {date: today, duration: 100, rpe: 9}] },
+        "at_08": { uid: "id_serg", name: "Сергій Атлет", club: "Shakhtar", photo: "https://i.pravatar.cc/150?u=8", wellness: { sleep: 8, stress: 2, soreness: 3, ready: 8 }, demoLoad: [{date: past, duration: 50, rpe: 5}, {date: today, duration: 45, rpe: 4}] },
+        "at_09": { uid: "id_viktor", name: "Віктор Сила", club: "FitBox", photo: "https://i.pravatar.cc/150?u=9", wellness: { sleep: 9, stress: 2, soreness: 2, ready: 9 }, demoLoad: [{date: past, duration: 120, rpe: 10}, {date: today, duration: 25, rpe: 2}] },
+        "at_10": { uid: "id_andrii", name: "Андрій ММА", club: "MMA Club", photo: "https://i.pravatar.cc/150?u=10", injuryStatus: { label: 'ТРАВМА', color: '#ff4d4d', pain: 7, bodyPart: 'Плече' }, wellness: { sleep: 5, stress: 7, soreness: 9, ready: 5 }, demoLoad: [{date: past, duration: 40, rpe: 4}, {date: today, duration: 130, rpe: 10}] }
     };
 
     renderAdminTable(demo);
-
-    // Підвантаження реальних юзерів з бази
-    try {
-        const usersSnap = await db.collection(USERS_COL).get();
-        const real = {};
-        usersSnap.forEach(doc => {
-            const data = doc.data();
-            if (data.role !== 'admin') {
-                real[doc.id] = {
-                    uid: doc.id,
-                    name: data.name || "Атлет",
-                    photo: data.photoURL || `https://ui-avatars.com/api/?name=${data.name || 'A'}&background=FFC72C&color=000`,
-                    club: data.club || "Клуб",
-                    wellness: data.lastWellness || { sleep: '-', stress: '-', soreness: '-', ready: '-' }
-                };
-            }
-        });
-        if (Object.keys(real).length > 0) renderAdminTable({...demo, ...real});
-    } catch (e) { console.warn("Firestore error:", e); }
 }
 
-firebase.auth().onAuthStateChanged(user => {
-    if (user) loadAdminDashboard();
-    else window.location.href = "auth.html";
-});
+firebase.auth().onAuthStateChanged(u => { if(u) loadAdminDashboard(); else window.location.href="auth.html"; });
