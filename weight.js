@@ -80,12 +80,10 @@
         } catch (error) { console.error("Firebase Error:", error); }
     }
 
-    // --- UI COMPOSITION SCAN ---
+    // --- UI SCANNER ---
     function updateScannerUI(weight, bmi, data) {
         const mainValue = document.getElementById('fat-percentage-value');
         if (mainValue) {
-            mainValue.style.display = "flex";
-            mainValue.style.flexDirection = "column";
             mainValue.innerHTML = `
                 <span style="font-size: 9px; color: #555; text-transform: uppercase;">Weight</span>
                 <span style="font-size: 28px; color: #FFC72C; font-weight: bold; line-height: 1;">${weight}</span>
@@ -103,28 +101,17 @@
         rankElement.innerHTML = `
             <div style="color:${data.statusColor}; font-size:12px; font-weight:bold; letter-spacing:1px; margin-bottom:4px;">${data.status}</div>
             <div style="color:#fff; font-size:20px; font-weight:bold; margin-bottom:4px;">${data.targetCalories} ккал</div>
-            <div style="color:#888; font-size:10px; background: #0a0a0a; padding: 4px; border-radius: 4px; border: 1px solid #1a1a1a;">
-                Б: ${data.prot}г | Ж: ${data.fat}г | В: ${data.carb}г
-            </div>
+            <div style="color:#888; font-size:10px;">Б: ${data.prot}г | Ж: ${data.fat}г | В: ${data.carb}г</div>
         `;
     }
 
     function updateRecommendationUI(data) {
         const btn = document.getElementById('get-diet-plan-btn');
         if (btn) btn.style.display = 'block';
-        document.getElementById('total-daily-kcal').textContent = data.targetCalories;
-        document.getElementById('calories-left').textContent = data.targetCalories;
+        updateMacrosLeftUI();
     }
 
-    window.setSpeed = function(speed, btn) {
-        selectedSpeed = speed;
-        document.querySelectorAll('.speed-btn').forEach(b => {
-            b.style.background = "#111"; b.style.color = "#555";
-        });
-        btn.style.background = "#FFC72C"; btn.style.color = "#000";
-    };
-
-    // --- ГЕНЕРАЦІЯ ТА ЛОГІКА ДІЄТИ ---
+    // --- ДІЄТА ТА ВІДНІМАННЯ (БЖУ + ККАЛ) ---
     async function generateWeeklyPlan() {
         if (!currentAnalysis) return;
         const container = document.getElementById('diet-container');
@@ -138,60 +125,74 @@
             const meal = meals[Math.floor(Math.random() * meals.length)] || dietDatabase[key][0];
             const kcal = (meal.p * 4) + (meal.f * 9) + (meal.c * 4);
             
-            const mealObj = { ...meal, kcal, category: cats[key], id: Date.now() + Math.random(), eaten: false };
+            const mealObj = { ...meal, kcal, id: Math.random().toString(36).substr(2, 9), eaten: false };
             currentDailyPlan.push(mealObj);
 
             html += `
-                <div id="meal-${mealObj.id}" class="meal-card" style="background:rgba(255,255,255,0.02); border:1px solid #1a1a1a; padding:10px; border-radius:6px; margin-bottom:8px; border-left: 3px solid #FFC72C; transition: all 0.3s ease; display: flex; align-items: center; justify-content: space-between;">
+                <div id="meal-${mealObj.id}" style="background:rgba(255,255,255,0.02); border:1px solid #1a1a1a; padding:10px; border-radius:6px; margin-bottom:8px; border-left: 3px solid #FFC72C; transition: all 0.3s ease; display: flex; align-items: center; justify-content: space-between;">
                     <div style="flex: 1;">
                         <div style="display:flex; justify-content:space-between; font-size:9px;">
                             <span style="color:#FFC72C; font-weight:bold; text-transform:uppercase;">${cats[key]}</span>
                             <span style="color:#444;">${kcal} kcal</span>
                         </div>
                         <div style="color:#eee; font-size:13px; font-weight:bold; margin:2px 0;">${meal.name}</div>
-                        <div style="font-size:9px; color:#666;">Б:${meal.p} Ж:${meal.f} В:${meal.c}</div>
+                        <div style="font-size:9px; color:#666;">Б:${meal.p}г Ж:${meal.f}г В:${meal.c}г</div>
                     </div>
-                    <div style="margin-left: 10px;">
-                        <input type="checkbox" style="accent-color: #FFC72C; width: 18px; height: 18px; cursor: pointer;" onchange="toggleMeal('${mealObj.id}', this)">
-                    </div>
+                    <input type="checkbox" style="accent-color: #FFC72C; width: 18px; height: 18px; cursor: pointer;" onchange="toggleMeal('${mealObj.id}', this)">
                 </div>
             `;
         }
         container.innerHTML = html + `</div>`;
-        updateCaloriesLeft();
+        updateMacrosLeftUI();
     }
 
-    // --- ФУНКЦІЯ ГАЛОЧКИ ---
     window.toggleMeal = function(id, checkbox) {
         const mealCard = document.getElementById(`meal-${id}`);
-        const meal = currentDailyPlan.find(m => m.id == id);
-        
-        if (checkbox.checked) {
-            meal.eaten = true;
-            mealCard.style.opacity = "0.2"; // Майже невидима
-            mealCard.style.filter = "grayscale(100%)";
-        } else {
-            meal.eaten = false;
-            mealCard.style.opacity = "1";
-            mealCard.style.filter = "none";
+        const meal = currentDailyPlan.find(m => m.id === id);
+        if (meal) {
+            meal.eaten = checkbox.checked;
+            mealCard.style.opacity = meal.eaten ? "0.15" : "1";
+            mealCard.style.filter = meal.eaten ? "grayscale(100%)" : "none";
+            updateMacrosLeftUI();
         }
-        updateCaloriesLeft();
     };
 
-    function updateCaloriesLeft() {
+    function updateMacrosLeftUI() {
         if (!currentAnalysis) return;
-        const eatenKcal = currentDailyPlan
-            .filter(m => m.eaten)
-            .reduce((sum, m) => sum + m.kcal, 0);
-        
-        const left = currentAnalysis.targetCalories - eatenKcal;
-        document.getElementById('calories-left').textContent = left;
-        
-        // Якщо переборщив з калоріями - колір стає червоним
-        document.getElementById('calories-left').style.color = left < 0 ? "#DA3E52" : "#FFC72C";
+
+        const consumed = currentDailyPlan.filter(m => m.eaten).reduce((acc, m) => {
+            acc.k += m.kcal; acc.p += m.p; acc.f += m.f; acc.c += m.c;
+            return acc;
+        }, { k: 0, p: 0, f: 0, c: 0 });
+
+        const kL = currentAnalysis.targetCalories - consumed.k;
+        const pL = currentAnalysis.prot - consumed.p;
+        const fL = currentAnalysis.fat - consumed.f;
+        const cL = currentAnalysis.carb - consumed.c;
+
+        document.getElementById('calories-left').textContent = kL;
+        document.getElementById('calories-left').style.color = kL < 0 ? "#DA3E52" : "#FFC72C";
+        document.getElementById('total-daily-kcal').textContent = currentAnalysis.targetCalories;
+
+        let sub = document.getElementById('macros-left-sub');
+        if (!sub) {
+            sub = document.createElement('div');
+            sub.id = 'macros-left-sub';
+            sub.style.cssText = "font-size: 11px; color: #555; margin-top: 5px; text-align: right; letter-spacing: 0.5px;";
+            document.getElementById('calories-left').parentElement.appendChild(sub);
+        }
+        sub.innerHTML = `ЗАЛИШОК БЖУ: Б:${pL}г | Ж:${fL}г | В:${cL}г`;
     }
 
-    // --- ГРАФІК ТА ІСТОРІЯ ---
+    // --- ДОПОМІЖНІ ФУНКЦІЇ ---
+    window.setSpeed = function(speed, btn) {
+        selectedSpeed = speed;
+        document.querySelectorAll('.speed-btn').forEach(b => {
+            b.style.background = "#111"; b.style.color = "#555";
+        });
+        btn.style.background = "#FFC72C"; btn.style.color = "#000";
+    };
+
     async function loadHistory() {
         if (!currentUserId || !weightChart) return;
         const snap = await firebase.firestore().collection('weight_history')
@@ -203,20 +204,14 @@
         if (!snap.empty) {
             const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             const last = docs[0];
-            updateScannerUI(last.weight, last.bmi, calculateAthleteData(last.weight, last.bmi, 180, 30));
+            currentAnalysis = calculateAthleteData(last.weight, last.bmi, 180, 30); // Default values if profile empty
+            updateScannerUI(last.weight, last.bmi, currentAnalysis);
+            updateMacrosLeftUI();
 
             const chartData = [...docs].reverse();
             weightChart.data.labels = chartData.map(d => d.date.split('.').slice(0,2).join('.'));
             weightChart.data.datasets[0].data = chartData.map(d => d.weight);
             weightChart.update();
-
-            docs.forEach(entry => {
-                const item = document.createElement('div');
-                item.style.cssText = "display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #111; font-size:11px; color:#888;";
-                item.innerHTML = `<span><strong>${entry.weight} kg</strong> <small style="color:#333; margin-left:5px;">${entry.date}</small></span>
-                                  <button onclick="deleteWeightEntry('${entry.id}')" style="background:none; border:none; color:#444; cursor:pointer;">✕</button>`;
-                historyContainer.appendChild(item);
-            });
         }
     }
 
