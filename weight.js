@@ -21,19 +21,20 @@
         if (planBtn) planBtn.addEventListener('click', generateWeeklyPlan);
     });
 
-    // 1. ФУНКЦІЯ ВИДАЛЕННЯ (Тепер працює!)
-    window.deleteWeightEntry = async (id) => {
-        if (confirm("Видалити цей запис?")) {
-            try {
-                await firebase.firestore().collection('weight_history').doc(id).delete();
-                loadHistory(); // Оновлюємо список і графік миттєво
-            } catch (e) {
-                console.error("Помилка видалення:", e);
-            }
+    // 1. ВИДАЛЕННЯ (Глобальна функція)
+    window.deleteWeightEntry = async function(id) {
+        if (!confirm("Видалити цей запис?")) return;
+        try {
+            await firebase.firestore().collection('weight_history').doc(id).delete();
+            // Миттєво оновлюємо дані без перезавантаження сторінки
+            loadHistory(); 
+        } catch (e) {
+            console.error("Помилка видалення:", e);
+            alert("Помилка при видаленні");
         }
     };
 
-    // 2. ОБРОБКА ТА РОЗРАХУНОК
+    // 2. ОБРОБКА ФОРМИ
     async function handleAthleteAnalysis(e) {
         e.preventDefault();
         const w = parseFloat(document.getElementById('weight-value').value);
@@ -76,19 +77,16 @@
         return { status, statusColor: color, targetCalories: kcal };
     }
 
-    // 3. ОНОВЛЕННЯ COMPOSITION SCAN (ID виправлено!)
+    // 3. ОНОВЛЕННЯ СКАНЕРА (КРУГА)
     function updateScannerUI(weight, bmi, data) {
-        const bmiSpan = document.getElementById('bmi-value');
-        if (bmiSpan) bmiSpan.textContent = bmi;
-
+        document.getElementById('bmi-value').textContent = bmi;
         const circle = document.getElementById('scan-main-circle');
         if (circle) {
             circle.innerHTML = `
-                <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%;">
-                    <span style="font-size: 10px; color: #666; text-transform: uppercase;">Status</span>
-                    <div style="color: ${data.statusColor}; font-size: 14px; font-weight: bold; margin-bottom: 5px;">${data.status}</div>
-                    <span style="font-size: 38px; color: #FFC72C; font-weight: bold; line-height: 1;">${weight}kg</span>
-                    <span style="font-size: 12px; color: #fff; margin-top: 5px;">BMI: ${bmi}</span>
+                <div style="text-align:center;">
+                    <div style="color:${data.statusColor}; font-size:12px; font-weight:bold; text-transform:uppercase;">${data.status}</div>
+                    <div style="font-size:42px; color:#FFC72C; font-weight:bold; margin:5px 0;">${weight}kg</div>
+                    <div style="color:#fff; font-size:14px;">BMI: ${bmi}</div>
                 </div>
             `;
         }
@@ -96,21 +94,18 @@
 
     function updateRecommendationUI(data) {
         const box = document.getElementById('athlete-recommendation-box');
-        const selector = document.getElementById('speed-selector-container');
         if (box) {
             box.innerHTML = `
-                <div style="border-left: 3px solid ${data.statusColor}; padding-left: 12px; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 4px;">
+                <div style="border-left: 3px solid ${data.statusColor}; padding-left: 12px;">
                     <p style="color:#eee; font-size:14px; margin:0;">Режим: <strong>${data.status}</strong></p>
-                    <p style="color:#ccc; font-size:13px; margin:5px 0 0 0; line-height:1.4;">
-                        Тобі необхідно <strong>${data.targetCalories} ккал</strong> для досягнення цілі.
-                    </p>
+                    <p style="color:#ccc; font-size:13px; margin:5px 0 0 0;">Необхідно: <strong>${data.targetCalories} ккал</strong>/день</p>
                 </div>
             `;
         }
-        if (selector) selector.style.display = 'block';
+        document.getElementById('speed-selector-container').style.display = 'block';
     }
 
-    // 4. ІСТОРІЯ ТА ГРАФІК
+    // 4. ЗАВАНТАЖЕННЯ ІСТОРІЇ ТА ГРАФІКА
     async function loadHistory() {
         if (!currentUserId || !weightChart) return;
         const snap = await firebase.firestore().collection('weight_history')
@@ -118,45 +113,43 @@
         
         const docs = snap.docs.map(d => ({id: d.id, ...d.data()}));
         
-        // Оновлення графіка
+        // Оновлюємо графік
         const chartData = [...docs].reverse();
         weightChart.data.labels = chartData.map(d => d.date.split('-').reverse().slice(0,2).join('.'));
         weightChart.data.datasets[0].data = chartData.map(d => d.weight);
         weightChart.update();
 
-        // Оновлення списку історії
-        updateHistoryListUI(docs);
-
-        // Якщо є дані, оновлюємо SCAN останній записом
+        // Оновлюємо SCAN останній записом
         if (docs.length > 0) {
             const last = docs[0];
-            const analysis = calculateAthleteData(last.weight, last.bmi, 180, 25);
-            updateScannerUI(last.weight, last.bmi, analysis);
+            updateScannerUI(last.weight, last.bmi, calculateAthleteData(last.weight, last.bmi, 180, 25));
         }
+
+        // Оновлюємо список історії під графіком
+        renderHistoryList(docs);
     }
 
-    function updateHistoryListUI(docs) {
-        let list = document.getElementById('compact-history-list');
-        if (!list) {
-            const chartCard = document.querySelector('.chart-card');
-            list = document.createElement('div');
-            list.id = 'compact-history-list';
-            list.style.cssText = "margin-top:15px; border-top:1px solid #222; padding-top:10px;";
-            chartCard.appendChild(list);
+    function renderHistoryList(docs) {
+        let container = document.getElementById('compact-history-list');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'compact-history-list';
+            container.style.cssText = "margin-top:20px; border-top:1px solid #222; padding-top:10px;";
+            document.querySelector('.chart-card').appendChild(container);
         }
 
-        list.innerHTML = docs.map(doc => `
-            <div style="display:flex; justify-content:space-between; align-items:center; background:#111; padding:8px 12px; margin-bottom:6px; border-radius:4px; border:1px solid #1a1a1a;">
-                <div>
-                    <span style="color:#666; font-size:10px;">${doc.date.split('-').reverse().join('.')}</span>
-                    <div style="color:#fff; font-weight:bold; font-size:13px;">${doc.weight} kg <small style="color:#444;">(${doc.bmi})</small></div>
+        container.innerHTML = docs.map(doc => `
+            <div style="display:flex; justify-content:space-between; align-items:center; background:#111; padding:10px; margin-bottom:6px; border-radius:4px; border:1px solid #1a1a1a;">
+                <div style="font-size:13px;">
+                    <span style="color:#666; font-size:10px;">${doc.date}</span>
+                    <div style="color:#fff; font-weight:bold;">${doc.weight} kg <small style="color:#444;">(BMI: ${doc.bmi})</small></div>
                 </div>
-                <button onclick="deleteWeightEntry('${doc.id}')" style="background:none; border:none; color:#DA3E52; cursor:pointer; font-size:18px; padding:0 5px;">&times;</button>
+                <button onclick="deleteWeightEntry('${doc.id}')" style="background:none; border:none; color:#DA3E52; font-size:20px; cursor:pointer;">&times;</button>
             </div>
         `).join('');
     }
 
-    // 5. ГЕНЕРАЦІЯ ТА ЗБЕРЕЖЕННЯ
+    // 5. ДОПОМІЖНІ ФУНКЦІЇ
     window.setSpeed = (speed, btn) => {
         selectedSpeed = speed;
         document.querySelectorAll('.speed-btn').forEach(b => {
@@ -175,37 +168,27 @@
                 speed: selectedSpeed,
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             }, { merge: true });
-            
-            document.getElementById('diet-container').innerHTML = `
-                <div style="background: rgba(255,199,44,0.1); border: 1px solid #FFC72C; color:#fff; padding:10px; border-radius:4px; font-size:11px; text-align:center; margin-top:10px;">
-                    ✅ ПЛАН НА 7 ДНІВ ЗАФІКСОВАНО
-                </div>`;
+            document.getElementById('diet-container').innerHTML = `<p style="color:#FFC72C; font-size:12px; text-align:center;">✅ ПЛАН ЗБЕРЕЖЕНО</p>`;
             btn.textContent = "ГЕНЕРУВАТИ ПЛАН НА ТИЖДЕНЬ";
         } catch (e) { console.error(e); }
     }
 
     function initChart() {
-        const canvas = document.getElementById('weightChart');
-        if (!canvas) return;
-        weightChart = new Chart(canvas.getContext('2d'), {
+        const ctx = document.getElementById('weightChart');
+        if (!ctx) return;
+        weightChart = new Chart(ctx, {
             type: 'line',
-            data: { labels: [], datasets: [{ label: 'Вага', data: [], borderColor: '#FFC72C', backgroundColor: 'rgba(255,199,44,0.05)', tension: 0.4, fill: true }] },
-            options: { 
-                responsive: true, maintainAspectRatio: false,
-                scales: { 
-                    x: { ticks: { color: '#666', font: { size: 9 } }, grid: { display: false } },
-                    y: { ticks: { color: '#666', font: { size: 9 } }, grid: { color: '#222' } }
-                }
-            }
+            data: { labels: [], datasets: [{ label: 'Вага', data: [], borderColor: '#FFC72C', tension: 0.4, fill: false }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: false, grid: { color: '#222' } }, x: { grid: { display: false } } } }
         });
     }
 
     async function loadBaseData() {
         const doc = await firebase.firestore().collection('users').doc(currentUserId).get();
         if (doc.exists) {
-            const data = doc.data();
-            if (document.getElementById('user-height')) document.getElementById('user-height').value = data.height || "";
-            if (document.getElementById('user-age')) document.getElementById('user-age').value = data.age || "";
+            const d = doc.data();
+            if (document.getElementById('user-height')) document.getElementById('user-height').value = d.height || "";
+            if (document.getElementById('user-age')) document.getElementById('user-age').value = d.age || "";
         }
     }
 })();
