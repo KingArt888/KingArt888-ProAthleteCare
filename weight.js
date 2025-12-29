@@ -22,7 +22,7 @@
         if (planBtn) planBtn.addEventListener('click', generateWeeklyPlan);
     });
 
-    // --- РОЗРАХУНКИ ---
+    // --- ПЕРСОНАЛЬНІ РОЗРАХУНКИ ---
     function calculateAthleteData(w, bmi, h, a) {
         let status, statusColor, modifier, pRatio, fRatio, cRatio;
         if (bmi < 20.5) { 
@@ -42,6 +42,119 @@
         };
     }
 
+    // --- ЦЕНТРУВАННЯ ТЕКСТУ В КРУГУ ---
+    function updateScannerUI(weight, bmi, data) {
+        const mainValue = document.getElementById('fat-percentage-value');
+        if (mainValue) {
+            // Забезпечуємо ідеальне центрування через JS стилі
+            mainValue.style.cssText = "display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; width:100%; height:100%; position:absolute; top:0; left:0; pointer-events:none;";
+            mainValue.innerHTML = `
+                <div style="font-size: 10px; color: #555; text-transform: uppercase; letter-spacing:1px;">Weight</div>
+                <div style="font-size: 32px; color: #FFC72C; font-weight: bold; line-height: 1;">${weight}</div>
+                <div style="font-size: 11px; color: ${data.statusColor}; font-weight: bold; margin-top: 5px; border-top: 1px solid #222; padding-top: 3px;">BMI ${bmi}</div>
+            `;
+        }
+
+        let rankEl = document.getElementById('athlete-rank');
+        if (!rankEl) {
+            rankEl = document.createElement('div');
+            rankEl.id = 'athlete-rank';
+            document.querySelector('.form-card:nth-child(2)').appendChild(rankEl);
+        }
+        rankEl.style.cssText = "text-align:center; margin-top:20px; padding:10px; border-top: 1px solid #1a1a1a;";
+        rankEl.innerHTML = `
+            <div style="color:${data.statusColor}; font-size:12px; font-weight:bold; letter-spacing:1px; margin-bottom:5px;">${data.status}</div>
+            <div style="color:#fff; font-size:22px; font-weight:bold;">${data.targetCalories} <span style="font-size:12px; color:#444;">kcal/day</span></div>
+            <div style="color:#666; font-size:10px; margin-top:5px;">ЦІЛЬ БЖУ: Б:${data.prot}г | Ж:${data.fat}г | В:${data.carb}г</div>
+        `;
+    }
+
+    // --- ГЕНЕРАЦІЯ ДІЄТИ (6 ПРИЙОМІВ ДЛЯ ПОВНОГО КАЛОРАЖУ) ---
+    async function generateWeeklyPlan() {
+        if (!currentAnalysis) { alert("Спочатку натисніть АНАЛІЗ"); return; }
+        const container = document.getElementById('diet-container');
+        const mealPlan = [
+            { key: 'breakfasts', label: 'Сніданок' },
+            { key: 'breakfasts', label: 'Перекус I' },
+            { key: 'lunches', label: 'Обід' },
+            { key: 'lunches', label: 'Перекус II' },
+            { key: 'dinners', label: 'Вечеря' },
+            { key: 'dinners', label: 'Перед сном' }
+        ];
+        
+        currentDailyPlan = [];
+        let html = `<div style="margin-top:15px;">`;
+
+        mealPlan.forEach(plan => {
+            const meals = dietDatabase[plan.key].filter(m => m.speed === selectedSpeed);
+            const meal = meals[Math.floor(Math.random() * meals.length)] || dietDatabase[plan.key][0];
+            const kcal = (meal.p * 4) + (meal.f * 9) + (meal.c * 4);
+            
+            const mealObj = { ...meal, kcal, id: Math.random().toString(36).substr(2, 9), eaten: false };
+            currentDailyPlan.push(mealObj);
+
+            html += `
+                <div id="meal-${mealObj.id}" style="background:rgba(255,255,255,0.02); border:1px solid #1a1a1a; padding:12px; border-radius:8px; margin-bottom:8px; border-left: 4px solid #FFC72C; display: flex; align-items: center; justify-content: space-between;">
+                    <div style="flex: 1;">
+                        <div style="display:flex; justify-content:space-between; font-size:10px; margin-bottom:4px;">
+                            <span style="color:#FFC72C; font-weight:bold; text-transform:uppercase;">${plan.label}</span>
+                            <span style="color:#444;">${kcal} kcal</span>
+                        </div>
+                        <div style="color:#fff; font-size:14px; font-weight:bold;">${meal.name}</div>
+                        <div style="font-size:10px; color:#666; margin-top:2px;">Б:${meal.p}г | Ж:${meal.f}г | В:${meal.c}г</div>
+                    </div>
+                    <input type="checkbox" style="accent-color:#FFC72C; width:20px; height:20px; cursor:pointer;" onchange="toggleMeal('${mealObj.id}', this)">
+                </div>
+            `;
+        });
+        container.innerHTML = html + `</div>`;
+        updateMacrosLeftUI();
+    }
+
+    // --- ЖИВЕ ВІДНІМАННЯ ---
+    window.toggleMeal = function(id, checkbox) {
+        const meal = currentDailyPlan.find(m => m.id === id);
+        const card = document.getElementById(`meal-${id}`);
+        if (meal) {
+            meal.eaten = checkbox.checked;
+            card.style.opacity = meal.eaten ? "0.1" : "1";
+            card.style.filter = meal.eaten ? "grayscale(100%)" : "none";
+            updateMacrosLeftUI();
+        }
+    };
+
+    function updateMacrosLeftUI() {
+        if (!currentAnalysis) return;
+        const eaten = currentDailyPlan.filter(m => m.eaten).reduce((acc, m) => {
+            acc.k += m.kcal; acc.p += m.p; acc.f += m.f; acc.c += m.c;
+            return acc;
+        }, { k: 0, p: 0, f: 0, c: 0 });
+
+        const kL = currentAnalysis.targetCalories - eaten.k;
+        const pL = currentAnalysis.prot - eaten.p;
+        const fL = currentAnalysis.fat - eaten.f;
+        const cL = currentAnalysis.carb - eaten.c;
+
+        const leftEl = document.getElementById('calories-left');
+        if (leftEl) {
+            leftEl.textContent = kL;
+            leftEl.style.color = kL < 0 ? "#DA3E52" : "#FFC72C";
+        }
+        
+        const totalEl = document.getElementById('total-daily-kcal');
+        if (totalEl) totalEl.textContent = currentAnalysis.targetCalories;
+
+        let sub = document.getElementById('macros-left-sub');
+        if (!sub) {
+            sub = document.createElement('div');
+            sub.id = 'macros-left-sub';
+            sub.style.cssText = "font-size: 11px; color: #555; margin-top: 5px; text-align: right; font-family: monospace;";
+            if (leftEl) leftEl.parentElement.appendChild(sub);
+        }
+        sub.innerHTML = `ЗАЛИШОК БЖУ: Б:${pL}г Ж:${fL}г В:${cL}г`;
+    }
+
+    // --- ОБРОБКА ФОРМИ ---
     async function handleAthleteAnalysis(e) {
         e.preventDefault();
         const w = parseFloat(document.getElementById('weight-value').value);
@@ -63,142 +176,10 @@
             });
             await firebase.firestore().collection('users').doc(currentUserId).set({ height: h, age: a }, { merge: true });
             loadHistory();
-        } catch (error) { console.error(error); }
+        } catch (err) { console.error(err); }
     }
 
-    // --- ЦЕНТРУВАННЯ ТЕКСТУ В КРУГУ ---
-    function updateScannerUI(weight, bmi, data) {
-        const mainValue = document.getElementById('fat-percentage-value');
-        if (mainValue) {
-            mainValue.style.display = "flex";
-            mainValue.style.flexDirection = "column";
-            mainValue.style.alignItems = "center";
-            mainValue.style.justifyContent = "center";
-            mainValue.style.textAlign = "center";
-            mainValue.innerHTML = `
-                <div style="font-size: 10px; color: #555; text-transform: uppercase; margin-bottom: -5px;">Weight</div>
-                <div style="font-size: 32px; color: #FFC72C; font-weight: bold;">${weight}</div>
-                <div style="font-size: 12px; color: ${data.statusColor}; font-weight: bold; border-top: 1px solid #222; padding-top: 2px;">BMI ${bmi}</div>
-            `;
-        }
-
-        let rankElement = document.getElementById('athlete-rank');
-        if (!rankElement) {
-            rankElement = document.createElement('div');
-            rankElement.id = 'athlete-rank';
-            rankElement.style.cssText = "text-align:center; margin-top:15px; padding-top:10px; border-top: 1px solid #1a1a1a;";
-            document.querySelector('.form-card:nth-child(2)').appendChild(rankElement);
-        }
-        rankElement.innerHTML = `
-            <div style="color:${data.statusColor}; font-size:11px; font-weight:bold; letter-spacing:1px; margin-bottom:4px;">${data.status}</div>
-            <div style="color:#fff; font-size:20px; font-weight:bold; margin-bottom:4px;">${data.targetCalories} kcal</div>
-            <div style="color:#666; font-size:10px; background:#080808; padding:5px; border-radius:4px;">Б: ${data.prot}г | Ж: ${data.fat}г | В: ${data.carb}г</div>
-        `;
-    }
-
-    // --- ПОВНА ДІЄТА (5 ПРИЙОМІВ) ---
-    async function generateWeeklyPlan() {
-        if (!currentAnalysis) return;
-        const container = document.getElementById('diet-container');
-        // Додаємо перекуси, щоб закрити калораж
-        const cats = { 
-            breakfasts: "Сніданок", 
-            lunches: "Перекус I", 
-            dinners: "Обід", 
-            breakfasts: "Перекус II", // Використовуємо легкі страви зі сніданків для перекусу
-            dinners: "Вечеря" 
-        };
-        
-        currentDailyPlan = [];
-        let html = `<div style="margin-top:12px;">`;
-
-        const keys = Object.keys(cats);
-        for (let i = 0; i < keys.length; i++) {
-            const type = keys[i];
-            const meals = dietDatabase[type].filter(m => m.speed === selectedSpeed);
-            const meal = meals[Math.floor(Math.random() * meals.length)] || dietDatabase[type][0];
-            const kcal = (meal.p * 4) + (meal.f * 9) + (meal.c * 4);
-            
-            const mealObj = { ...meal, kcal, id: Math.random().toString(36).substr(2, 9), eaten: false };
-            currentDailyPlan.push(mealObj);
-
-            html += `
-                <div id="meal-${mealObj.id}" style="background:rgba(255,255,255,0.02); border:1px solid #1a1a1a; padding:10px; border-radius:6px; margin-bottom:8px; border-left: 3px solid #FFC72C; display: flex; align-items: center; justify-content: space-between;">
-                    <div style="flex: 1;">
-                        <div style="display:flex; justify-content:space-between; font-size:9px;">
-                            <span style="color:#FFC72C; font-weight:bold;">${Object.values(cats)[i]}</span>
-                            <span style="color:#444;">${kcal} kcal</span>
-                        </div>
-                        <div style="color:#eee; font-size:13px; font-weight:bold; margin:2px 0;">${meal.name}</div>
-                        <div style="font-size:9px; color:#666;">Б:${meal.p} Ж:${meal.f} В:${meal.c}</div>
-                    </div>
-                    <input type="checkbox" style="accent-color:#FFC72C; width:18px; height:18px; cursor:pointer;" onchange="toggleMeal('${mealObj.id}', this)">
-                </div>
-            `;
-        }
-        container.innerHTML = html + `</div>`;
-        updateMacrosLeftUI();
-    }
-
-    window.toggleMeal = function(id, checkbox) {
-        const mealCard = document.getElementById(`meal-${id}`);
-        const meal = currentDailyPlan.find(m => m.id === id);
-        if (meal) {
-            meal.eaten = checkbox.checked;
-            mealCard.style.opacity = meal.eaten ? "0.15" : "1";
-            mealCard.style.filter = meal.eaten ? "grayscale(100%)" : "none";
-            updateMacrosLeftUI();
-        }
-    };
-
-    function updateMacrosLeftUI() {
-        if (!currentAnalysis) return;
-        const eaten = currentDailyPlan.filter(m => m.eaten).reduce((acc, m) => {
-            acc.k += m.kcal; acc.p += m.p; acc.f += m.f; acc.c += m.c;
-            return acc;
-        }, { k: 0, p: 0, f: 0, c: 0 });
-
-        const kL = currentAnalysis.targetCalories - eaten.k;
-        const pL = currentAnalysis.prot - eaten.p;
-        const fL = currentAnalysis.fat - eaten.f;
-        const cL = currentAnalysis.carb - eaten.c;
-
-        const kcalEl = document.getElementById('calories-left');
-        kcalEl.textContent = kL;
-        kcalEl.style.color = kL < 0 ? "#DA3E52" : "#FFC72C";
-        document.getElementById('total-daily-kcal').textContent = currentAnalysis.targetCalories;
-
-        let sub = document.getElementById('macros-left-sub');
-        if (!sub) {
-            sub = document.createElement('div');
-            sub.id = 'macros-left-sub';
-            sub.style.cssText = "font-size: 10px; color: #555; margin-top: 5px; text-align: right;";
-            kcalEl.parentElement.appendChild(sub);
-        }
-        sub.innerHTML = `ЗАЛИШОК БЖУ: Б:${pL}г | Ж:${fL}г | В:${cL}г`;
-    }
-
-    // --- СТАНДАРТНІ ФУНКЦІЇ ---
-    window.setSpeed = function(s, b) {
-        selectedSpeed = s;
-        document.querySelectorAll('.speed-btn').forEach(btn => { btn.style.background = "#111"; btn.style.color = "#555"; });
-        b.style.background = "#FFC72C"; b.style.color = "#000";
-    };
-
-    async function loadHistory() {
-        if (!currentUserId || !weightChart) return;
-        const snap = await firebase.firestore().collection('weight_history').where('userId', '==', currentUserId).orderBy('timestamp', 'desc').limit(7).get();
-        if (!snap.empty) {
-            const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            currentAnalysis = calculateAthleteData(docs[0].weight, docs[0].bmi, 180, 30);
-            updateScannerUI(docs[0].weight, docs[0].bmi, currentAnalysis);
-            updateMacrosLeftUI();
-            weightChart.data.labels = docs.reverse().map(d => d.date.split('.').slice(0,2).join('.'));
-            weightChart.data.datasets[0].data = docs.map(d => d.weight);
-            weightChart.update();
-        }
-    }
-
+    // --- CHART & HISTORY ---
     function initChart() {
         const ctx = document.getElementById('weightChart');
         if (!ctx) return;
@@ -209,12 +190,37 @@
         });
     }
 
+    async function loadHistory() {
+        if (!currentUserId || !weightChart) return;
+        const snap = await firebase.firestore().collection('weight_history').where('userId', '==', currentUserId).orderBy('timestamp', 'desc').limit(7).get();
+        if (!snap.empty) {
+            const docs = snap.docs.map(d => d.data());
+            const last = docs[0];
+            const h = parseFloat(document.getElementById('user-height').value) || 180;
+            const a = parseInt(document.getElementById('user-age').value) || 30;
+            currentAnalysis = calculateAthleteData(last.weight, last.bmi, h, a);
+            updateScannerUI(last.weight, last.bmi, currentAnalysis);
+            updateMacrosLeftUI();
+
+            const chartData = [...docs].reverse();
+            weightChart.data.labels = chartData.map(d => d.date.split('.').slice(0,2).join('.'));
+            weightChart.data.datasets[0].data = chartData.map(d => d.weight);
+            weightChart.update();
+        }
+    }
+
     async function loadBaseData() {
         const doc = await firebase.firestore().collection('users').doc(currentUserId).get();
         if (doc.exists) {
             const d = doc.data();
-            document.getElementById('user-height').value = d.height || "";
-            document.getElementById('user-age').value = d.age || "";
+            if (document.getElementById('user-height')) document.getElementById('user-height').value = d.height || "";
+            if (document.getElementById('user-age')) document.getElementById('user-age').value = d.age || "";
         }
     }
+
+    window.setSpeed = function(s, b) {
+        selectedSpeed = s;
+        document.querySelectorAll('.speed-btn').forEach(btn => { btn.style.background = "#111"; btn.style.color = "#555"; });
+        b.style.background = "#FFC72C"; b.style.color = "#000";
+    };
 })();
