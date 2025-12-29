@@ -12,6 +12,8 @@
             currentUserId = viewUserId || user.uid;
             loadBaseData();
             loadHistory();
+        } else {
+            firebase.auth().signInAnonymously().catch(e => console.error("Auth error:", e));
         }
     });
 
@@ -21,13 +23,12 @@
         if (form) form.addEventListener('submit', handleAthleteAnalysis);
         
         const planBtn = document.getElementById('get-diet-plan-btn');
-        if (planBtn) planBtn.addEventListener('click', generateAndSaveWeeklyPlan);
+        if (planBtn) planBtn.addEventListener('click', generateWeeklyPlan);
     });
 
-    // Функція перемикання швидкості приготування
+    // Вибір швидкості приготування
     window.setSpeed = function(speed, btn) {
         selectedSpeed = speed;
-        // Оновлюємо візуал кнопок
         document.querySelectorAll('.speed-btn').forEach(b => {
             b.style.background = "#111";
             b.style.borderColor = "#333";
@@ -53,19 +54,20 @@
         updateScannerUI(w, bmi, analysis);
         updateRecommendationUI(analysis);
 
-        // Зберігаємо в історію ваги
         try {
             await firebase.firestore().collection('weight_history').add({
                 userId: currentUserId,
                 weight: w,
                 bmi: bmi,
                 status: analysis.status,
+                statusColor: analysis.statusColor,
+                target_kcal: analysis.targetCalories,
                 date: new Date().toISOString().split('T')[0],
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
             await firebase.firestore().collection('users').doc(currentUserId).set({ height: h, age: a }, { merge: true });
             loadHistory();
-        } catch (error) { console.error(error); }
+        } catch (error) { console.error("Firebase Error:", error); }
     }
 
     function calculateAthleteData(w, bmi, h, a) {
@@ -79,9 +81,10 @@
         return { status, statusColor: color, targetCalories: kcal };
     }
 
+    // Оновлення КРУГА (Composition Scan)
     function updateScannerUI(weight, bmi, data) {
-        const bmiBadge = document.getElementById('bmi-value');
-        if (bmiBadge) bmiBadge.textContent = bmi;
+        const bmiDisplay = document.getElementById('bmi-value');
+        if (bmiDisplay) bmiDisplay.textContent = bmi;
 
         const circle = document.getElementById('scan-main-circle');
         if (circle) {
@@ -94,6 +97,7 @@
         }
     }
 
+    // Оновлення АНАЛІЗУ ТА РЕКОМЕНДАЦІЙ
     function updateRecommendationUI(data) {
         const box = document.getElementById('athlete-recommendation-box');
         const selector = document.getElementById('speed-selector-container');
@@ -111,36 +115,28 @@
         if (selector) selector.style.display = 'block';
     }
 
-    async function generateAndSaveWeeklyPlan() {
+    async function generateWeeklyPlan() {
         if (!currentAnalysis) return;
+        const btn = document.getElementById('get-diet-plan-btn');
+        btn.textContent = "ЗБЕРЕЖЕННЯ...";
         
-        const dietContainer = document.getElementById('diet-container');
-        const kcalBalance = document.getElementById('kcal-balance');
-        const caloriesLeft = document.getElementById('calories-left');
-
-        dietContainer.innerHTML = `<p style="color:#FFC72C; font-size:11px; text-align:center;">ФОРМУЄМО ПЛАН НА ТИЖДЕНЬ...</p>`;
-
         try {
-            // Зберігаємо вибір для тренера
             await firebase.firestore().collection('athlete_plans').doc(currentUserId).set({
-                targetKcal: currentAnalysis.targetCalories,
-                selectedSpeed: selectedSpeed,
+                kcal: currentAnalysis.targetCalories,
+                speed: selectedSpeed,
                 status: currentAnalysis.status,
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             }, { merge: true });
-
-            // Відображаємо "заглушку" плану (або дані з diet-data.js якщо підключено)
-            dietContainer.innerHTML = `
-                <div style="background:#111; padding:12px; border-radius:6px; border:1px solid #222; margin-top:10px;">
-                    <p style="color:#FFC72C; font-size:12px; margin-bottom:5px; font-weight:bold;">✅ ПЛАН ГОТОВИЙ</p>
-                    <p style="color:#aaa; font-size:11px;">Режим приготування: ${selectedSpeed === 'Easy' ? 'ШВИДКО' : selectedSpeed === 'Medium' ? 'СЕРЕДНЬО' : 'МАЮ ЧАС'}</p>
-                    <p style="color:#666; font-size:10px; margin-top:5px;">Детальний список продуктів відправлено у ваш кабінет PAC.</p>
-                </div>
-            `;
             
-            if (kcalBalance) kcalBalance.style.display = 'block';
-            if (caloriesLeft) caloriesLeft.textContent = currentAnalysis.targetCalories;
-
+            const dietContainer = document.getElementById('diet-container');
+            if (dietContainer) {
+                dietContainer.innerHTML = `
+                    <div style="background:#111; padding:12px; border-radius:6px; border:1px solid #222; margin-top:10px; text-align:center;">
+                        <p style="color:#FFC72C; font-size:12px; margin:0;">✅ План на 7 днів сформовано!</p>
+                        <p style="color:#666; font-size:10px;">Режим: ${selectedSpeed}</p>
+                    </div>`;
+            }
+            btn.textContent = "ГЕНЕРУВАТИ ПЛАН НА ТИЖДЕНЬ";
         } catch (e) { console.error(e); }
     }
 
@@ -157,19 +153,22 @@
     async function loadHistory() {
         if (!currentUserId || !weightChart) return;
         const snap = await firebase.firestore().collection('weight_history')
-            .where('userId', '==', currentUserId).orderBy('date', 'desc').limit(10).get();
+            .where('userId', '==', currentUserId).orderBy('date', 'desc').limit(15).get();
         
         if (!snap.empty) {
             const docs = snap.docs.map(d => d.data());
+            const last = docs[0];
+            
+            // Викликаємо оновлення інтерфейсу останніми даними з бази
+            const analysis = calculateAthleteData(last.weight, last.bmi, 180, 25);
+            currentAnalysis = analysis;
+            updateScannerUI(last.weight, last.bmi, analysis);
+            updateRecommendationUI(analysis);
+
             const chartData = [...docs].reverse();
             weightChart.data.labels = chartData.map(d => d.date.split('-').reverse().slice(0,2).join('.'));
             weightChart.data.datasets[0].data = chartData.map(d => d.weight);
             weightChart.update();
-
-            // Оновлюємо сканер останніми даними
-            const last = docs[0];
-            const analysis = calculateAthleteData(last.weight, last.bmi, 180, 25);
-            updateScannerUI(last.weight, last.bmi, analysis);
         }
     }
 
