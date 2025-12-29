@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weight Control | ProAthleteCare</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="weight-control.css"> <link rel="stylesheet" href="weight-control.css">
+    <link rel="stylesheet" href="weight-control.css">
     <link rel="stylesheet" href="navigation-mobile.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -65,15 +65,35 @@
                         </div>
                     </div>
                 </div>
+
                 <div class="form-card diet-card">
-                   <h3>🍽 ПЕРСОНАЛЬНИЙ ПЛАН ХАРЧУВАННЯ</h3>
-                   <div id="diet-container">
-        <p style="color: #666; text-align: center;">Введіть параметри тіла для розрахунку дієти</p>
-                   </div>
-                   <div class="remaining-calories">
-                       ЗАЛИШИЛОСЯ: <span id="calories-left">0</span> ккал
-                   </div>
-               </div>
+                    <h3>🍽 АНАЛІЗ ТА РЕКОМЕНДАЦІЇ</h3>
+                    
+                    <div class="speed-selector" style="display: flex; gap: 5px; margin-bottom: 15px;">
+                        <button type="button" onclick="setSpeed('Easy', this)" class="speed-btn active" style="flex:1; font-size: 10px; padding: 8px; background: #FFC72C; color: #000; border: none; cursor: pointer; font-weight: bold; border-radius: 4px;">⚡ ШВИДКО</button>
+                        <button type="button" onclick="setSpeed('Medium', this)" class="speed-btn" style="flex:1; font-size: 10px; padding: 8px; background: #222; color: #fff; border: 1px solid #FFC72C; cursor: pointer; border-radius: 4px;">🥗 СЕРЕДНЬО</button>
+                        <button type="button" onclick="setSpeed('Hard', this)" class="speed-btn" style="flex:1; font-size: 10px; padding: 8px; background: #222; color: #fff; border: 1px solid #FFC72C; cursor: pointer; border-radius: 4px;">👨‍🍳 МАЮ ЧАС</button>
+                    </div>
+
+                    <div id="athlete-recommendation-box" style="color: #FFC72C; font-size: 14px; margin-bottom: 15px; border-bottom: 1px solid #222; padding-bottom: 10px;">
+                        Введіть дані для отримання рекомендації...
+                    </div>
+                    
+                    <button id="get-diet-plan-btn" class="gold-button" style="display:none; margin: 10px 0; width: 100%;">ОТРИМАТИ ПЛАН НА 7 ДНІВ</button>
+
+                    <div id="diet-container"></div>
+
+                    <div class="remaining-balance" style="margin-top: 20px; border-top: 1px dashed #FFC72C; padding-top: 15px;">
+                        <div style="display:flex; justify-content: space-between; font-size: 12px;">
+                            <span>БЮДЖЕТ КАЛОРІЙ:</span>
+                            <strong id="total-daily-kcal">0</strong>
+                        </div>
+                        <div style="display:flex; justify-content: space-between; font-size: 20px; color: #FFC72C; margin-top: 10px;">
+                            <span>ЗАЛИШИЛОСЯ:</span>
+                            <strong id="calories-left">0</strong>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="chart-card">
                     <h3>📉 PROGRESS CHART</h3>
@@ -89,11 +109,8 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
-
     <script src="firebase-config.js"></script>
-
-    <script src="weight.js"></script>
+    <script src="diet-data.js"></script> <script src="weight.js"></script>
     <script src="navigation-common.js"></script>
-    
 </body>
 </html>
