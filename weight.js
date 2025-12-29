@@ -2,7 +2,6 @@
     let weightChart = null;
     let currentUserId = null;
     let selectedSpeed = 'Easy'; 
-    let currentAnalysis = null;
 
     const urlParams = new URLSearchParams(window.location.search);
     const viewUserId = urlParams.get('userId');
@@ -23,25 +22,19 @@
         if (form) {
             form.addEventListener('submit', handleAthleteAnalysis);
         }
-        
-        // Кнопка генерації плану
-        const planBtn = document.getElementById('get-diet-plan-btn');
-        if (planBtn) {
-            planBtn.addEventListener('click', generateWeeklyPlan);
-        }
     });
 
-    // Функція вибору швидкості (Швидко/Середньо/Маю час)
+    // Функція вибору швидкості приготування
     window.setSpeed = function(speed, btn) {
         selectedSpeed = speed;
         document.querySelectorAll('.speed-btn').forEach(b => {
             b.style.background = "#111";
             b.style.borderColor = "#333";
-            b.classList.remove('active');
+            b.style.color = "#fff";
         });
         btn.style.background = "#222";
         btn.style.borderColor = "#FFC72C";
-        btn.classList.add('active');
+        btn.style.color = "#FFC72C";
     };
 
     async function handleAthleteAnalysis(e) {
@@ -54,7 +47,6 @@
 
         const bmi = (w / ((h / 100) ** 2)).toFixed(1);
         const analysis = calculateAthleteData(w, bmi, h, a);
-        currentAnalysis = analysis;
 
         updateScannerUI(w, bmi, analysis);
         updateRecommendationUI(analysis);
@@ -64,9 +56,9 @@
                 userId: currentUserId,
                 weight: w,
                 bmi: bmi,
+                target_kcal: analysis.targetCalories,
                 status: analysis.status,
                 statusColor: analysis.statusColor,
-                target_kcal: analysis.targetCalories,
                 date: new Date().toISOString().split('T')[0],
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
@@ -76,21 +68,25 @@
     }
 
     function calculateAthleteData(w, bmi, h, a) {
-        let status, color, modifier;
-        if (bmi < 20.5) { status = "MUSCLE GAIN"; color = "#00BFFF"; modifier = 1.15; }
-        else if (bmi < 25.5) { status = "ATHLETIC FORM"; color = "#FFC72C"; modifier = 1.0; }
-        else { status = "WEIGHT LOSS"; color = "#DA3E52"; modifier = 0.85; }
+        let status, color, modifier, motivation;
+        if (bmi < 20.5) { 
+            status = "MUSCLE GAIN"; color = "#00BFFF"; modifier = 1.15;
+            motivation = "Твоє тіло — це будівельний майданчик. Дай йому достатньо енергії для росту!";
+        } else if (bmi < 25.5) {
+            status = "ATHLETIC FORM"; color = "#FFC72C"; modifier = 1.0;
+            motivation = "Ти у чудовій формі! Підтримуй цей баланс для максимальної продуктивності.";
+        } else {
+            status = "WEIGHT LOSS"; color = "#DA3E52"; modifier = 0.85;
+            motivation = "Кожен крок наближає тебе до пікової форми. Дисципліна б'є талант!";
+        }
 
         const bmr = (10 * w) + (6.25 * h) - (5 * a) + 5;
         const kcal = Math.round(bmr * 1.55 * modifier);
-        return { status, statusColor: color, targetCalories: kcal };
+        return { status, statusColor: color, targetCalories: kcal, motivation };
     }
 
-    // Оновлення великого круга (SCANNER)
+    // Модуль COMPOSITION SCAN (Status, Вага, BMI)
     function updateScannerUI(weight, bmi, data) {
-        const bmiValueSpan = document.getElementById('bmi-value');
-        if (bmiValueSpan) bmiValueSpan.textContent = bmi;
-
         const circle = document.getElementById('scan-main-circle');
         if (circle) {
             circle.innerHTML = `
@@ -102,56 +98,23 @@
         }
     }
 
-    // Оновлення блоку РЕКОМЕНДАЦІЙ
+    // Модуль АНАЛІЗ ТА РЕКОМЕНДАЦІЇ
     function updateRecommendationUI(data) {
         const box = document.getElementById('athlete-recommendation-box');
         const selector = document.getElementById('speed-selector-container');
         
         if (box) {
             box.innerHTML = `
-                <div style="border-left: 3px solid ${data.statusColor}; padding-left: 10px;">
+                <div style="border-left: 3px solid ${data.statusColor}; padding-left: 10px; margin-bottom: 15px;">
                     <p style="color:#eee; font-size:14px; margin:0;">Режим: <strong>${data.status}</strong></p>
                     <p style="color:#eee; font-size:13px; margin:8px 0 0 0; line-height:1.4;">
                         <strong>РЕКОМЕНДАЦІЯ:</strong> Тобі необхідно <strong>${data.targetCalories} ккал</strong> в день для досягнення пікової форми.
                     </p>
+                    <p style="color:#FFC72C; font-size:12px; font-style:italic; margin-top:10px;">"${data.motivation}"</p>
                 </div>
             `;
         }
-        if (selector) {
-            selector.style.display = 'block';
-        }
-    }
-
-    async function generateWeeklyPlan() {
-        if (!currentAnalysis) return;
-        const btn = document.getElementById('get-diet-plan-btn');
-        btn.textContent = "ЗБЕРЕЖЕННЯ...";
-        
-        try {
-            await firebase.firestore().collection('athlete_plans').doc(currentUserId).set({
-                kcal: currentAnalysis.targetCalories,
-                speed: selectedSpeed,
-                status: currentAnalysis.status,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true });
-            
-            const dietContainer = document.getElementById('diet-container');
-            const kcalBalance = document.getElementById('kcal-balance');
-            const caloriesLeft = document.getElementById('calories-left');
-
-            if (dietContainer) {
-                dietContainer.innerHTML = `
-                    <div style="background:#111; padding:12px; border-radius:6px; border:1px solid #222; margin-top:10px; text-align:center;">
-                        <p style="color:#FFC72C; font-size:12px; margin:0;">✅ ПЛАН НА 7 ДНІВ СФОРМОВАНО!</p>
-                        <p style="color:#666; font-size:10px;">Режим приготування: ${selectedSpeed}</p>
-                    </div>`;
-            }
-
-            if (kcalBalance) kcalBalance.style.display = 'block';
-            if (caloriesLeft) caloriesLeft.textContent = currentAnalysis.targetCalories;
-
-            btn.textContent = "ГЕНЕРУВАТИ ПЛАН НА ТИЖДЕНЬ";
-        } catch (e) { console.error(e); }
+        if (selector) selector.style.display = 'block';
     }
 
     function initChart() {
@@ -172,10 +135,8 @@
         if (!snap.empty) {
             const docs = snap.docs.map(d => d.data());
             const last = docs[0];
-            
-            // Завантажуємо останній аналіз при відкритті
             const analysis = calculateAthleteData(last.weight, last.bmi, 180, 25);
-            currentAnalysis = analysis;
+            
             updateScannerUI(last.weight, last.bmi, analysis);
             updateRecommendationUI(analysis);
 
