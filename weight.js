@@ -87,71 +87,88 @@
     // --- 2. БЛОК: ГЕНЕРАТОР ДІЄТИ ---
    // --- БЛОК ДІЄТИ (3 ВЕЛИКІ КАТЕГОРІЇ) ---
 
+// --- 2. БЛОК: РОЗУМНИЙ ГЕНЕРАТОР (БЖВ + 40/30/30) ---
+
 async function generateWeeklyPlan() {
-    console.log("Кнопка натиснута, швидкість:", selectedSpeed);
     if (!currentAnalysis) {
-        alert("Спочатку заповніть параметри тіла!");
+        alert("Спочатку введіть дані у сканер та натисніть 'Аналіз'");
         return;
     }
 
+    // Твоя формула розподілу
     const categories = [
-        { id: 'brf', label: 'СНІДАНОК', icon: '🍳', dbKey: 'breakfasts' },
-        { id: 'lnc', label: 'ОБІД', icon: '🍱', dbKey: 'lunches' },
-        { id: 'din', label: 'ВЕЧЕРЯ', icon: '🍗', dbKey: 'dinners' }
+        { id: 'brf', label: 'СНІДАНОК', icon: '🍳', dbKey: 'breakfasts', pct: 0.40 },
+        { id: 'lnc', label: 'ОБІД', icon: '🍱', dbKey: 'lunches', pct: 0.30 },
+        { id: 'din', label: 'ВЕЧЕРЯ', icon: '🍗', dbKey: 'dinners', pct: 0.30 }
     ];
 
-    // Беремо по 1 страві для кожної категорії
     currentDailyPlan = categories.map(cat => {
+        // Розраховуємо ідеальні цілі для цього прийому їжі
+        const targetP = currentAnalysis.prot * cat.pct;
+        const targetF = currentAnalysis.fat * cat.pct;
+        const targetC = currentAnalysis.carb * cat.pct;
+
+        // Фільтруємо базу за швидкістю (Easy/Medium/Hard)
         const meals = dietDatabase[cat.dbKey].filter(m => m.speed === selectedSpeed);
-        const meal = meals[Math.floor(Math.random() * meals.length)] || dietDatabase[cat.dbKey][0];
+
+        // Шукаємо страву з мінімальним відхиленням від БЖВ цілей
+        let bestMeal = meals[0];
+        let minError = Infinity;
+
+        meals.forEach(meal => {
+            // Математична різниця між ідеалом та поточною стравою
+            const error = Math.sqrt(
+                Math.pow(meal.p - targetP, 2) + 
+                Math.pow(meal.f - targetF, 2) + 
+                Math.pow(meal.c - targetC, 2)
+            );
+            
+            if (error < minError) {
+                minError = error;
+                bestMeal = meal;
+            }
+        });
+
         return { 
-            ...meal, 
+            ...bestMeal, 
             catLabel: cat.label, 
             catIcon: cat.icon, 
             catId: cat.id,
-            kcal: (meal.p * 4) + (meal.f * 9) + (meal.c * 4), 
+            kcal: Math.round((bestMeal.p * 4) + (bestMeal.f * 9) + (bestMeal.c * 4)), 
             eaten: false 
         };
     });
 
-    console.log("План сформовано:", currentDailyPlan);
     renderDietPlan();
-    
-    // Зберігаємо в пам'ять (локальне сховище)
-    localStorage.setItem('proatlet_diet', JSON.stringify({
-        plan: currentDailyPlan,
-        analysis: currentAnalysis,
-        date: new Date().toDateString()
-    }));
+    savePlanToMemory();
 }
 
+// --- ФУНКЦІЯ ВІДОБРАЖЕННЯ (АКОРДЕОН) ---
 function renderDietPlan() {
     const container = document.getElementById('diet-container');
-    if (!container) {
-        console.error("Помилка: Не знайдено id='diet-container' в HTML!");
-        return;
-    }
+    if (!container) return;
 
-    document.getElementById('get-diet-plan-btn').disabled = true;
+    // Ховаємо кнопку після генерації для чистоти інтерфейсу
+    document.getElementById('get-diet-plan-btn').style.display = "none";
 
     container.innerHTML = currentDailyPlan.map(meal => `
-        <div class="meal-group" style="margin-bottom:10px; border:1px solid #1a1a1a; border-radius:8px; overflow:hidden; background:#000;">
+        <div class="meal-category-block" style="margin-bottom:12px; border:1px solid #1a1a1a; border-radius:10px; overflow:hidden; background:#000;">
             <div onclick="toggleCategory('${meal.catId}')" style="padding:15px; background:#111; display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
-                <span style="color:#FFC72C; font-weight:bold; font-size:12px;">${meal.catIcon} ${meal.catLabel}</span>
-                <span id="arrow-${meal.catId}" style="color:#444;">▼</span>
+                <span style="color:#FFC72C; font-weight:bold; font-size:13px;">${meal.catIcon} ${meal.catLabel}</span>
+                <span id="arrow-${meal.catId}" style="color:#444; font-size:12px;">▼</span>
             </div>
             
-            <div id="box-${meal.catId}" style="display:none; padding:15px; border-top:1px solid #1a1a1a; background:rgba(255,199,44,0.02);">
-                <div style="display:flex; justify-content:space-between; align-items:center; opacity:${meal.eaten ? '0.2' : '1'}" id="item-${meal.catId}">
+            <div id="content-${meal.catId}" style="display:none; padding:15px; border-top:1px solid #1a1a1a; background:rgba(255,199,44,0.01);">
+                <div id="inner-${meal.catId}" style="display:flex; justify-content:space-between; align-items:center; transition:0.3s; opacity:${meal.eaten ? '0.2' : '1'}">
                     <div>
-                        <div style="color:#fff; font-size:15px; font-weight:bold;">${meal.name}</div>
-                        <div style="color:#FFC72C; font-size:11px; margin-top:4px;">
-                            ${meal.kcal} ккал | Б:${meal.p} Ж:${meal.f} В:${meal.c}
+                        <div style="color:#fff; font-weight:bold; font-size:16px;">${meal.name}</div>
+                        <div style="color:#FFC72C; font-size:12px; margin-top:5px; font-family:monospace;">
+                            ⚡ ${meal.kcal} ккал | Б:${meal.p} Ж:${meal.f} В:${meal.c}
                         </div>
                     </div>
                     <input type="checkbox" ${meal.eaten ? 'checked' : ''} 
                            onchange="handleMealCheck('${meal.catId}', this)" 
-                           style="width:22px; height:22px; accent-color:#FFC72C; cursor:pointer;">
+                           style="width:25px; height:25px; accent-color:#FFC72C; cursor:pointer;">
                 </div>
             </div>
         </div>
@@ -160,55 +177,26 @@ function renderDietPlan() {
     updateMacrosLeftUI();
 }
 
-// Функція відкриття/закриття (акордеон)
-window.toggleCategory = function(catId) {
-    const box = document.getElementById(`box-${catId}`);
-    const arrow = document.getElementById(`arrow-${catId}`);
-    if (box.style.display === "none") {
-        box.style.display = "block";
-        arrow.textContent = "▲";
-        arrow.style.color = "#FFC72C";
-    } else {
-        box.style.display = "none";
-        arrow.textContent = "▼";
-        arrow.style.color = "#444";
-    }
+// Глобальні функції для керування
+window.toggleCategory = function(id) {
+    const content = document.getElementById(`content-${id}`);
+    const arrow = document.getElementById(`arrow-${id}`);
+    const isOpen = content.style.display === "block";
+    
+    content.style.display = isOpen ? "none" : "block";
+    arrow.textContent = isOpen ? "▼" : "▲";
+    arrow.style.color = isOpen ? "#444" : "#FFC72C";
 };
 
-// Функція галочки
-window.handleMealCheck = function(catId, checkbox) {
-    const meal = currentDailyPlan.find(m => m.catId === catId);
+window.handleMealCheck = function(id, checkbox) {
+    const meal = currentDailyPlan.find(m => m.catId === id);
     if (meal) {
         meal.eaten = checkbox.checked;
-        document.getElementById(`item-${catId}`).style.opacity = meal.eaten ? "0.2" : "1";
-        
-        // Оновлюємо пам'ять
-        localStorage.setItem('proatlet_diet', JSON.stringify({
-            plan: currentDailyPlan,
-            analysis: currentAnalysis,
-            date: new Date().toDateString()
-        }));
-        
+        document.getElementById(`inner-${id}`).style.opacity = meal.eaten ? "0.2" : "1";
+        savePlanToMemory();
         updateMacrosLeftUI();
     }
 };
-
-    function renderDietPlan() {
-        const container = document.getElementById('diet-container');
-        if (!container) return;
-        document.getElementById('get-diet-plan-btn').disabled = true;
-        
-        container.innerHTML = currentDailyPlan.map(meal => `
-            <div id="meal-${meal.id}" style="background:rgba(255,255,255,0.02); border:1px solid #1a1a1a; padding:10px; border-radius:8px; margin-bottom:8px; border-left:4px solid #FFC72C; display:flex; align-items:center; justify-content:space-between; opacity:${meal.eaten ? '0.15' : '1'}">
-                <div style="flex:1">
-                    <div style="color:#fff; font-size:14px; font-weight:bold;">${meal.name}</div>
-                    <div style="font-size:10px; color:#666;">Б:${meal.p} Ж:${meal.f} В:${meal.c} | ${meal.kcal} kcal</div>
-                </div>
-                <input type="checkbox" ${meal.eaten ? 'checked' : ''} style="width:20px; height:20px; cursor:pointer;" onchange="toggleMeal('${meal.id}', this)">
-            </div>
-        `).join('');
-        updateMacrosLeftUI();
-    }
 
     // --- 3. БЛОК: КОНТРОЛЬНА ПАНЕЛЬ (ВІДНІМАННЯ) ---
     window.toggleMeal = function(id, checkbox) {
