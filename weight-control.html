@@ -66,32 +66,36 @@
                     </div>
                 </div>
 
-                <div class="form-card diet-card">
-                    <h3>🍽 АНАЛІЗ ТА РЕКОМЕНДАЦІЇ</h3>
-                    
+               <div class="form-card diet-card">
+                    <h3>🍽 ПЛАН ХАРЧУВАННЯ 40/30/30</h3>
+    
                     <div class="speed-selector" style="display: flex; gap: 5px; margin-bottom: 15px;">
-                        <button type="button" onclick="setSpeed('Easy', this)" class="speed-btn active" style="flex:1; font-size: 10px; padding: 8px; background: #FFC72C; color: #000; border: none; cursor: pointer; font-weight: bold; border-radius: 4px;">⚡ ШВИДКО</button>
+                     <button type="button" onclick="setSpeed('Easy', this)" class="speed-btn active" style="flex:1; font-size: 10px; padding: 8px; background: #FFC72C; color: #000; border: none; cursor: pointer; font-weight: bold; border-radius: 4px;">⚡ ШВИДКО</button>
                         <button type="button" onclick="setSpeed('Medium', this)" class="speed-btn" style="flex:1; font-size: 10px; padding: 8px; background: #222; color: #fff; border: 1px solid #FFC72C; cursor: pointer; border-radius: 4px;">🥗 СЕРЕДНЬО</button>
                         <button type="button" onclick="setSpeed('Hard', this)" class="speed-btn" style="flex:1; font-size: 10px; padding: 8px; background: #222; color: #fff; border: 1px solid #FFC72C; cursor: pointer; border-radius: 4px;">👨‍🍳 МАЮ ЧАС</button>
                     </div>
 
                     <div id="athlete-recommendation-box" style="color: #FFC72C; font-size: 14px; margin-bottom: 15px; border-bottom: 1px solid #222; padding-bottom: 10px;">
-                        Введіть дані для отримання рекомендації...
+        Введіть дані для отримання рекомендації...
                     </div>
-                    
-                    <button id="get-diet-plan-btn" class="gold-button" style="display:none; margin: 10px 0; width: 100%;">ОТРИМАТИ ПЛАН НА 7 ДНІВ</button>
+    
+                    <button id="get-diet-plan-btn" class="gold-button" style="display:none; margin: 10px 0; width: 100%;">ГЕНЕРУВАТИ ПЛАН НА СЬОГОДНІ</button>
 
-                    <div id="diet-container"></div>
+                    <div id="diet-tabs-wrapper" style="display:none; margin-top:20px;">
+                        <div style="display:flex; gap:5px; margin-bottom:15px;">
+                            <button onclick="switchDietTab('brf')" id="btn-brf" class="speed-btn" style="flex:1; font-size:9px; padding:10px; border: 1px solid #FFC72C; background: #111;">СНІДАНОК</button>
+                            <button onclick="switchDietTab('lnc')" id="btn-lnc" class="speed-btn" style="flex:1; font-size:9px; padding:10px; border: 1px solid #FFC72C; background: #111;">ОБІД</button>
+                            <button onclick="switchDietTab('din')" id="btn-din" class="speed-btn" style="flex:1; font-size:9px; padding:10px; border: 1px solid #FFC72C; background: #111;">ВЕЧЕРЯ</button>
+                     </div>
+                        <div id="diet-tab-content"></div>
+                    </div>
 
                     <div class="remaining-balance" style="margin-top: 20px; border-top: 1px dashed #FFC72C; padding-top: 15px;">
                         <div style="display:flex; justify-content: space-between; font-size: 12px;">
-                            <span>БЮДЖЕТ КАЛОРІЙ:</span>
-                            <strong id="total-daily-kcal">0</strong>
+                            <span>БЮДЖЕТ: <strong id="total-daily-kcal">0</strong> ккал</span>
+                            <span style="color:#FFC72C">ЗАЛИШОК: <strong id="calories-left">0</strong></span>
                         </div>
-                        <div style="display:flex; justify-content: space-between; font-size: 20px; color: #FFC72C; margin-top: 10px;">
-                            <span>ЗАЛИШИЛОСЯ:</span>
-                            <strong id="calories-left">0</strong>
-                        </div>
+                        <div id="bju-left-display" style="display:flex; justify-content:space-between; font-size:10px; color:#555; margin-top:5px; font-family:monospace;"></div>
                     </div>
                 </div>
 
