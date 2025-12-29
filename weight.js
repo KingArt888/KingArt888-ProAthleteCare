@@ -22,31 +22,27 @@
         if (planBtn) planBtn.addEventListener('click', generateWeeklyPlan);
     });
 
-    // --- ПЕРСОНАЛЬНИЙ РОЗРАХУНОК (BMI + БЖУ) ---
-    function calculateAthleteData(w, bmi, h, a) {
-        let status, recommendation, statusColor, modifier, pRatio, fRatio, cRatio;
+    // --- ПЕРСОНАЛЬНИЙ РОЗРАХУНОК (BMI + БЖУ ПО ФОРМУЛІ) ---
+    function calculateAthleteData(w, h, a) {
+        const bmi = (w / ((h / 100) ** 2)).toFixed(1);
+        let status, statusColor, modifier, pRatio, fRatio, cRatio;
 
-        // Коефіцієнти підбираються індивідуально під стан (BMI)
         if (bmi < 20.5) { 
-            status = "MUSCLE GAIN MODE";
-            recommendation = "Гіпертрофія: Профіцит +15%.";
-            statusColor = "#00BFFF"; modifier = 1.15; pRatio = 0.25; fRatio = 0.25; cRatio = 0.50; 
+            status = "MUSCLE GAIN MODE"; statusColor = "#00BFFF"; // Синій
+            modifier = 1.15; pRatio = 0.25; fRatio = 0.25; cRatio = 0.50; 
         } else if (bmi < 25.5) {
-            status = "ATHLETIC FORM";
-            recommendation = "Рекімпозиція: Підтримка форми.";
-            statusColor = "#FFC72C"; modifier = 1.0; pRatio = 0.30; fRatio = 0.25; cRatio = 0.45;
+            status = "ATHLETIC FORM"; statusColor = "#FFC72C"; // Золотий
+            modifier = 1.0; pRatio = 0.30; fRatio = 0.25; cRatio = 0.45;
         } else {
-            status = "WEIGHT LOSS MODE";
-            recommendation = "Жироспалювання: Дефіцит -20%.";
-            statusColor = "#DA3E52"; modifier = 0.80; pRatio = 0.35; fRatio = 0.25; cRatio = 0.40;
+            status = "WEIGHT LOSS MODE"; statusColor = "#DA3E52"; // Червоний
+            modifier = 0.80; pRatio = 0.35; fRatio = 0.25; cRatio = 0.40;
         }
 
-        // Базовий метаболізм (BMR) за індивідуальними параметрами
         const bmr = (10 * w) + (6.25 * h) - (5 * a) + 5;
         const targetCalories = Math.round(bmr * 1.55 * modifier);
         
         return {
-            status, statusColor, recommendation, targetCalories,
+            bmi, status, statusColor, targetCalories,
             prot: Math.round((targetCalories * pRatio) / 4),
             fat: Math.round((targetCalories * fRatio) / 9),
             carb: Math.round((targetCalories * cRatio) / 4)
@@ -60,15 +56,13 @@
         const a = parseInt(document.getElementById('user-age').value);
         if (!w || !h || !a) return;
 
-        const bmi = (w / ((h / 100) ** 2)).toFixed(1);
-        currentAnalysis = calculateAthleteData(w, bmi, h, a);
-
-        updateScannerUI(w, bmi, currentAnalysis);
+        currentAnalysis = calculateAthleteData(w, h, a);
+        updateScannerUI(w, currentAnalysis);
         updateMacrosLeftUI();
 
         try {
             await firebase.firestore().collection('weight_history').add({
-                userId: currentUserId, weight: w, bmi: bmi,
+                userId: currentUserId, weight: w, bmi: currentAnalysis.bmi,
                 target_kcal: currentAnalysis.targetCalories,
                 date: new Date().toLocaleDateString('uk-UA'),
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
@@ -78,14 +72,14 @@
         } catch (error) { console.error(error); }
     }
 
-    // --- UI COMPOSITION SCAN (ІНДИВІДУАЛЬНИЙ) ---
-    function updateScannerUI(weight, bmi, data) {
+    // --- UI SCANNER (ЗОЛОТИЙ СТИЛЬ + КОЛЬОРОВИЙ BMI) ---
+    function updateScannerUI(weight, data) {
         const mainValue = document.getElementById('fat-percentage-value');
         if (mainValue) {
             mainValue.innerHTML = `
                 <span style="font-size: 9px; color: #555; text-transform: uppercase;">Weight</span>
                 <span style="font-size: 28px; color: #FFC72C; font-weight: bold; line-height: 1;">${weight}</span>
-                <span style="font-size: 13px; color: ${data.statusColor}; font-weight: bold;">BMI ${bmi}</span>
+                <span style="font-size: 13px; color: ${data.statusColor}; font-weight: bold;">BMI ${data.bmi}</span>
             `;
         }
 
@@ -97,15 +91,13 @@
             document.querySelector('.form-card:nth-child(2)').appendChild(rankElement);
         }
         rankElement.innerHTML = `
-            <div style="color:${data.statusColor}; font-size:11px; font-weight:bold; letter-spacing:1px; margin-bottom:4px;">${data.status}</div>
-            <div style="color:#fff; font-size:18px; font-weight:bold; margin-bottom:4px;">${data.targetCalories} ккал</div>
-            <div style="color:#888; font-size:10px; background: #0a0a0a; padding: 4px; border-radius: 4px;">
-                Б: ${data.prot}г | Ж: ${data.fat}г | В: ${data.carb}г
-            </div>
+            <div style="color:${data.statusColor}; font-size:11px; font-weight:bold; letter-spacing:1px;">${data.status}</div>
+            <div style="color:#fff; font-size:18px; font-weight:bold; margin:4px 0;">${data.targetCalories} ккал</div>
+            <div style="color:#888; font-size:10px;">Б: ${data.prot}г | Ж: ${data.fat}г | В: ${data.carb}г</div>
         `;
     }
 
-    // --- ЛОГІКА ДІЄТИ: ВІДНІМАННЯ БЖУ ---
+    // --- ДІЄТА: ГАЛОЧКИ ТА ВІДНІМАННЯ ---
     async function generateWeeklyPlan() {
         if (!currentAnalysis) return;
         const container = document.getElementById('diet-container');
@@ -127,7 +119,7 @@
                             <span style="color:#FFC72C; font-weight:bold;">${cats[key]}</span>
                             <span style="color:#444;">${kcal} kcal</span>
                         </div>
-                        <div style="color:#eee; font-size:12px; font-weight:bold; margin:2px 0;">${meal.name}</div>
+                        <div style="color:#eee; font-size:12px; font-weight:bold;">${meal.name}</div>
                         <div style="font-size:9px; color:#666;">Б:${meal.p} Ж:${meal.f} В:${meal.c}</div>
                     </div>
                     <input type="checkbox" style="accent-color:#FFC72C; width:16px; height:16px;" onchange="toggleMeal('${mealObj.id}', this)">
@@ -143,7 +135,7 @@
         const card = document.getElementById(`meal-${id}`);
         if (meal) {
             meal.eaten = checkbox.checked;
-            card.style.opacity = meal.eaten ? "0.2" : "1";
+            card.style.opacity = meal.eaten ? "0.1" : "1"; // Майже невидима
             card.style.filter = meal.eaten ? "grayscale(100%)" : "none";
             updateMacrosLeftUI();
         }
@@ -172,10 +164,10 @@
             sub.style.cssText = "font-size: 10px; color: #555; margin-top: 4px; text-align: right;";
             document.getElementById('calories-left').parentElement.appendChild(sub);
         }
-        sub.innerHTML = `Залишилось: Б:${pL}г Ж:${fL}г В:${cL}г`;
+        sub.innerHTML = `ЗАЛИШОК БЖУ: Б:${pL}г Ж:${fL}г В:${cL}г`;
     }
 
-    // --- ШВИДКІСТЬ ТА ГРАФІК ---
+    // --- ІНШЕ ---
     window.setSpeed = function(s, b) {
         selectedSpeed = s;
         document.querySelectorAll('.speed-btn').forEach(btn => { btn.style.background = "#111"; btn.style.color = "#555"; });
@@ -189,13 +181,12 @@
         if (!snap.empty) {
             const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             const last = docs[0];
-            currentAnalysis = calculateAthleteData(last.weight, last.bmi, 180, 30);
-            updateScannerUI(last.weight, last.bmi, currentAnalysis);
+            currentAnalysis = calculateAthleteData(last.weight, 180, 30); // Тимчасово 180/30 до завантаження профілю
+            updateScannerUI(last.weight, currentAnalysis);
             updateMacrosLeftUI();
-
-            const chartData = [...docs].reverse();
-            weightChart.data.labels = chartData.map(d => d.date.split('.').slice(0,2).join('.'));
-            weightChart.data.datasets[0].data = chartData.map(d => d.weight);
+            
+            weightChart.data.labels = docs.reverse().map(d => d.date.split('.').slice(0,2).join('.'));
+            weightChart.data.datasets[0].data = docs.map(d => d.weight);
             weightChart.update();
         }
     }
@@ -205,7 +196,7 @@
         if (!ctx) return;
         weightChart = new Chart(ctx, {
             type: 'line',
-            data: { labels: [], datasets: [{ data: [], borderColor: '#FFC72C', pointRadius: 2, borderWidth: 2, tension: 0.4, fill: false }] },
+            data: { labels: [], datasets: [{ data: [], borderColor: '#FFC72C', pointRadius: 0, borderWidth: 2, tension: 0.4, fill: false }] },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
         });
     }
