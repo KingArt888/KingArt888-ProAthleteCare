@@ -1,32 +1,29 @@
 (function() {
     let weightChart = null;
     let currentUserId = null;
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const viewUserId = urlParams.get('userId');
+    let selectedSpeed = 'Easy'; 
+    let currentAnalysis = null;
 
     firebase.auth().onAuthStateChanged(async (user) => {
         if (user) {
-            currentUserId = viewUserId || user.uid;
+            currentUserId = user.uid;
             loadBaseData();
             loadHistory();
-        } else {
-            firebase.auth().signInAnonymously().catch(e => console.error("Auth error:", e));
         }
     });
 
     document.addEventListener('DOMContentLoaded', () => {
         initChart();
         const form = document.getElementById('weight-form');
-        if (form) {
-            form.addEventListener('submit', handleAthleteAnalysis);
-        }
+        if (form) form.addEventListener('submit', handleAthleteAnalysis);
+        
+        const planBtn = document.getElementById('get-diet-plan-btn');
+        if (planBtn) planBtn.addEventListener('click', generateWeeklyPlan);
     });
 
+    // --- ОБРОБКА ТА РОЗРАХУНОК ---
     async function handleAthleteAnalysis(e) {
         e.preventDefault();
-        const submitBtn = e.target.querySelector('button[type="submit"]');
-        
         const w = parseFloat(document.getElementById('weight-value').value);
         const h = parseFloat(document.getElementById('user-height').value);
         const a = parseInt(document.getElementById('user-age').value);
@@ -35,8 +32,10 @@
 
         const bmi = (w / ((h / 100) ** 2)).toFixed(1);
         const analysis = calculateAthleteData(w, bmi, h, a);
+        currentAnalysis = analysis;
 
-        updateScannerUI(w, bmi, analysis.status, analysis.targetCalories, analysis.prot, analysis.fat, analysis.carb, analysis.statusColor, analysis.recommendation);
+        updateScannerUI(w, bmi, analysis);
+        updateRecommendationUI(analysis);
 
         try {
             await firebase.firestore().collection('weight_history').add({
@@ -48,40 +47,33 @@
                 status: analysis.status,
                 statusColor: analysis.statusColor,
                 recommendation: analysis.recommendation,
-                date: new Date().toISOString().split('T')[0],
+                date: new Date().toLocaleDateString('uk-UA'),
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
             await firebase.firestore().collection('users').doc(currentUserId).set({ height: h, age: a }, { merge: true });
-            
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.textContent = "ОНОВЛЕНО";
-                submitBtn.style.opacity = "0.5";
-            }
-            
             loadHistory();
         } catch (error) { console.error("Firebase Error:", error); }
     }
 
     function calculateAthleteData(w, bmi, h, a) {
-        let status, recommendation, statusColor, calorieModifier, pRatio, fRatio, cRatio;
+        let status, recommendation, statusColor, modifier, pRatio, fRatio, cRatio;
 
         if (bmi < 20.5) { 
             status = "MUSCLE GAIN MODE";
-            recommendation = "Ціль: Гіпертрофія. Профіцит +15%.";
-            statusColor = "#00BFFF"; calorieModifier = 1.15; pRatio = 0.25; fRatio = 0.25; cRatio = 0.50; 
+            recommendation = "Гіпертрофія: Профіцит +15%.";
+            statusColor = "#00BFFF"; modifier = 1.15; pRatio = 0.25; fRatio = 0.25; cRatio = 0.50; 
         } else if (bmi < 25.5) {
             status = "ATHLETIC FORM";
-            recommendation = "Ціль: Рекімпозиція. Підтримка форми.";
-            statusColor = "#FFC72C"; calorieModifier = 1.0; pRatio = 0.30; fRatio = 0.25; cRatio = 0.45;
+            recommendation = "Рекімпозиція: Підтримка форми.";
+            statusColor = "#FFC72C"; modifier = 1.0; pRatio = 0.30; fRatio = 0.25; cRatio = 0.45;
         } else {
             status = "WEIGHT LOSS MODE";
-            recommendation = "Ціль: Жироспалювання. Дефіцит -20%.";
-            statusColor = "#DA3E52"; calorieModifier = 0.80; pRatio = 0.35; fRatio = 0.25; cRatio = 0.40;
+            recommendation = "Жироспалювання: Дефіцит -20%.";
+            statusColor = "#DA3E52"; modifier = 0.80; pRatio = 0.35; fRatio = 0.25; cRatio = 0.40;
         }
 
         const bmr = (10 * w) + (6.25 * h) - (5 * a) + 5;
-        const targetCalories = Math.round(bmr * 1.55 * calorieModifier);
+        const targetCalories = Math.round(bmr * 1.55 * modifier);
         
         return {
             status, recommendation, statusColor, targetCalories,
@@ -91,52 +83,91 @@
         };
     }
 
-    function updateScannerUI(weight, bmi, status, kcal, p, f, c, color, rec) {
+    // --- ОБНОВЛЕНИЙ COMPOSITION SCAN (МЕНШИЙ ШРИФТ + КОЛЬОРОВИЙ BMI) ---
+    function updateScannerUI(weight, bmi, data) {
         const mainValue = document.getElementById('fat-percentage-value');
-        const smallLabel = document.querySelector('.main-circle small');
-        
-        // Приховуємо оригінальний <small>, бо ми малюємо свій напис всередині для кращого контролю
-        if (smallLabel) smallLabel.style.display = "none";
-
-        if (mainValue) { 
-            let bmiColor = "#4CAF50"; 
-            const bmiNum = parseFloat(bmi);
-            if (bmiNum < 18.5) bmiColor = "#00BFFF"; 
-            else if (bmiNum >= 25 && bmiNum < 30) bmiColor = "#FFC72C"; 
-            else if (bmiNum >= 30) bmiColor = "#DA3E52"; 
-
+        if (mainValue) {
             mainValue.style.display = "flex";
             mainValue.style.flexDirection = "column";
-            mainValue.style.alignItems = "center";
-            mainValue.style.justifyContent = "center";
-            mainValue.style.height = "100%";
-            mainValue.style.textAlign = "center";
-
+            mainValue.style.gap = "2px";
             mainValue.innerHTML = `
-                <span style="font-size: 10px; color: #666; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px;">Current Weight</span>
-                <span style="font-size: 34px; color: #FFC72C; font-weight: bold; line-height: 1;">${weight}kg</span>
-                <span style="font-size: 15px; color: ${bmiColor}; font-weight: bold; margin-top: 8px;">BMI: ${bmi}</span>
+                <span style="font-size: 9px; color: #555; text-transform: uppercase; letter-spacing: 0.5px;">Weight</span>
+                <span style="font-size: 28px; color: #FFC72C; font-weight: bold; line-height: 1;">${weight}</span>
+                <span style="font-size: 13px; color: ${data.statusColor}; font-weight: bold;">BMI ${bmi}</span>
             `;
         }
-        
+
         let rankElement = document.getElementById('athlete-rank');
         if (!rankElement) {
             rankElement = document.createElement('div');
             rankElement.id = 'athlete-rank';
-            rankElement.style.textAlign = 'center';
-            rankElement.style.marginTop = '15px';
+            rankElement.style.cssText = "text-align:center; margin-top:12px; padding-top:10px; border-top: 1px solid #1a1a1a;";
             document.querySelector('.form-card:nth-child(2)').appendChild(rankElement);
         }
-        rankElement.innerHTML = `<div style="color:${color}; font-size:18px; font-weight:bold;">${status}</div>
-            <div style="color:#fff; font-size:24px; font-weight:bold;">${kcal} ккал</div>
-            <div style="color:#aaa; font-size:11px;">Б: ${p}г | Ж: ${f}г | В: ${c}г</div>
-            <div style="color:#FFC72C; font-size:11px; margin-top:10px; border-top:1px solid #222; padding-top:5px;">${rec}</div>`;
+        rankElement.innerHTML = `
+            <div style="color:${data.statusColor}; font-size:12px; font-weight:bold; letter-spacing:1px; margin-bottom:4px;">${data.status}</div>
+            <div style="color:#fff; font-size:20px; font-weight:bold; margin-bottom:4px;">${data.targetCalories} ккал</div>
+            <div style="color:#888; font-size:10px; background: #0a0a0a; padding: 4px; border-radius: 4px; border: 1px solid #1a1a1a;">
+                Б: ${data.prot}г | Ж: ${data.fat}г | В: ${data.carb}г
+            </div>
+            <div style="color:#555; font-size:9px; margin-top:8px; font-style: italic;">${data.recommendation}</div>
+        `;
     }
 
+    function updateRecommendationUI(data) {
+        const box = document.getElementById('athlete-recommendation-box');
+        if (box) box.innerHTML = `<span style="font-size:11px; color:#666;">РЕЖИМ:</span> <strong style="font-size:11px;">${data.status}</strong>`;
+        
+        const btn = document.getElementById('get-diet-plan-btn');
+        if (btn) btn.style.display = 'block';
+        
+        document.getElementById('total-daily-kcal').textContent = data.targetCalories;
+        document.getElementById('calories-left').textContent = data.targetCalories;
+    }
+
+    // --- КНОПКИ ШВИДКОСТІ ---
+    window.setSpeed = function(speed, btn) {
+        selectedSpeed = speed;
+        document.querySelectorAll('.speed-btn').forEach(b => {
+            b.style.background = "#111"; b.style.color = "#555";
+        });
+        btn.style.background = "#FFC72C"; btn.style.color = "#000";
+    };
+
+    // --- ГЕНЕРАЦІЯ ДІЄТИ ---
+    async function generateWeeklyPlan() {
+        if (!currentAnalysis) return;
+        const container = document.getElementById('diet-container');
+        const cats = { breakfasts: "Сніданок", lunches: "Обід", dinners: "Вечеря" };
+        let html = `<div style="margin-top:12px;">`;
+        let usedKcal = 0;
+
+        for (let key in cats) {
+            const meals = dietDatabase[key].filter(m => m.speed === selectedSpeed);
+            const meal = meals[Math.floor(Math.random() * meals.length)] || dietDatabase[key][0];
+            const kcal = (meal.p * 4) + (meal.f * 9) + (meal.c * 4);
+            usedKcal += kcal;
+
+            html += `
+                <div style="background:rgba(255,255,255,0.02); border:1px solid #1a1a1a; padding:8px; border-radius:4px; margin-bottom:6px; border-left: 2px solid #FFC72C;">
+                    <div style="display:flex; justify-content:space-between; font-size:9px;">
+                        <span style="color:#FFC72C; font-weight:bold; text-transform:uppercase;">${cats[key]}</span>
+                        <span style="color:#444;">${kcal} kcal</span>
+                    </div>
+                    <div style="color:#eee; font-size:12px; font-weight:bold; margin:2px 0;">${meal.name}</div>
+                    <div style="font-size:9px; color:#666;">Б:${meal.p} Ж:${meal.f} В:${meal.c}</div>
+                </div>
+            `;
+        }
+        container.innerHTML = html + `</div>`;
+        document.getElementById('calories-left').textContent = currentAnalysis.targetCalories - usedKcal;
+    }
+
+    // --- ГРАФІК ТА ІСТОРІЯ ---
     async function loadHistory() {
         if (!currentUserId || !weightChart) return;
         const snap = await firebase.firestore().collection('weight_history')
-            .where('userId', '==', currentUserId).orderBy('date', 'desc').limit(20).get();
+            .where('userId', '==', currentUserId).orderBy('timestamp', 'desc').limit(10).get();
         
         const historyContainer = getOrCreateCompactHistory();
         historyContainer.innerHTML = "";
@@ -145,73 +176,59 @@
             const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             const last = docs[0];
             
-            const today = new Date().toISOString().split('T')[0];
-            if (last.date === today) {
-                const submitBtn = document.querySelector('#weight-form button[type="submit"]');
-                if (submitBtn) {
-                    submitBtn.disabled = true;
-                    submitBtn.textContent = "ОНОВЛЕНО";
-                    submitBtn.style.opacity = "0.5";
-                }
-            }
-
-            updateScannerUI(last.weight, last.bmi, last.status, last.target_kcal, last.macros.p, last.macros.f, last.macros.c, last.statusColor, last.recommendation);
+            updateScannerUI(last.weight, last.bmi, calculateAthleteData(last.weight, last.bmi, 180, 30));
 
             const chartData = [...docs].reverse();
-            weightChart.data.labels = chartData.map(d => d.date.split('-').reverse().slice(0,2).join('.'));
+            weightChart.data.labels = chartData.map(d => d.date.split('.').slice(0,2).join('.'));
             weightChart.data.datasets[0].data = chartData.map(d => d.weight);
             weightChart.update();
 
             docs.forEach(entry => {
                 const item = document.createElement('div');
-                item.style.cssText = "display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #1a1a1a; padding:8px 0; font-size:13px;";
-                item.innerHTML = `
-                    <div style="color:#fff;"><strong>${entry.weight} kg</strong> <span style="color:#666; font-size:11px; margin-left:8px;">${entry.date}</span></div>
-                    <button onclick="deleteWeightEntry('${entry.id}')" style="background:none; border:none; color:#DA3E52; cursor:pointer; font-size:14px;">✕</button>
-                `;
+                item.style.cssText = "display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #111; font-size:11px; color:#888;";
+                item.innerHTML = `<span><strong>${entry.weight} kg</strong> <small style="color:#333; margin-left:5px;">${entry.date}</small></span>
+                                  <button onclick=\"deleteWeightEntry('${entry.id}')\" style=\"background:none; border:none; color:#444; cursor:pointer;\">✕</button>`;
                 historyContainer.appendChild(item);
             });
         }
     }
 
     function initChart() {
-        const canvas = document.getElementById('weightChart');
-        if (!canvas) return;
-        weightChart = new Chart(canvas.getContext('2d'), {
+        const ctx = document.getElementById('weightChart');
+        if (!ctx) return;
+        weightChart = new Chart(ctx, {
             type: 'line',
-            data: { labels: [], datasets: [{ label: 'Вага (кг)', data: [], borderColor: '#FFC72C', backgroundColor: 'rgba(255,199,44,0.05)', tension: 0.4, fill: true }] },
-            options: { responsive: true, maintainAspectRatio: false }
+            data: { labels: [], datasets: [{ data: [], borderColor: '#FFC72C', pointRadius: 0, borderWidth: 2, tension: 0.4, fill: false }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
         });
     }
-
-    window.deleteWeightEntry = async (id) => {
-        if (confirm("Видалити запис?")) {
-            try { await firebase.firestore().collection('weight_history').doc(id).delete(); location.reload(); }
-            catch (e) { console.error(e); }
-        }
-    };
 
     function getOrCreateCompactHistory() {
         let container = document.getElementById('compact-history');
         if (!container) {
-            const chartCard = document.querySelector('.chart-card');
             const wrapper = document.createElement('div');
-            wrapper.style.cssText = "margin-top:15px; max-height:180px; overflow-y:auto; padding-right:5px;";
+            wrapper.style.cssText = "margin-top:10px; max-height:120px; overflow-y:auto;";
             container = document.createElement('div');
             container.id = 'compact-history';
             wrapper.appendChild(container);
-            chartCard.appendChild(wrapper);
+            document.querySelector('.chart-card').appendChild(wrapper);
         }
         return container;
     }
 
     async function loadBaseData() {
-        if (!currentUserId) return;
         const doc = await firebase.firestore().collection('users').doc(currentUserId).get();
         if (doc.exists) {
-            const data = doc.data();
-            if (document.getElementById('user-height')) document.getElementById('user-height').value = data.height || "";
-            if (document.getElementById('user-age')) document.getElementById('user-age').value = data.age || "";
+            const d = doc.data();
+            if (document.getElementById('user-height')) document.getElementById('user-height').value = d.height || "";
+            if (document.getElementById('user-age')) document.getElementById('user-age').value = d.age || "";
         }
     }
+
+    window.deleteWeightEntry = async (id) => {
+        if (confirm("Видалити?")) {
+            await firebase.firestore().collection('weight_history').doc(id).delete();
+            loadHistory();
+        }
+    };
 })();
