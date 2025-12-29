@@ -85,37 +85,93 @@
     }
 
     // --- 2. БЛОК: ГЕНЕРАТОР ДІЄТИ ---
-    async function generateWeeklyPlan() {
-        if (!currentAnalysis) return;
-        const mealKeys = ["breakfasts", "breakfasts", "lunches", "lunches", "dinners", "dinners"];
-        
-        currentDailyPlan = mealKeys.map((key, i) => {
-            const meals = dietDatabase[key].filter(m => m.speed === selectedSpeed);
-            const meal = meals[Math.floor(Math.random() * meals.length)] || dietDatabase[key][0];
-            return { ...meal, kcal: (meal.p*4)+(meal.f*9)+(meal.c*4), id: Math.random().toString(36).substr(2,9), eaten: false };
-        });
+   // --- ОНОВЛЕНИЙ ГЕНЕРАТОР (Сніданок, Обід, Вечеря) ---
+async function generateWeeklyPlan() {
+    if (!currentAnalysis) return;
+    
+    const types = [
+        { key: "breakfasts", label: "Сніданок", icon: "🍳" },
+        { key: "lunches", label: "Обід", icon: "🍱" },
+        { key: "dinners", label: "Вечеря", icon: "🍗" }
+    ];
+    
+    currentDailyPlan = types.map(type => {
+        const meals = dietDatabase[type.key].filter(m => m.speed === selectedSpeed);
+        const meal = meals[Math.floor(Math.random() * meals.length)] || dietDatabase[type.key][0];
+        return { 
+            ...meal, 
+            typeLabel: type.label, 
+            typeIcon: type.icon,
+            kcal: (meal.p*4)+(meal.f*9)+(meal.c*4), 
+            id: Math.random().toString(36).substr(2,9), 
+            eaten: false 
+        };
+    });
 
-        renderDietPlan();
-        savePlanToMemory();
-    }
+    renderDietPlan();
+    savePlanToMemory();
+}
 
-    function renderDietPlan() {
-        const container = document.getElementById('diet-container');
-        if (!container) return;
-        document.getElementById('get-diet-plan-btn').disabled = true;
-        
-        container.innerHTML = currentDailyPlan.map(meal => `
-            <div id="meal-${meal.id}" style="background:rgba(255,255,255,0.02); border:1px solid #1a1a1a; padding:10px; border-radius:8px; margin-bottom:8px; border-left:4px solid #FFC72C; display:flex; align-items:center; justify-content:space-between; opacity:${meal.eaten ? '0.15' : '1'}">
-                <div style="flex:1">
-                    <div style="color:#fff; font-size:14px; font-weight:bold;">${meal.name}</div>
-                    <div style="font-size:10px; color:#666;">Б:${meal.p} Ж:${meal.f} В:${meal.c} | ${meal.kcal} kcal</div>
-                </div>
-                <input type="checkbox" ${meal.eaten ? 'checked' : ''} style="width:20px; height:20px; cursor:pointer;" onchange="toggleMeal('${meal.id}', this)">
+// --- ОНОВЛЕНИЙ РЕНДЕР (Вікна, що відкриваються/приховуються) ---
+function renderDietPlan() {
+    const container = document.getElementById('diet-container');
+    if (!container) return;
+    document.getElementById('get-diet-plan-btn').disabled = true;
+    
+    container.innerHTML = currentDailyPlan.map((meal, index) => `
+        <div class="meal-section" style="margin-bottom: 10px; border: 1px solid #1a1a1a; border-radius: 8px; overflow: hidden; background: rgba(255,255,255,0.02);">
+            <div onclick="toggleMealWindow('window-${meal.id}')" style="padding: 12px; background: #111; display: flex; justify-content: space-between; align-items: center; cursor: pointer; border-bottom: 1px solid #1a1a1a;">
+                <span style="font-size: 13px; font-weight: bold; color: #FFC72C;">${meal.typeIcon} ${meal.typeLabel}</span>
+                <span id="icon-window-${meal.id}" style="color: #444; font-size: 10px;">▼</span>
             </div>
-        `).join('');
+            
+            <div id="window-${meal.id}" style="display: none; padding: 12px; border-left: 3px solid #FFC72C; opacity:${meal.eaten ? '0.3' : '1'}">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="flex: 1;">
+                        <div style="color: #fff; font-size: 15px; font-weight: bold; margin-bottom: 4px;">${meal.name}</div>
+                        <div style="font-size: 11px; color: #888; font-family: monospace;">
+                            Б :${meal.p}г | Ж :${meal.f}г | В :${meal.c}г <br>
+                            <span style="color: #FFC72C;">⚡ ${meal.kcal} ккал</span>
+                        </div>
+                    </div>
+                    <input type="checkbox" ${meal.eaten ? 'checked' : ''} 
+                           style="width: 22px; height: 22px; cursor: pointer; accent-color: #FFC72C;" 
+                           onchange="toggleMeal('${meal.id}', this)">
+                </div>
+            </div>
+        </div>
+    `).join('');
+    
+    updateMacrosLeftUI();
+}
+
+// --- ЛОГІКА ВІДКРИТТЯ/ЗАКРИТТЯ ---
+window.toggleMealWindow = function(windowId) {
+    const win = document.getElementById(windowId);
+    const icon = document.getElementById('icon-' + windowId);
+    if (win.style.display === "none") {
+        win.style.display = "block";
+        icon.textContent = "▲";
+        icon.style.color = "#FFC72C";
+    } else {
+        win.style.display = "none";
+        icon.textContent = "▼";
+        icon.style.color = "#444";
+    }
+};
+
+// --- ВИПРАВЛЕНА toggleMeal (щоб не ламало відображення) ---
+window.toggleMeal = function(id, checkbox) {
+    const meal = currentDailyPlan.find(m => m.id === id);
+    if (meal) {
+        meal.eaten = checkbox.checked;
+        const windowContent = document.getElementById(`window-${id}`);
+        if (windowContent) windowContent.style.opacity = meal.eaten ? "0.3" : "1";
+        
+        savePlanToMemory();
         updateMacrosLeftUI();
     }
-
+};
     // --- 3. БЛОК: КОНТРОЛЬНА ПАНЕЛЬ (ВІДНІМАННЯ) ---
     window.toggleMeal = function(id, checkbox) {
         const meal = currentDailyPlan.find(m => m.id === id);
