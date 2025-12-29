@@ -9,57 +9,102 @@
         body { background-color: #000; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; }
         .admin-wrapper { display: flex; flex-direction: column; min-height: 100vh; }
         
-        header { background: #111; padding: 20px; border-bottom: 2px solid #FFC72C; display: flex; justify-content: space-between; align-items: center; }
-        .logo { color: #FFC72C; font-weight: bold; font-size: 1.5em; letter-spacing: 2px; }
+        header { 
+            background: #111; 
+            padding: 20px 40px; 
+            border-bottom: 2px solid #FFC72C; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(255, 199, 44, 0.1);
+        }
+        .logo { color: #FFC72C; font-weight: bold; font-size: 1.6em; letter-spacing: 2px; }
 
-        .container { padding: 20px; max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+        .container { 
+            padding: 30px; 
+            max-width: 1400px; /* Збільшена панель */
+            margin: 0 auto; 
+            width: 100%; 
+            box-sizing: border-box; 
+        }
         
-        .monitor-table { width: 100%; border-collapse: collapse; background: #111; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .monitor-table th { background: #FFC72C; color: #000; padding: 15px; text-align: left; text-transform: uppercase; font-size: 0.75em; letter-spacing: 1px; }
-        .monitor-table td { padding: 15px; border-bottom: 1px solid #222; transition: 0.3s; }
-        .monitor-table tr:hover { background: #1a1a1a; }
+        h2 { color: #fff; margin-bottom: 25px; font-weight: 300; letter-spacing: 1px; }
 
-        /* Стилі для критичних показників */
-        .critical-cell { background: rgba(218, 62, 82, 0.2) !important; color: #ff4d4d !important; font-weight: bold; border-left: 4px solid #DA3E52; }
-        .warning-cell { background: rgba(255, 199, 44, 0.1) !important; color: #FFC72C !important; }
-        
-        .athlete-info { display: flex; align-items: center; gap: 12px; }
-        .athlete-photo { width: 45px; height: 45px; border-radius: 50%; border: 1px solid #FFC72C; object-fit: cover; }
-        .athlete-details div { font-size: 0.7em; color: #888; }
-        .athlete-name { color: #FFC72C; font-weight: bold; font-size: 1em !important; }
+        .monitor-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            background: #0a0a0a; 
+            border-radius: 12px; 
+            overflow: hidden; 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+            border: 1px solid #1a1a1a;
+        }
+        .monitor-table th { 
+            background: #FFC72C; 
+            color: #000; 
+            padding: 18px 15px; 
+            text-align: center; 
+            text-transform: uppercase; 
+            font-size: 0.8em; 
+            letter-spacing: 1px; 
+            font-weight: 800;
+        }
+        /* Перша колонка вирівняна по лівому краю */
+        .monitor-table th:first-child, .monitor-table td:first-child { text-align: left; padding-left: 25px; }
 
-        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.7em; font-weight: bold; text-transform: uppercase; }
-        .badge-healthy { background: #50C878; color: #000; }
-        .badge-injured { background: #DA3E52; color: #fff; }
+        .monitor-table td { 
+            padding: 15px; 
+            border-bottom: 1px solid #1a1a1a; 
+            transition: 0.3s; 
+            vertical-align: middle;
+        }
+        .monitor-table tr:hover { background: #111; }
 
-        .btn-action { background: #FFC72C; color: #000; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; text-decoration: none; font-size: 0.8em; }
-        .btn-action:hover { background: #fff; }
+        .btn-action { 
+            background: #FFC72C; 
+            color: #000; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            text-decoration: none; 
+            font-size: 0.85em;
+            transition: 0.3s;
+        }
+        .btn-action:hover { background: #fff; transform: translateY(-2px); }
+
+        /* Стиль для скролбару (золотий) */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: #FFC72C; border-radius: 10px; }
     </style>
 </head>
 <body>
 
 <div class="admin-wrapper">
     <header>
-        <div class="logo">PRO ATLET CARE <span style="font-weight: 300; color: #fff;">| ADMIN</span></div>
-        <button onclick="firebase.auth().signOut()" class="btn-action" style="background: transparent; color: #FFC72C; border: 1px solid #FFC72C;">Вихід</button>
+        <div class="logo">PRO ATLET CARE <span style="font-weight: 300; color: #fff;">| MONITORING</span></div>
+        <button onclick="firebase.auth().signOut()" class="btn-action" style="background: transparent; color: #FFC72C; border: 1px solid #FFC72C;">ВИХІД</button>
     </header>
 
     <div class="container">
-        <h2 style="margin-bottom: 20px;">Моніторинг команди</h2>
+        <h2>КОМАНДНИЙ МОНІТОРИНГ</h2>
         <table class="monitor-table">
             <thead>
                 <tr>
-                    <th>Атлет / Клуб</th>
-                    <th>Статус</th>
-                    <th>Сон</th>
-                    <th>Стрес</th>
-                    <th>Біль</th>
-                    <th>Готовність</th>
-                    <th>Дія</th>
+                    <th>АТЛЕТ / КЛУБ</th>
+                    <th>СТАТУС</th>
+                    <th>ВАГА / BMI</th>
+                    <th>СОН</th>
+                    <th>СТРЕС</th>
+                    <th>М'ЯЗИ</th>
+                    <th>ГОТОВНІСТЬ</th>
+                    <th style="text-align: right; padding-right: 25px;">ДІЇ</th>
                 </tr>
             </thead>
             <tbody id="athletes-tbody">
-                <tr><td colspan="7" style="text-align: center; padding: 50px;">Завантаження даних атлетів...</td></tr>
+                <tr><td colspan="8" style="text-align: center; padding: 100px; color: #666;">Завантаження профілів атлетів...</td></tr>
             </tbody>
         </table>
     </div>
@@ -68,6 +113,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
 <script src="firebase-config.js"></script>
 <script src="admin.js"></script>
 
