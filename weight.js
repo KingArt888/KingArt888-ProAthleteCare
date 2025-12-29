@@ -21,16 +21,7 @@
         if (planBtn) planBtn.addEventListener('click', generateWeeklyPlan);
     });
 
-    // --- ВИДАЛЕННЯ ---
-    window.deleteWeightEntry = async function(id) {
-        if (!confirm("Видалити цей запис?")) return;
-        try {
-            await firebase.firestore().collection('weight_history').doc(id).delete();
-            loadHistory(); 
-        } catch (e) { console.error("Помилка видалення:", e); }
-    };
-
-    // --- ОБРОБКА ТА РОЗРАХУНОК ---
+    // --- ОБРОБКА ТА АНАЛІЗ ---
     async function handleAthleteAnalysis(e) {
         e.preventDefault();
         const w = parseFloat(document.getElementById('weight-value').value);
@@ -43,6 +34,7 @@
         const analysis = calculateAthleteData(w, bmi, h, a);
         currentAnalysis = analysis;
 
+        // Повертаємо той самий візуал у коло
         updateScannerUI(w, bmi, analysis);
         updateRecommendationUI(analysis);
 
@@ -73,17 +65,17 @@
         return { status, statusColor: color, targetCalories: kcal };
     }
 
-    // --- ОНОВЛЕННЯ СКАНЕРА ---
+    // --- ТОЙ САМИЙ COMPOSITION SCAN (Попередня версія) ---
     function updateScannerUI(weight, bmi, data) {
         document.getElementById('bmi-value').textContent = bmi;
-        // Шукаємо за класом .main-circle, бо в HTML немає ID
         const circle = document.querySelector('.main-circle');
         if (circle) {
+            circle.style.border = `2px solid ${data.statusColor}`;
             circle.innerHTML = `
                 <div style="text-align:center; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%;">
-                    <div style="color:${data.statusColor}; font-size:9px; font-weight:bold; text-transform:uppercase;">${data.status}</div>
-                    <div style="font-size:28px; color:#FFC72C; font-weight:bold; margin:2px 0;">${weight}kg</div>
-                    <div style="color:#fff; font-size:10px;">BMI: ${bmi}</div>
+                    <div style="color:${data.statusColor}; font-size:10px; font-weight:bold; letter-spacing:1px; text-transform:uppercase;">${data.status}</div>
+                    <div style="font-size:32px; color:#FFC72C; font-weight:bold; margin:2px 0;">${weight}kg</div>
+                    <div style="color:#fff; font-size:11px; opacity:0.8;">BMI: ${bmi}</div>
                 </div>
             `;
         }
@@ -99,85 +91,69 @@
                 </div>
             `;
         }
-        // Показуємо кнопку
-        const btn = document.getElementById('get-diet-plan-btn');
-        if (btn) btn.style.display = 'block';
-        
-        // Оновлюємо цифри калорій внизу
+        document.getElementById('get-diet-plan-btn').style.display = 'block';
         document.getElementById('total-daily-kcal').textContent = data.targetCalories;
         document.getElementById('calories-left').textContent = data.targetCalories;
     }
 
-    // --- ВИБІР ШВИДКОСТІ ПРИГОТУВАННЯ ---
+    // --- ВИБІР ШВИДКОСТІ ---
     window.setSpeed = function(speed, btn) {
         selectedSpeed = speed;
         document.querySelectorAll('.speed-btn').forEach(b => {
             b.style.background = "#222"; 
             b.style.color = "#fff";
-            b.classList.remove('active');
         });
         btn.style.background = "#FFC72C"; 
         btn.style.color = "#000";
-        btn.classList.add('active');
     };
 
-    // --- ГЕНЕРАЦІЯ ДІЄТИ ---
+    // --- ГЕНЕРАЦІЯ ПЛАНУ ---
     async function generateWeeklyPlan() {
         if (!currentAnalysis) return;
         const container = document.getElementById('diet-container');
         
-        if (typeof dietDatabase === 'undefined') {
-            container.innerHTML = "<p style='color:red; font-size:12px;'>Помилка: diet-data.js не знайдено!</p>";
-            return;
-        }
-
         const cats = { breakfasts: "Сніданок", lunches: "Обід", dinners: "Вечеря" };
-        let html = `<div style="margin-top:15px; border-top: 1px solid #222; padding-top:10px;">`;
+        let html = `<div style="margin-top:15px;">`;
+        let usedKcal = 0;
 
         for (let key in cats) {
             const meals = dietDatabase[key].filter(m => m.speed === selectedSpeed);
             const meal = meals[Math.floor(Math.random() * meals.length)] || dietDatabase[key][0];
+            const kcal = (meal.p * 4) + (meal.f * 9) + (meal.c * 4);
+            usedKcal += kcal;
 
             html += `
-                <div style="background: rgba(255,255,255,0.03); border: 1px solid #222; padding:10px; border-radius:6px; margin-bottom:8px;">
-                    <div style="display:flex; justify-content:space-between;">
-                        <span style="color:#FFC72C; font-size:9px; font-weight:bold; text-transform:uppercase;">${cats[key]}</span>
-                        <span style="color:#555; font-size:9px;">${meal.kcal || (meal.p*4 + meal.f*9 + meal.c*4)} kcal</span>
-                    </div>
-                    <div style="color:#fff; font-size:13px; font-weight:bold; margin:3px 0;">${meal.name}</div>
-                    <div style="display:flex; gap:8px; font-size:10px; color:#666;">
-                        <span>Б: ${meal.p}г</span> <span>Ж: ${meal.f}г</span> <span>В: ${meal.c}г</span>
-                    </div>
+                <div style="background:rgba(255,255,255,0.03); border:1px solid #222; padding:10px; border-radius:6px; margin-bottom:8px;">
+                    <div style="color:#FFC72C; font-size:9px; font-weight:bold;">${cats[key]}</div>
+                    <div style="color:#fff; font-size:13px; font-weight:bold;">${meal.name}</div>
+                    <div style="font-size:10px; color:#666;">Б: ${meal.p}г | Ж: ${meal.f}г | В: ${meal.c}г</div>
                 </div>
             `;
         }
-        html += `</div>`;
-        container.innerHTML = html;
+        container.innerHTML = html + `</div>`;
+        document.getElementById('calories-left').textContent = currentAnalysis.targetCalories - usedKcal;
     }
 
     // --- ГРАФІК ТА ІСТОРІЯ ---
     async function loadHistory() {
         if (!currentUserId || !weightChart) return;
-        try {
-            const snap = await firebase.firestore().collection('weight_history')
-                .where('userId', '==', currentUserId).orderBy('timestamp', 'desc').limit(7).get();
-            
-            const docs = snap.docs.map(d => ({id: d.id, ...d.data()}));
-            
-            if (docs.length > 0) {
-                const last = docs[0];
-                updateScannerUI(last.weight, last.bmi, calculateAthleteData(last.weight, last.bmi, 180, 30));
-                document.getElementById('total-daily-kcal').textContent = last.target_kcal || 0;
-                document.getElementById('calories-left').textContent = last.target_kcal || 0;
-            }
+        const snap = await firebase.firestore().collection('weight_history')
+            .where('userId', '==', currentUserId).orderBy('timestamp', 'desc').limit(7).get();
+        
+        const docs = snap.docs.map(d => ({id: d.id, ...d.data()}));
+        
+        if (docs.length > 0) {
+            const last = docs[0];
+            updateScannerUI(last.weight, last.bmi, calculateAthleteData(last.weight, last.bmi, 180, 33));
+            document.getElementById('total-daily-kcal').textContent = last.target_kcal || 0;
+        }
 
-            const chartData = [...docs].reverse();
-            weightChart.data.labels = chartData.map(d => d.date.split('.').slice(0,2).join('.'));
-            weightChart.data.datasets[0].data = chartData.map(d => d.weight);
-            weightChart.update();
+        const chartData = [...docs].reverse();
+        weightChart.data.labels = chartData.map(d => d.date.split('.').slice(0,2).join('.'));
+        weightChart.data.datasets[0].data = chartData.map(d => d.weight);
+        weightChart.update();
 
-            renderHistoryList(docs);
-        } catch (e) { console.log("History load error:", e); }
+        renderHistoryList(docs);
     }
 
     function renderHistoryList(docs) {
@@ -186,8 +162,7 @@
             list = document.createElement('div');
             list.id = 'compact-history-list';
             list.style.cssText = "margin-top:20px; border-top:1px solid #222; padding-top:10px;";
-            const card = document.querySelector('.chart-card');
-            if (card) card.appendChild(list);
+            document.querySelector('.chart-card').appendChild(list);
         }
 
         list.innerHTML = docs.map(doc => `
@@ -203,8 +178,8 @@
         if (!ctx) return;
         weightChart = new Chart(ctx, {
             type: 'line',
-            data: { labels: [], datasets: [{ label: 'Вага', data: [], borderColor: '#FFC72C', backgroundColor: 'rgba(255,199,44,0.05)', tension: 0.4, fill: true }] },
-            options: { responsive: true, maintainAspectRatio: false, scales: { y: { grid: { color: '#111' }, ticks: { color: '#444' } }, x: { grid: { display: false }, ticks: { color: '#444' } } }, plugins: { legend: { display: false } } }
+            data: { labels: [], datasets: [{ label: 'Вага', data: [], borderColor: '#FFC72C', tension: 0.4, fill: false }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { grid: { color: '#111' } }, x: { grid: { display: false } } } }
         });
     }
 
@@ -216,4 +191,10 @@
             if (document.getElementById('user-age')) document.getElementById('user-age').value = d.age || "";
         }
     }
+
+    window.deleteWeightEntry = async function(id) {
+        if (!confirm("Видалити?")) return;
+        await firebase.firestore().collection('weight_history').doc(id).delete();
+        loadHistory();
+    };
 })();
