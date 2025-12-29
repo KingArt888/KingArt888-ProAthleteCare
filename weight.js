@@ -85,19 +85,113 @@
     }
 
     // --- 2. БЛОК: ГЕНЕРАТОР ДІЄТИ ---
-    async function generateWeeklyPlan() {
-        if (!currentAnalysis) return;
-        const mealKeys = ["breakfasts", "breakfasts", "lunches", "lunches", "dinners", "dinners"];
-        
-        currentDailyPlan = mealKeys.map((key, i) => {
-            const meals = dietDatabase[key].filter(m => m.speed === selectedSpeed);
-            const meal = meals[Math.floor(Math.random() * meals.length)] || dietDatabase[key][0];
-            return { ...meal, kcal: (meal.p*4)+(meal.f*9)+(meal.c*4), id: Math.random().toString(36).substr(2,9), eaten: false };
-        });
+   // --- БЛОК ДІЄТИ (3 ВЕЛИКІ КАТЕГОРІЇ) ---
 
-        renderDietPlan();
-        savePlanToMemory();
+async function generateWeeklyPlan() {
+    console.log("Кнопка натиснута, швидкість:", selectedSpeed);
+    if (!currentAnalysis) {
+        alert("Спочатку заповніть параметри тіла!");
+        return;
     }
+
+    const categories = [
+        { id: 'brf', label: 'СНІДАНОК', icon: '🍳', dbKey: 'breakfasts' },
+        { id: 'lnc', label: 'ОБІД', icon: '🍱', dbKey: 'lunches' },
+        { id: 'din', label: 'ВЕЧЕРЯ', icon: '🍗', dbKey: 'dinners' }
+    ];
+
+    // Беремо по 1 страві для кожної категорії
+    currentDailyPlan = categories.map(cat => {
+        const meals = dietDatabase[cat.dbKey].filter(m => m.speed === selectedSpeed);
+        const meal = meals[Math.floor(Math.random() * meals.length)] || dietDatabase[cat.dbKey][0];
+        return { 
+            ...meal, 
+            catLabel: cat.label, 
+            catIcon: cat.icon, 
+            catId: cat.id,
+            kcal: (meal.p * 4) + (meal.f * 9) + (meal.c * 4), 
+            eaten: false 
+        };
+    });
+
+    console.log("План сформовано:", currentDailyPlan);
+    renderDietPlan();
+    
+    // Зберігаємо в пам'ять (локальне сховище)
+    localStorage.setItem('proatlet_diet', JSON.stringify({
+        plan: currentDailyPlan,
+        analysis: currentAnalysis,
+        date: new Date().toDateString()
+    }));
+}
+
+function renderDietPlan() {
+    const container = document.getElementById('diet-container');
+    if (!container) {
+        console.error("Помилка: Не знайдено id='diet-container' в HTML!");
+        return;
+    }
+
+    document.getElementById('get-diet-plan-btn').disabled = true;
+
+    container.innerHTML = currentDailyPlan.map(meal => `
+        <div class="meal-group" style="margin-bottom:10px; border:1px solid #1a1a1a; border-radius:8px; overflow:hidden; background:#000;">
+            <div onclick="toggleCategory('${meal.catId}')" style="padding:15px; background:#111; display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
+                <span style="color:#FFC72C; font-weight:bold; font-size:12px;">${meal.catIcon} ${meal.catLabel}</span>
+                <span id="arrow-${meal.catId}" style="color:#444;">▼</span>
+            </div>
+            
+            <div id="box-${meal.catId}" style="display:none; padding:15px; border-top:1px solid #1a1a1a; background:rgba(255,199,44,0.02);">
+                <div style="display:flex; justify-content:space-between; align-items:center; opacity:${meal.eaten ? '0.2' : '1'}" id="item-${meal.catId}">
+                    <div>
+                        <div style="color:#fff; font-size:15px; font-weight:bold;">${meal.name}</div>
+                        <div style="color:#FFC72C; font-size:11px; margin-top:4px;">
+                            ${meal.kcal} ккал | Б:${meal.p} Ж:${meal.f} В:${meal.c}
+                        </div>
+                    </div>
+                    <input type="checkbox" ${meal.eaten ? 'checked' : ''} 
+                           onchange="handleMealCheck('${meal.catId}', this)" 
+                           style="width:22px; height:22px; accent-color:#FFC72C; cursor:pointer;">
+                </div>
+            </div>
+        </div>
+    `).join('');
+    
+    updateMacrosLeftUI();
+}
+
+// Функція відкриття/закриття (акордеон)
+window.toggleCategory = function(catId) {
+    const box = document.getElementById(`box-${catId}`);
+    const arrow = document.getElementById(`arrow-${catId}`);
+    if (box.style.display === "none") {
+        box.style.display = "block";
+        arrow.textContent = "▲";
+        arrow.style.color = "#FFC72C";
+    } else {
+        box.style.display = "none";
+        arrow.textContent = "▼";
+        arrow.style.color = "#444";
+    }
+};
+
+// Функція галочки
+window.handleMealCheck = function(catId, checkbox) {
+    const meal = currentDailyPlan.find(m => m.catId === catId);
+    if (meal) {
+        meal.eaten = checkbox.checked;
+        document.getElementById(`item-${catId}`).style.opacity = meal.eaten ? "0.2" : "1";
+        
+        // Оновлюємо пам'ять
+        localStorage.setItem('proatlet_diet', JSON.stringify({
+            plan: currentDailyPlan,
+            analysis: currentAnalysis,
+            date: new Date().toDateString()
+        }));
+        
+        updateMacrosLeftUI();
+    }
+};
 
     function renderDietPlan() {
         const container = document.getElementById('diet-container');
