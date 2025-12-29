@@ -21,31 +21,19 @@
         if (planBtn) planBtn.addEventListener('click', generateWeeklyPlan);
     });
 
-    // Вибір швидкості приготування
-    window.setSpeed = function(speed, btn) {
-        selectedSpeed = speed;
-        document.querySelectorAll('.speed-btn').forEach(b => {
-            b.style.background = "#111";
-            b.style.borderColor = "#333";
-            b.classList.remove('active');
-        });
-        btn.style.background = "#222";
-        btn.style.borderColor = "#FFC72C";
-        btn.classList.add('active');
-    };
-
-    // Видалення запису
+    // 1. ФУНКЦІЯ ВИДАЛЕННЯ (Тепер працює!)
     window.deleteWeightEntry = async (id) => {
-        if (confirm("Видалити цей запис з історії?")) {
+        if (confirm("Видалити цей запис?")) {
             try {
                 await firebase.firestore().collection('weight_history').doc(id).delete();
-                loadHistory(); // Оновлюємо список та графік
+                loadHistory(); // Оновлюємо список і графік миттєво
             } catch (e) {
                 console.error("Помилка видалення:", e);
             }
         }
     };
 
+    // 2. ОБРОБКА ТА РОЗРАХУНОК
     async function handleAthleteAnalysis(e) {
         e.preventDefault();
         const w = parseFloat(document.getElementById('weight-value').value);
@@ -88,14 +76,20 @@
         return { status, statusColor: color, targetCalories: kcal };
     }
 
+    // 3. ОНОВЛЕННЯ COMPOSITION SCAN (ID виправлено!)
     function updateScannerUI(weight, bmi, data) {
+        const bmiSpan = document.getElementById('bmi-value');
+        if (bmiSpan) bmiSpan.textContent = bmi;
+
         const circle = document.getElementById('scan-main-circle');
         if (circle) {
             circle.innerHTML = `
-                <span style="font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 1px;">Status</span>
-                <div style="color: ${data.statusColor}; font-size: 14px; font-weight: bold; margin-bottom: 5px;">${data.status}</div>
-                <span style="font-size: 38px; color: #FFC72C; font-weight: bold; line-height: 1;">${weight}kg</span>
-                <span style="font-size: 14px; color: #fff; margin-top: 5px;">BMI: ${bmi}</span>
+                <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%;">
+                    <span style="font-size: 10px; color: #666; text-transform: uppercase;">Status</span>
+                    <div style="color: ${data.statusColor}; font-size: 14px; font-weight: bold; margin-bottom: 5px;">${data.status}</div>
+                    <span style="font-size: 38px; color: #FFC72C; font-weight: bold; line-height: 1;">${weight}kg</span>
+                    <span style="font-size: 12px; color: #fff; margin-top: 5px;">BMI: ${bmi}</span>
+                </div>
             `;
         }
     }
@@ -116,6 +110,7 @@
         if (selector) selector.style.display = 'block';
     }
 
+    // 4. ІСТОРІЯ ТА ГРАФІК
     async function loadHistory() {
         if (!currentUserId || !weightChart) return;
         const snap = await firebase.firestore().collection('weight_history')
@@ -129,9 +124,10 @@
         weightChart.data.datasets[0].data = chartData.map(d => d.weight);
         weightChart.update();
 
-        // Оновлення списку з кнопкою видалення
+        // Оновлення списку історії
         updateHistoryListUI(docs);
 
+        // Якщо є дані, оновлюємо SCAN останній записом
         if (docs.length > 0) {
             const last = docs[0];
             const analysis = calculateAthleteData(last.weight, last.bmi, 180, 25);
@@ -152,13 +148,22 @@
         list.innerHTML = docs.map(doc => `
             <div style="display:flex; justify-content:space-between; align-items:center; background:#111; padding:8px 12px; margin-bottom:6px; border-radius:4px; border:1px solid #1a1a1a;">
                 <div>
-                    <span style="color:#666; font-size:11px;">${doc.date.split('-').reverse().join('.')}</span>
-                    <div style="color:#fff; font-weight:bold; font-size:13px;">${doc.weight} kg <small style="color:#666; font-weight:normal; font-size:10px;">(BMI: ${doc.bmi})</small></div>
+                    <span style="color:#666; font-size:10px;">${doc.date.split('-').reverse().join('.')}</span>
+                    <div style="color:#fff; font-weight:bold; font-size:13px;">${doc.weight} kg <small style="color:#444;">(${doc.bmi})</small></div>
                 </div>
-                <button onclick="deleteWeightEntry('${doc.id}')" style="background:none; border:none; color:#DA3E52; cursor:pointer; font-size:16px;">&times;</button>
+                <button onclick="deleteWeightEntry('${doc.id}')" style="background:none; border:none; color:#DA3E52; cursor:pointer; font-size:18px; padding:0 5px;">&times;</button>
             </div>
         `).join('');
     }
+
+    // 5. ГЕНЕРАЦІЯ ТА ЗБЕРЕЖЕННЯ
+    window.setSpeed = (speed, btn) => {
+        selectedSpeed = speed;
+        document.querySelectorAll('.speed-btn').forEach(b => {
+            b.style.background = "#111"; b.style.borderColor = "#333";
+        });
+        btn.style.background = "#222"; btn.style.borderColor = "#FFC72C";
+    };
 
     async function generateWeeklyPlan() {
         if (!currentAnalysis) return;
@@ -172,8 +177,8 @@
             }, { merge: true });
             
             document.getElementById('diet-container').innerHTML = `
-                <div style="background: rgba(0,191,255,0.1); border: 1px solid #00BFFF; color:#fff; padding:10px; border-radius:4px; font-size:12px; text-align:center; margin-top:10px;">
-                    ✅ ПЛАН НА 7 ДНІВ СФОРМОВАНО
+                <div style="background: rgba(255,199,44,0.1); border: 1px solid #FFC72C; color:#fff; padding:10px; border-radius:4px; font-size:11px; text-align:center; margin-top:10px;">
+                    ✅ ПЛАН НА 7 ДНІВ ЗАФІКСОВАНО
                 </div>`;
             btn.textContent = "ГЕНЕРУВАТИ ПЛАН НА ТИЖДЕНЬ";
         } catch (e) { console.error(e); }
@@ -186,11 +191,10 @@
             type: 'line',
             data: { labels: [], datasets: [{ label: 'Вага', data: [], borderColor: '#FFC72C', backgroundColor: 'rgba(255,199,44,0.05)', tension: 0.4, fill: true }] },
             options: { 
-                responsive: true, 
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false,
                 scales: { 
-                    x: { ticks: { color: '#666', font: { size: 10 } }, grid: { display: false } },
-                    y: { ticks: { color: '#666', font: { size: 10 } }, grid: { color: '#222' } }
+                    x: { ticks: { color: '#666', font: { size: 9 } }, grid: { display: false } },
+                    y: { ticks: { color: '#666', font: { size: 9 } }, grid: { color: '#222' } }
                 }
             }
         });
