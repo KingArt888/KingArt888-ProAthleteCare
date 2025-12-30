@@ -2,8 +2,10 @@
     let currentAnalysis = null;
     let currentDailyPlan = { brf: [], lnc: [], din: [] };
     let activeTab = 'brf';
-    let selectedSpeed = 'Easy'; // Стандартне значення
+    let selectedSpeed = 'Easy';
     
+    // Отримуємо ID користувача (якщо використовуєте Firebase Auth)
+    // Якщо Auth не налаштовано, використовуємо заглушку або Device ID
     const getUserId = () => (window.auth && window.auth.currentUser) ? window.auth.currentUser.uid : "guest_athlete_1";
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -18,10 +20,12 @@
             if (btn) btn.onclick = () => switchDietTab(id);
         });
 
-        setTimeout(loadFromFirebase, 1000);
+        // Завантаження з Firebase при старті
+        setTimeout(loadFromFirebase, 1000); // невелика затримка для ініціалізації БД
     });
 
     // --- FIREBASE OPERATIONS ---
+
     async function saveToFirebase() {
         if (!currentAnalysis) return;
         try {
@@ -29,12 +33,14 @@
             await window.db.collection("athlete_plans").doc(uid).set({
                 plan: currentDailyPlan,
                 analysis: currentAnalysis,
-                selectedSpeed: selectedSpeed, // Зберігаємо обрану складність
+                selectedSpeed: selectedSpeed,
                 lastUpdate: new Date().toISOString(),
                 serverDate: new Date().toDateString()
             });
-            console.log("🚀 PAC: Plan synced");
-        } catch (e) { console.error("Firebase Save Error:", e); }
+            console.log("🚀 PAC: Plan synced with Cloud");
+        } catch (e) {
+            console.error("Firebase Save Error:", e);
+        }
     }
 
     async function loadFromFirebase() {
@@ -54,13 +60,16 @@
                         document.getElementById('diet-tabs-wrapper').style.display = 'block';
 
                     updateAllUI();
-                    switchDietTab(activeTab);
+                    switchDietTab('brf');
                 }
             }
-        } catch (e) { console.log("Load info:", e); }
+        } catch (e) {
+            console.log("No cloud data or error:", e);
+        }
     }
 
     // --- CORE LOGIC ---
+
     function handleAthleteAnalysis(e) {
         if (e) e.preventDefault();
         const w = parseFloat(document.getElementById('weight-value')?.value);
@@ -69,14 +78,18 @@
         if (!w || !h || !a) return;
 
         const bmi = (w / ((h / 100) ** 2)).toFixed(1);
-        let mode = "MAINTENANCE", mult = 1.55;
+        let mode = "MAINTENANCE";
+        let mult = 1.55;
         if (bmi < 18.5) { mode = "MASS GAIN"; mult = 1.85; }
         else if (bmi > 25.5) { mode = "WEIGHT LOSS"; mult = 1.35; }
 
         currentAnalysis = {
             targetKcal: Math.round(((10 * w) + (6.25 * h) - (5 * a) + 5) * mult),
-            mode, water: (w * 0.035).toFixed(1),
-            p: Math.round(w * 2), f: Math.round(w * 0.9), c: Math.round(w * 3)
+            mode,
+            water: (w * 0.035).toFixed(1),
+            p: Math.round((w * 2)), // Професійний підрахунок протеїну
+            f: Math.round((w * 0.9)),
+            c: Math.round((w * 3))
         };
 
         updateAllUI();
@@ -94,11 +107,10 @@
         ];
 
         slots.forEach(slot => {
-            // Передаємо selectedSpeed у функцію вибору страв
-            currentDailyPlan[slot.id] = pickMeals(slot.key, currentAnalysis.targetKcal * slot.pct, selectedSpeed);
+            currentDailyPlan[slot.id] = pickMeals(slot.key, currentAnalysis.targetKcal * slot.pct);
         });
 
-        if (document.querySelector('.speed-selector')) document.querySelector('.speed-selector').style.display = 'none';
+        document.querySelector('.speed-selector').style.display = 'none';
         document.getElementById('diet-tabs-wrapper').style.display = 'block';
         document.getElementById('get-diet-plan-btn').style.display = 'none';
 
@@ -107,13 +119,10 @@
         await saveToFirebase();
     };
 
-    function pickMeals(key, target, speed) {
+    function pickMeals(key, target) {
         let currentKcal = 0;
         let selected = [];
-        // Фільтрація за обраною складністю (speed)
-        let available = [...dietDatabase[key].filter(m => m.speed === speed)];
-        
-        // Якщо страв обраної складності немає, беремо будь-які доступні
+        let available = [...dietDatabase[key].filter(m => m.speed === selectedSpeed)];
         if (available.length === 0) available = [...dietDatabase[key]];
 
         while (currentKcal < target && available.length > 0) {
@@ -133,30 +142,21 @@
         if (index === -1) return;
 
         const currentNames = currentDailyPlan[activeTab].map(m => m.name);
-        // Заміна враховує поточну складність
         let available = dietDatabase[dbKey].filter(m => m.speed === selectedSpeed && !currentNames.includes(m.name));
-
-        if (available.length === 0) available = dietDatabase[dbKey];
 
         if (available.length > 0) {
             let meal = available[Math.floor(Math.random() * available.length)];
-            currentDailyPlan[activeTab][index] = { 
-                ...meal, 
-                kcal: Math.round((meal.p*4)+(meal.f*9)+(meal.c*4)), 
-                eaten: false, 
-                uid: Math.random().toString(36).substr(2, 9) 
-            };
+            currentDailyPlan[activeTab][index] = { ...meal, kcal: Math.round((meal.p*4)+(meal.f*9)+(meal.c*4)), eaten: false, uid: Math.random().toString(36).substr(2, 9) };
             renderMealList();
             updateAllUI();
             await saveToFirebase();
         }
     };
 
-    // --- UI RENDERING (БЕЗ ЗМІН ДИЗАЙНУ) ---
     function renderMealList() {
         const meals = currentDailyPlan[activeTab];
         const box = document.getElementById('diet-tab-content');
-        if (!box || !meals) return;
+        if (!box) return;
 
         box.innerHTML = meals.map(meal => `
             <div style="background:transparent; padding:10px 0; border-bottom:1px solid #1a1a1a; display:flex; justify-content:space-between; align-items:center;">
@@ -205,7 +205,7 @@
             acc.k += m.kcal; acc.p += m.p; acc.f += m.f; acc.c += m.c; return acc;
         }, {k:0, p:0, f:0, c:0});
 
-        const leftKcal = Math.max(0, currentAnalysis.targetKcal - eaten.k);
+        const leftKcal = currentAnalysis.targetKcal - eaten.k;
         
         const topBox = document.getElementById('athlete-recommendation-box');
         if (topBox) {
