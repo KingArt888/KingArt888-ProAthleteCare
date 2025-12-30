@@ -1,0 +1,263 @@
+/* daily-individual.css - ЗАГАЛЬНІ СТИЛІ ТА СТИЛІ ВПРАВ (Daily Individual) */
+
+/* ======================================================= */
+/* --- СТИЛІ НАВІГАЦІЇ ТА ШАПКИ СТОРІНКИ --- */
+/* ======================================================= */
+
+/* Активний пункт меню в бічній панелі */
+.sidebar a.active {
+    background-color: #FFC72C; /* Жовтий фон */
+    color: #000000;           /* Чорний текст */
+    border-left: 2px solid #000000;
+}
+
+/* Фільтр для зображень активного пункту меню (скидання фільтра) */
+.sidebar a.active img {
+    filter: none; 
+}
+
+/* Шапка сторінки плану (загальний макет) */
+.daily-plan-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap; /* Дозволяє елементам переноситися на мобільних пристроях */
+}
+
+/* Відображення поточного статусу (наприклад, "Готовий") */
+#md-status-display {
+    font-size: 1.5em;
+    padding: 8px 12px;
+    border-radius: 6px;
+}
+
+/* Діапазон/показник MDX (наприклад, рівень втоми/готовності) */
+#mdx-range-display {
+    color: #FFC72C; /* Було #FFD700 */
+    font-weight: bold; 
+    font-size: 1.1em;
+}
+
+/* Блок рекомендацій */
+#md-recommendations {
+    border: 1px solid #1a1a1a; /* Було 1px solid #FFD700 */
+    padding: 15px; 
+    border-radius: 6px; 
+    background-color: #0d0d0d; /* Було #333 */
+    margin-bottom: 20px; 
+    color: #EEE;        /* Світлий текст */
+}
+
+/* Заголовки етапів тренування */
+.main-content h3.stage-header {
+    color: #FFF; 
+    margin-top: 30px; 
+    border-bottom: 2px solid #555; 
+    padding-bottom: 5px;
+    font-size: 1.2em; 
+}
+
+
+/* ======================================================= */
+/* --- СТИЛІ СПИСКУ ВПРАВ (daily-exercise-item) --- */
+/* ======================================================= */
+
+.daily-exercise-item {
+    background-color: #0d0d0d; /* Було #222 */
+    border: 1px solid #1a1a1a; /* Було 2px solid #FFD700 */
+    padding: 20px; /* Трохи збільшимо відступи для вигляду картки */
+    margin-bottom: 20px; 
+    border-radius: 10px; /* Більший радіус як у wellness.css картках */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); /* Тінь як у wellness.css */
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    justify-content: space-between;
+}
+.exercise-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+/* ЗМІНЕНО: Колір на акцентний з wellness.css */
+.daily-exercise-item h4 {
+    color: #FFC72C; /* Було #FFD700 */
+    margin-top: 0;
+    border-bottom: 1px solid #333333; /* Було 1px solid #444 */
+    padding-bottom: 10px; /* Трохи збільшимо відступ */
+    font-size: 1.3em; 
+}
+
+/* Деталі вправи (повтори, вага) */
+.exercise-details p {
+    margin: 3px 0;
+    color: #ccc;
+    font-size: 0.95em;
+}
+
+/* Відображення сетів і повторів */
+.sets-reps-display {
+    padding: 5px 0;
+    margin-top: 5px;
+    font-weight: bold;
+    color: #FFF;
+}
+
+/* ЗМІНЕНО: Колір на акцентний з wellness.css */
+.sets-reps-display span {
+    color: #FFC72C; /* Було #FFD700 */
+    font-size: 1.1em;
+}
+
+
+/* ======================================================= */
+/* --- СТИЛІ МЕДІА ТА ГАЛОЧКИ ЗАВЕРШЕННЯ --- */
+/* ======================================================= */
+
+/* Контейнер для медіа (відео/зображення) */
+.media-container {
+    width: 320px; 
+    min-width: 320px; /* Фіксована мінімальна ширина для десктопу */
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end; /* Вирівнювання галочки праворуч */
+    gap: 10px;
+}
+
+/* Стилі зображень та iframe (відео) */
+.media-container img, .media-container iframe {
+    max-width: 100%;
+    width: 300px; 
+    height: 180px; 
+    border: 1px solid #333333; /* Було 1px solid #FFD700 */
+    border-radius: 4px;
+}
+/* ЗМІНЕНО: Колір на акцентний з wellness.css */
+.completion-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #FFC72C; /* Було #FFD700 */
+    font-weight: bold;
+    font-size: 1.1em;
+}
+/* Стилі для кастомних чекбоксів */
+input[type="checkbox"] {
+    appearance: none;
+    width: 25px;
+    height: 25px;
+    border: 2px solid #FFC72C; /* Було #FFD700 */
+    border-radius: 4px;
+    background-color: #000;
+    cursor: pointer;
+    position: relative;
+    outline: none;
+}
+/* ЗМІНЕНО: Колір фону при активації на акцентний з wellness.css */
+input[type="checkbox"]:checked {
+    background-color: #FFC72C; /* Було #FFD700 */
+}
+
+input[type="checkbox"]:checked::after {
+    content: '✔';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+    color: #000; /* Чорна галочка на жовтому фоні */
+    font-weight: bolder;
+}
+
+.section-content {
+    display: none;
+}
+
+.section-content.active {
+    display: block;
+}
+
+/* ======================================================= */
+/* --- СТИЛІ ЗВОРОТНОГО ЗВ'ЯЗКУ (ФІДБЕК) --- */
+/* ======================================================= */
+
+.feedback-block {
+    background-color: #0d0d0d; /* Було #1a1a1a */
+    border: 1px solid #1a1a1a; /* Було 1px solid #FFD700 */
+    padding: 25px;
+    border-radius: 10px; /* Збільшимо радіус */
+    margin-top: 30px;
+    color: #EEE;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); /* Тінь як у wellness.css */
+}
+/* ЗМІНЕНО: Колір на акцентний з wellness.css */
+.feedback-block h3 {
+    color: #FFC72C; /* Було #FFD700 */
+    border-bottom: 1px solid #333333; /* Було 1px solid #444 */
+    padding-bottom: 10px;
+    margin-top: 0;
+}
+.feedback-form textarea {
+    width: 100%;
+    background-color: #333;
+    color: #EEE;
+    border: 1px solid #555;
+    padding: 10px;
+    border-radius: 4px;
+    margin: 10px 0;
+    box-sizing: border-box;
+}
+/* Кнопка зворотного зв'язку як gold-button з wellness.css */
+.feedback-form button {
+    background-color: #FFC72C; /* Було #FFD700 */
+    color: #000;
+    border: none;
+    padding: 12px 25px; /* Змінено з 10px 20px */
+    border-radius: 5px; /* Змінено з 4px */
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 15px;
+    font-size: 1.1em;
+    transition: background-color 0.3s;
+}
+.feedback-form button:hover {
+    background-color: #E6B800; /* З wellness.css */
+}
+
+/* ======================================================= */
+/* МОБІЛЬНА АДАПТАЦІЯ КОНТЕНТУ (max-width: 900px) */
+/* ======================================================= */
+@media (max-width: 900px) {
+
+    /* Вертикальний макет для елементів вправи */
+    .daily-exercise-item {
+        flex-direction: column; 
+        gap: 15px;
+    }
+    
+    /* Адаптація медіа-контейнера */
+    .media-container {
+        width: 100%; 
+        min-width: 100%;
+        align-items: center; 
+        /* order: -1 переміщує медіа-блок над текстовим контентом */
+        order: -1; 
+    }
+
+    /* Адаптація розмірів вбудованих медіа */
+    .media-container img, .media-container iframe {
+        width: 100%;
+        height: auto;
+        max-height: 200px;
+    }
+    
+    /* Адаптація повзунка (range input) у формі зворотного зв'язку */
+    .feedback-form input[type="range"] {
+        width: 95%; /* Більша ширина для мобільних пристроїв */
+    }
+}
