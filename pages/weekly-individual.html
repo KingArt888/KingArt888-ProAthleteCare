@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Individual | ProAthleteCare</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/weekly-individual.css">
+    <link rel="stylesheet" href="../css/navigation-mobile.css">
+</head>
+<body>
+    <header>
+    <a href="index.html" class="logo-link">
+        <img src="../assets/images/AK_logo.png" alt="ProAthleteCare Logo" class="logo">
+        </a>
+        <h1 class="project-title">ProAthleteCare</h1>
+        <p class="tagline">Онлайн-тренінг та професійний супровід атлетів</p>
+        <button class="menu-toggle" id="menu-toggle-button">☰</button>
+    </header>
+    
+    <div class="content-wrapper">
+        <nav class="sidebar" id="main-sidebar">
+            <a href="../index.html"> About Us <img src="../assets/images/AK_logo.png" class="menu-icon" alt="АК"></a>
+            
+            <a href="wellness.html">Wellness Control <img src="../assets/images/AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="injury.html">Injury Story <img src="../assets/images/AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="load-season.html">Load Season <img src="../assets/images/AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="daily-individual.html">Daily Individual <img src="../assets/images/AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="weekly-individual.html">Weekly Individual <img src="../assets/images/AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="weight-control.html">Weight Control <img src="../assets/images/AK_logo.png" class="menu-icon" alt="АК"></a>
+            <a href="velocity-control.html">Velocity Control <img src="../assets/images/AK_logo.png" class="menu-icon" alt="АК"></a>
+        </nav>
+
+        <main class="main-content">
+            <h2>🗓️ Weekly Individual: Планування мікроциклу</h2>
+            <p class="sub-header">Ваш тижневий план, цикли навантаження та шаблони завдань.</p>
+
+            <form id="weekly-plan-form">
+                
+                <div class="table-container">
+                    <table class="weekly-table">
+                        <thead>
+                            <tr>
+                                <th class="table-header-day">День</th>
+                                <th>Пн</th><th>Вт</th><th>Ср</th><th>Чт</th><th>Пт</th><th>Сб</th><th>Нд</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr id="md-colors-row">
+                                <td>MD Status</td>
+                                <td class="cycle-day" data-day-index="0" id="day-status-0"><span class="md-status color-dark-grey">TRAIN</span></td>
+                                <td class="cycle-day" data-day-index="1" id="day-status-1"><span class="md-status color-dark-grey">TRAIN</span></td>
+                                <td class="cycle-day" data-day-index="2" id="day-status-2"><span class="md-status color-dark-grey">TRAIN</span></td>
+                                <td class="cycle-day" data-day-index="3" id="day-status-3"><span class="md-status color-dark-grey">TRAIN</span></td>
+                                <td class="cycle-day" data-day-index="4" id="day-status-4"><span class="md-status color-dark-grey">TRAIN</span></td>
+                                <td class="cycle-day" data-day-index="5" id="day-status-5"><span class="md-status color-dark-grey">TRAIN</span></td>
+                                <td class="cycle-day" data-day-index="6" id="day-status-6"><span class="md-status color-dark-grey">TRAIN</span></td>
+                            </tr>
+                            
+                            <tr>
+                                <td>Активність</td>
+                                <td data-day-index="0">
+                                    <select name="activity_0" class="activity-type-select">
+                                        <option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option>
+                                    </select>
+                                </td>
+                                <td data-day-index="1">
+                                    <select name="activity_1" class="activity-type-select">
+                                        <option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option>
+                                    </select>
+                                </td>
+                                <td data-day-index="2">
+                                    <select name="activity_2" class="activity-type-select">
+                                        <option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option>
+                                    </select>
+                                </td>
+                                <td data-day-index="3">
+                                    <select name="activity_3" class="activity-type-select">
+                                        <option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option>
+                                    </select>
+                                </td>
+                                <td data-day-index="4">
+                                    <select name="activity_4" class="activity-type-select">
+                                        <option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option>
+                                    </select>
+                                </td>
+                                <td data-day-index="5">
+                                    <select name="activity_5" class="activity-type-select">
+                                        <option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option>
+                                    </select>
+                                </td>
+                                <td data-day-index="6">
+                                    <select name="activity_6" class="activity-type-select">
+                                        <option value="TRAIN">Тренування</option><option value="MATCH">Матч</option><option value="REST">Відпочинок</option>
+                                    </select>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <section class="daily-task-section">
+                    <h3>📝 Налаштування Шаблонів Вправ</h3>
+                    <p class="note-info">❗ Тут ви вказуєте **яку категорію** і **скільки вправ** генерувати для MD-статусу, який має цей день.</p>
+                    
+                    <div class="tasks-grid">
+                        
+                        <div class="day-template-wrapper">
+                            <h4 class="day-md-title" id="md-title-0"></h4>
+                            <div class="task-day-container" data-day-index="0">
+                            </div>
+                        </div>
+
+                        <div class="day-template-wrapper">
+                            <h4 class="day-md-title" id="md-title-1"></h4>
+                            <div class="task-day-container" data-day-index="1"></div>
+                        </div>
+                        
+                        <div class="day-template-wrapper">
+                            <h4 class="day-md-title" id="md-title-2"></h4>
+                            <div class="task-day-container" data-day-index="2"></div>
+                        </div>
+                        
+                        <div class="day-template-wrapper">
+                            <h4 class="day-md-title" id="md-title-3"></h4>
+                            <div class="task-day-container" data-day-index="3"></div>
+                        </div>
+                        
+                        <div class="day-template-wrapper">
+                            <h4 class="day-md-title" id="md-title-4"></h4>
+                            <div class="task-day-container" data-day-index="4"></div>
+                        </div>
+                        
+                        <div class="day-template-wrapper">
+                            <h4 class="day-md-title" id="md-title-5"></h4>
+                            <div class="task-day-container" data-day-index="5"></div>
+                        </div>
+                        
+                        <div class="day-template-wrapper">
+                            <h4 class="day-md-title" id="md-title-6"></h4>
+                            <div class="task-day-container" data-day-index="6"></div>
+                        </div>
+
+                    </div>
+                </section>
+                
+                <div class="form-actions">
+                    <button type="submit" class="save-button gold-button">Зберегти Тижневий План та Шаблони</button>
+                </div>
+            </form>
+        </main>
+    </div>
+    
+    <div id="exercise-selection-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal-btn">&times;</span>
+            <h3 id="modal-title-context">Вибір вправи</h3>
+
+            <h4>Фільтр за якістю навантаження:</h4>
+            <div id="quality-filters" class="quality-filters-container">
+                </div>
+            
+            <hr>
+
+            <div id="exercise-list-container" class="exercise-list-container">
+                </div>
+            
+            <button id="add-selected-btn" class="gold-button" style="display: none; margin-top: 20px;">
+                Додати вибрані (0)
+            </button>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2025 ProAthleteCare. 
+    </footer>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+
+    <script src="../config/firebase-config.js"></script>
+    <script src="../js/exercise_library.js"></script>
+    <script src="../js/weekly-individual.js"></script>
+    <script src="../js/navigation-common.js"></script>
+
+
+</body>
+
+</html>

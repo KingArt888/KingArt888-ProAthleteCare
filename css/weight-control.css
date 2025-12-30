@@ -1,0 +1,169 @@
+/* --- СТИЛІ АКТИВНОГО ПУНКТУ МЕНЮ (ІДЕНТИЧНО INJURY) --- */
+.sidebar a.active {
+    background-color: #FFC72C !important; 
+    color: #000000 !important; 
+    border-left: 2px solid #000000 !important;
+}
+
+.sidebar a.active img {
+    filter: none !important; 
+}
+
+/* --- КОМПАКТНА ТА ГАРНА КНОПКА --- */
+.gold-button {
+    background-color: #FFC72C;
+    color: #000;
+    border: none;
+    padding: 10px 24px; /* Компактні відступи */
+    font-size: 14px;
+    font-weight: 800;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    display: block;
+    margin: 20px auto 0; /* Центрування */
+    width: fit-content; /* Кнопка не на всю ширину */
+    min-width: 180px; /* Мінімальна ширина для солідності */
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 10px rgba(255, 199, 44, 0.2);
+}
+
+.gold-button:hover {
+    background-color: #e6b327;
+    transform: translateY(-2px); /* Ефект при наведенні */
+    box-shadow: 0 6px 15px rgba(255, 199, 44, 0.3);
+}
+
+.gold-button:active {
+    transform: translateY(0);
+}
+
+/* --- ГЕОМЕТРІЯ ТА СТИЛЬ КАРТОК --- */
+.dashboard-container {
+    display: flex;
+    gap: 25px;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: stretch;
+}
+
+.form-card, .chart-card {
+    background-color: #0d0d0d;
+    border: 1px solid #1a1a1a;
+    border-radius: 10px;
+    padding: 25px;
+    flex: 1;
+    min-width: 320px;
+    max-width: 480px;
+}
+
+/* --- ВІЗУАЛІЗАЦІЯ ІНПУТІВ --- */
+.input-row-top {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.field-box label {
+    display: block;
+    color: #666;
+    font-size: 11px;
+    margin-bottom: 5px;
+}
+
+.field-box input {
+    width: 100%;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    color: #fff;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+.weight-focus-area label {
+    color: #FFC72C;
+    font-size: 13px;
+    display: block;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.weight-focus-area input {
+    width: 100%;
+    background: #000;
+    border: 2px solid #FFC72C;
+    color: #FFC72C;
+    font-size: 42px;
+    padding: 10px 0;
+    text-align: center;
+    border-radius: 8px;
+    font-weight: 300;
+}
+
+/* --- BMI БЕЙДЖ --- */
+.bmi-result-badge {
+    background: #151515;
+    padding: 8px 15px;
+    text-align: center;
+    border-left: 3px solid #FFC72C;
+    margin-top: 20px;
+    font-size: 12px;
+    color: #aaa;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+/* --- ЕФЕКТ СКАНУВАННЯ --- */
+.hologram-viewport {
+    position: relative;
+    background: radial-gradient(circle, rgba(255,199,44,0.05) 0%, transparent 80%);
+    min-height: 240px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px solid #1a1a1a;
+    border-radius: 8px;
+}
+
+.scan-beam {
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    background: #FFC72C;
+    top: 0;
+    animation: scanMove 3s infinite linear;
+    box-shadow: 0 0 15px #FFC72C;
+}
+
+@keyframes scanMove {
+    0% { top: 0; }
+    100% { top: 100%; }
+}
+
+.main-circle {
+    width: 130px;
+    height: 130px;
+    border: 2px solid #FFC72C;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.chart-container {
+    height: 250px;
+}
+<div class="form-card diet-card">
+    <h3>🍽 ПЕРСОНАЛЬНИЙ ПЛАН ХАРЧУВАННЯ</h3>
+    <div id="diet-container">
+        <p style="color: #666; text-align: center;">Введіть параметри тіла для розрахунку дієти</p>
+    </div>
+    <div class="remaining-calories">
+        ЗАЛИШИЛОСЯ: <span id="calories-left">0</span> ккал
+    </div>
+</div>
