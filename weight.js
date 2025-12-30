@@ -4,8 +4,6 @@
     let activeTab = 'brf';
     let selectedSpeed = 'Easy';
     
-    // Отримуємо ID користувача (якщо використовуєте Firebase Auth)
-    // Якщо Auth не налаштовано, використовуємо заглушку або Device ID
     const getUserId = () => (window.auth && window.auth.currentUser) ? window.auth.currentUser.uid : "guest_athlete_1";
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -20,12 +18,10 @@
             if (btn) btn.onclick = () => switchDietTab(id);
         });
 
-        // Завантаження з Firebase при старті
-        setTimeout(loadFromFirebase, 1000); // невелика затримка для ініціалізації БД
+        setTimeout(loadFromFirebase, 1000);
     });
 
     // --- FIREBASE OPERATIONS ---
-
     async function saveToFirebase() {
         if (!currentAnalysis) return;
         try {
@@ -69,7 +65,6 @@
     }
 
     // --- CORE LOGIC ---
-
     function handleAthleteAnalysis(e) {
         if (e) e.preventDefault();
         const w = parseFloat(document.getElementById('weight-value')?.value);
@@ -87,7 +82,7 @@
             targetKcal: Math.round(((10 * w) + (6.25 * h) - (5 * a) + 5) * mult),
             mode,
             water: (w * 0.035).toFixed(1),
-            p: Math.round((w * 2)), // Професійний підрахунок протеїну
+            p: Math.round((w * 2)),
             f: Math.round((w * 0.9)),
             c: Math.round((w * 3))
         };
@@ -107,7 +102,8 @@
         ];
 
         slots.forEach(slot => {
-            currentDailyPlan[slot.id] = pickMeals(slot.key, currentAnalysis.targetKcal * slot.pct);
+            // ПЕРЕДАЄМО selectedSpeed сюди
+            currentDailyPlan[slot.id] = pickMeals(slot.key, currentAnalysis.targetKcal * slot.pct, selectedSpeed);
         });
 
         document.querySelector('.speed-selector').style.display = 'none';
@@ -119,10 +115,11 @@
         await saveToFirebase();
     };
 
-    function pickMeals(key, target) {
+    function pickMeals(key, target, speed) {
         let currentKcal = 0;
         let selected = [];
-        let available = [...dietDatabase[key].filter(m => m.speed === selectedSpeed)];
+        // Фільтруємо саме за переданою швидкістю
+        let available = [...dietDatabase[key].filter(m => m.speed === speed)];
         if (available.length === 0) available = [...dietDatabase[key]];
 
         while (currentKcal < target && available.length > 0) {
@@ -141,8 +138,15 @@
         const index = currentDailyPlan[activeTab].findIndex(m => m.uid === uid);
         if (index === -1) return;
 
+        const choice = prompt("Select speed:\n1 - ⚡ Fast\n2 - 🥗 Medium\n3 - 👨‍🍳 Hard", "1");
+        let newSpeed = "Easy";
+        if (choice === "2") newSpeed = "Medium";
+        if (choice === "3") newSpeed = "Hard";
+
         const currentNames = currentDailyPlan[activeTab].map(m => m.name);
-        let available = dietDatabase[dbKey].filter(m => m.speed === selectedSpeed && !currentNames.includes(m.name));
+        let available = dietDatabase[dbKey].filter(m => m.speed === newSpeed && !currentNames.includes(m.name));
+
+        if (available.length === 0) available = dietDatabase[dbKey];
 
         if (available.length > 0) {
             let meal = available[Math.floor(Math.random() * available.length)];
@@ -209,12 +213,35 @@
         
         const topBox = document.getElementById('athlete-recommendation-box');
         if (topBox) {
+            // ОНОВЛЕНИЙ ДАШБОРД: КАЛОРІЇ + ЖБУ + ВОДА
             topBox.innerHTML = `
                 <div style="background:#000; padding:15px; border-radius:12px; border:1px solid #FFC72C;">
-                    <div style="font-size:9px; color:#FFC72C; text-transform:uppercase;">PAC • ${currentAnalysis.mode}</div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
-                        <div style="font-size:28px; color:#fff; font-weight:800;">${leftKcal} <span style="font-size:12px; color:#FFC72C;">KCAL</span></div>
-                        <div style="text-align:right;"><div style="font-size:18px; color:#fff;">💧 ${currentAnalysis.water}L</div></div>
+                    <div style="font-size:9px; color:#FFC72C; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">PAC ANALYTICS • ${currentAnalysis.mode}</div>
+                    
+                    <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+                        <div>
+                            <div style="font-size:32px; color:#fff; font-weight:800; line-height:1;">${leftKcal}</div>
+                            <div style="font-size:10px; color:#FFC72C; font-weight:600; margin-top:4px;">KCAL REMAINING</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:18px; color:#fff; font-weight:700;">💧 ${currentAnalysis.water}L</div>
+                            <div style="font-size:9px; color:#555;">DAILY WATER GOAL</div>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; gap:15px; margin-top:15px; padding-top:10px; border-top:1px solid #1a1a1a;">
+                        <div style="flex:1;">
+                            <div style="font-size:8px; color:#555;">PRO</div>
+                            <div style="font-size:13px; color:#fff; font-weight:bold;">${currentAnalysis.p}g</div>
+                        </div>
+                        <div style="flex:1;">
+                            <div style="font-size:8px; color:#555;">FAT</div>
+                            <div style="font-size:13px; color:#fff; font-weight:bold;">${currentAnalysis.f}g</div>
+                        </div>
+                        <div style="flex:1;">
+                            <div style="font-size:8px; color:#555;">CARB</div>
+                            <div style="font-size:13px; color:#fff; font-weight:bold;">${currentAnalysis.c}g</div>
+                        </div>
                     </div>
                 </div>`;
         }
