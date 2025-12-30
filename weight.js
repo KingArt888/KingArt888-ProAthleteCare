@@ -1,11 +1,25 @@
 (function() {
+    // --- ДАНІ ТА СТАН ---
     let currentAnalysis = null;
     let currentDailyPlan = { brf: [], lnc: [], din: [] };
     let activeTab = 'brf';
     let selectedSpeed = 'Easy';
     let weightChart = null;
-    
+    let currentUserId = null;
+
+    // --- ІНІЦІАЛІЗАЦІЯ ---
     const getUserId = () => (window.auth && window.auth.currentUser) ? window.auth.currentUser.uid : "guest_athlete_1";
+
+    firebase.auth().onAuthStateChanged(async (user) => {
+        if (user) {
+            currentUserId = user.uid;
+            loadBaseData();
+            loadHistory();
+            setTimeout(loadFromFirebase, 1000);
+        } else {
+            firebase.auth().signInAnonymously().catch(e => console.error("Auth error:", e));
+        }
+    });
 
     document.addEventListener('DOMContentLoaded', () => {
         initChart();
@@ -19,11 +33,9 @@
             const btn = document.getElementById('btn-' + id);
             if (btn) btn.onclick = () => switchDietTab(id);
         });
-
-        setTimeout(loadFromFirebase, 1000);
     });
 
-    // --- FIREBASE ---
+    // --- FIREBASE (ЗБЕРЕЖЕННЯ ПЛАНУ ТА АНАЛІЗУ) ---
     async function saveToFirebase() {
         if (!currentAnalysis) return;
         try {
@@ -35,6 +47,7 @@
                 lastUpdate: new Date().toISOString(),
                 serverDate: new Date().toDateString()
             });
+            console.log("🚀 PAC: Дані синхронізовано");
         } catch (e) { console.error("Firebase Save Error:", e); }
     }
 
@@ -42,23 +55,26 @@
         try {
             const uid = getUserId();
             const doc = await window.db.collection("athlete_plans").doc(uid).get();
-            loadHistory(uid);
             if (doc.exists) {
                 const data = doc.data();
                 if (data.serverDate === new Date().toDateString()) {
                     currentDailyPlan = data.plan;
                     currentAnalysis = data.analysis;
                     selectedSpeed = data.selectedSpeed || 'Easy';
-                    if (document.querySelector('.speed-selector')) document.querySelector('.speed-selector').style.display = 'none';
-                    if (document.getElementById('diet-tabs-wrapper')) document.getElementById('diet-tabs-wrapper').style.display = 'block';
+
+                    if (document.querySelector('.speed-selector')) 
+                        document.querySelector('.speed-selector').style.display = 'none';
+                    if (document.getElementById('diet-tabs-wrapper')) 
+                        document.getElementById('diet-tabs-wrapper').style.display = 'block';
+
                     updateAllUI();
                     switchDietTab(activeTab);
                 }
             }
-        } catch (e) { console.log("Load error:", e); }
+        } catch (e) { console.log("Load info:", e); }
     }
 
-    // --- LOGIC ---
+    // --- ОСНОВНА ЛОГІКА АНАЛІЗУ (COMPOSITION SCAN) ---
     async function handleAthleteAnalysis(e) {
         if (e) e.preventDefault();
         const w = parseFloat(document.getElementById('weight-value')?.value);
@@ -67,60 +83,79 @@
         if (!w || !h || !a) return;
 
         const bmi = (w / ((h / 100) ** 2)).toFixed(1);
-        let mode, statusColor, calorieModifier;
+        let status, recommendation, statusColor, calorieModifier, pRatio, fRatio, cRatio;
 
-        // Кольори та режими з твого сканера
+        // Логіка режимів та кольорів з weight alt.js
         if (bmi < 20.5) { 
-            mode = "MUSCLE GAIN MODE"; statusColor = "#00BFFF"; calorieModifier = 1.15;
+            status = "MUSCLE GAIN MODE";
+            recommendation = "Ціль: Гіпертрофія. Профіцит +15%.";
+            statusColor = "#00BFFF"; calorieModifier = 1.15; pRatio = 0.25; fRatio = 0.25; cRatio = 0.50; 
         } else if (bmi < 25.5) {
-            mode = "ATHLETIC FORM"; statusColor = "#FFC72C"; calorieModifier = 1.0;
+            status = "ATHLETIC FORM";
+            recommendation = "Ціль: Рекімпозиція. Підтримка форми.";
+            statusColor = "#FFC72C"; calorieModifier = 1.0; pRatio = 0.30; fRatio = 0.25; cRatio = 0.45;
         } else {
-            mode = "WEIGHT LOSS MODE"; statusColor = "#DA3E52"; calorieModifier = 0.80;
+            status = "WEIGHT LOSS MODE";
+            recommendation = "Ціль: Жироспалювання. Дефіцит -20%.";
+            statusColor = "#DA3E52"; calorieModifier = 0.80; pRatio = 0.35; fRatio = 0.25; cRatio = 0.40;
         }
 
         const bmr = (10 * w) + (6.25 * h) - (5 * a) + 5;
         const targetKcal = Math.round(bmr * 1.55 * calorieModifier);
 
         currentAnalysis = {
-            targetKcal, mode, statusColor, weight: w, bmi,
+            targetKcal: targetKcal,
+            mode: status,
+            recommendation: recommendation,
+            statusColor: statusColor,
             water: (w * 0.035).toFixed(1),
-            p: Math.round(w * 2.2),
-            f: Math.round(w * 0.9),
-            c: Math.round((targetKcal - (w*2.2*4) - (w*0.9*9)) / 4)
+            weight: w,
+            bmi: bmi,
+            p: Math.round((targetKcal * pRatio) / 4),
+            f: Math.round((targetKcal * fRatio) / 9),
+            c: Math.round((targetKcal * cRatio) / 4)
         };
 
+        // Зберігаємо в історію ваги
         try {
             await window.db.collection('weight_history').add({
-                userId: getUserId(), weight: w, bmi, date: new Date().toISOString().split('T')[0],
+                userId: getUserId(),
+                weight: w,
+                bmi: bmi,
+                date: new Date().toISOString().split('T')[0],
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
+            await window.db.collection('users').doc(getUserId()).set({ height: h, age: a }, { merge: true });
         } catch (err) { console.error(err); }
 
         updateAllUI();
-        loadHistory(getUserId());
-        if (document.getElementById('get-diet-plan-btn')) document.getElementById('get-diet-plan-btn').style.display = "block";
+        loadHistory();
+        if (document.getElementById('get-diet-plan-btn')) 
+            document.getElementById('get-diet-plan-btn').style.display = "block";
     }
 
+    // --- UI ВІДОБРАЖЕННЯ (DASHBOARD + SCANNER) ---
     function updateAllUI() {
         if (!currentAnalysis) return;
-        const all = [...currentDailyPlan.brf, ...currentDailyPlan.lnc, ...currentDailyPlan.din];
-        const eaten = all.filter(m => m.eaten).reduce((acc, m) => {
+
+        // 1. Розрахунок залишків (ЖБУ що віднімаються)
+        const allMeals = [...currentDailyPlan.brf, ...currentDailyPlan.lnc, ...currentDailyPlan.din];
+        const eaten = allMeals.filter(m => m.eaten).reduce((acc, m) => {
             acc.k += m.kcal; acc.p += m.p; acc.f += m.f; acc.c += m.c; return acc;
         }, {k:0, p:0, f:0, c:0});
 
-        // Віднімання залишків ЖБУ
         const leftKcal = Math.max(0, currentAnalysis.targetKcal - eaten.k);
         const leftP = Math.max(0, currentAnalysis.p - eaten.p);
         const leftF = Math.max(0, currentAnalysis.f - eaten.f);
         const leftC = Math.max(0, currentAnalysis.c - eaten.c);
 
+        // 2. Оновлення верхнього блоку аналітики (PAC ANALYTICS)
         const topBox = document.getElementById('athlete-recommendation-box');
         if (topBox) {
             topBox.innerHTML = `
-                <div style="background:#000; padding:18px; border-radius:15px; border:1px solid #FFC72C;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                        <div style="font-size:10px; color:${currentAnalysis.statusColor}; text-transform:uppercase; font-weight:700;">PAC ANALYTICS • ${currentAnalysis.mode}</div>
-                        <div style="font-size:12px; color:#fff; font-weight:800;">BMI: <span style="color:${currentAnalysis.statusColor}">${currentAnalysis.bmi}</span></div>
+                <div style="background:#000; padding:18px; border-radius:15px; border:1px solid #FFC72C; box-shadow: 0 4px 20px rgba(255,199,44,0.1);">
+                    <div style="font-size:10px; color:${currentAnalysis.statusColor}; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:12px; font-weight:700;">
+                        PAC ANALYTICS • ${currentAnalysis.mode}
                     </div>
                     <div style="display:flex; justify-content:space-between; align-items:flex-end;">
                         <div>
@@ -128,8 +163,8 @@
                             <div style="font-size:11px; color:#FFC72C; font-weight:600; margin-top:5px;">KCAL REMAINING</div>
                         </div>
                         <div style="text-align:right;">
-                            <div style="font-size:20px; color:#fff; font-weight:800;">${currentAnalysis.weight}kg</div>
-                            <div style="font-size:10px; color:#555; font-weight:600;">💧 ${currentAnalysis.water}L WATER</div>
+                            <div style="font-size:20px; color:#fff; font-weight:800;">💧 ${currentAnalysis.water}L</div>
+                            <div style="font-size:10px; color:#555; font-weight:600;">DAILY WATER GOAL</div>
                         </div>
                     </div>
                     <div style="display:flex; gap:15px; margin-top:20px; padding-top:15px; border-top:1px solid #1a1a1a;">
@@ -139,19 +174,33 @@
                     </div>
                 </div>`;
         }
+
+        // 3. Оновлення кругового сканера (BMI та Вага різними кольорами)
+        const mainValue = document.getElementById('fat-percentage-value');
+        if (mainValue) {
+            mainValue.innerHTML = `
+                <span style="font-size: 10px; color: #666; text-transform: uppercase; margin-bottom: 5px;">Current Weight</span>
+                <span style="font-size: 34px; color: #FFC72C; font-weight: bold; line-height: 1;">${currentAnalysis.weight}kg</span>
+                <span style="font-size: 15px; color: ${currentAnalysis.statusColor}; font-weight: bold; margin-top: 8px;">BMI: ${currentAnalysis.bmi}</span>
+            `;
+        }
     }
 
-    // Решта функцій (generateWeeklyPlan, renderMealList, initChart і т.д.) залишаються без змін як у фіналі
+    // --- ГЕНЕРАЦІЯ ТА ВИБІР СТРАВ (DIET LOGIC) ---
     window.generateWeeklyPlan = async function() {
         if (!currentAnalysis || typeof dietDatabase === 'undefined') return;
-        const slots = [{ id: 'brf', pct: 0.35, key: 'breakfasts' }, { id: 'lnc', pct: 0.35, key: 'lunches' }, { id: 'din', pct: 0.30, key: 'dinners' }];
+        const slots = [
+            { id: 'brf', pct: 0.35, key: 'breakfasts' },
+            { id: 'lnc', pct: 0.35, key: 'lunches' },
+            { id: 'din', pct: 0.30, key: 'dinners' }
+        ];
         slots.forEach(slot => {
             currentDailyPlan[slot.id] = pickMeals(slot.key, currentAnalysis.targetKcal * slot.pct, selectedSpeed);
         });
-        document.querySelector('.speed-selector').style.display = 'none';
+        if (document.querySelector('.speed-selector')) document.querySelector('.speed-selector').style.display = 'none';
         document.getElementById('diet-tabs-wrapper').style.display = 'block';
         document.getElementById('get-diet-plan-btn').style.display = 'none';
-        switchDietTab(activeTab);
+        switchDietTab('brf');
         updateAllUI();
         await saveToFirebase();
     };
@@ -169,6 +218,16 @@
         return selected;
     }
 
+    window.toggleMealStatus = async function(uid) {
+        const meal = currentDailyPlan[activeTab].find(m => m.uid === uid);
+        if (meal) {
+            meal.eaten = !meal.eaten;
+            renderMealList();
+            updateAllUI();
+            await saveToFirebase();
+        }
+    };
+
     function renderMealList() {
         const meals = currentDailyPlan[activeTab];
         const box = document.getElementById('diet-tab-content');
@@ -179,22 +238,12 @@
                     <div style="color:#fff; font-size:13px; font-weight:600;">${meal.name.toUpperCase()}</div>
                     <div style="color:#555; font-size:9px;">${meal.p}P ${meal.f}F ${meal.c}C • <span style="color:#FFC72C;">${meal.kcal} KCAL</span></div>
                 </div>
-                <button onclick="window.toggleMealStatus('${meal.uid}')" style="background:${meal.eaten ? '#FFC72C' : 'transparent'}; border:1px solid ${meal.eaten ? '#FFC72C' : '#333'}; width:24px; height:24px; border-radius:6px;">
-                    ${meal.eaten ? '✓' : ''}
+                <button onclick="window.toggleMealStatus('${meal.uid}')" style="background:${meal.eaten ? '#FFC72C' : 'transparent'}; border:1px solid ${meal.eaten ? '#FFC72C' : '#333'}; width:24px; height:24px; border-radius:6px; cursor:pointer;">
+                    ${meal.eaten ? '<span style="color:#000; font-weight:bold;">✓</span>' : ''}
                 </button>
             </div>
         `).join('');
     }
-
-    window.toggleMealStatus = async function(uid) {
-        const meal = currentDailyPlan[activeTab].find(m => m.uid === uid);
-        if (meal) {
-            meal.eaten = !meal.eaten;
-            renderMealList();
-            updateAllUI();
-            await saveToFirebase();
-        }
-    };
 
     function switchDietTab(id) {
         activeTab = id;
@@ -208,30 +257,15 @@
         renderMealList();
     }
 
+    // --- CHART & HISTORY (З weight alt.js) ---
     function initChart() {
         const canvas = document.getElementById('weightChart');
         if (!canvas) return;
         weightChart = new Chart(canvas.getContext('2d'), {
             type: 'line',
             data: { labels: [], datasets: [{ label: 'Вага (кг)', data: [], borderColor: '#FFC72C', backgroundColor: 'rgba(255,199,44,0.05)', tension: 0.4, fill: true }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            options: { responsive: true, maintainAspectRatio: false }
         });
     }
 
-    async function loadHistory(uid) {
-        if (!uid || !weightChart) return;
-        const snap = await window.db.collection('weight_history').where('userId', '==', uid).orderBy('date', 'desc').limit(10).get();
-        if (!snap.empty) {
-            const docs = snap.docs.map(d => d.data()).reverse();
-            weightChart.data.labels = docs.map(d => d.date.split('-').slice(1).reverse().join('.'));
-            weightChart.data.datasets[0].data = docs.map(d => d.weight);
-            weightChart.update();
-        }
-    }
-
-    window.setSpeed = (s, btn) => {
-        selectedSpeed = s;
-        document.querySelectorAll('.speed-btn').forEach(b => { b.style.background = "transparent"; b.style.color = "#555"; });
-        if (btn) { btn.style.background = "#FFC72C"; btn.style.color = "#000"; }
-    };
-})();
+    async function loadHistory() {
