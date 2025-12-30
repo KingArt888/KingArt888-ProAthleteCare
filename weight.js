@@ -4,6 +4,7 @@
     let activeTab = 'brf';
     let selectedSpeed = 'Easy';
     
+    // Отримання ID користувача з Firebase
     const getUserId = () => (window.auth && window.auth.currentUser) ? window.auth.currentUser.uid : "guest_athlete_1";
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -18,6 +19,7 @@
             if (btn) btn.onclick = () => switchDietTab(id);
         });
 
+        // Завантаження даних
         setTimeout(loadFromFirebase, 1000);
     });
 
@@ -33,7 +35,7 @@
                 lastUpdate: new Date().toISOString(),
                 serverDate: new Date().toDateString()
             });
-            console.log("🚀 PAC: Plan synced with Cloud");
+            console.log("🚀 PAC: Дані синхронізовано з хмарою");
         } catch (e) {
             console.error("Firebase Save Error:", e);
         }
@@ -56,12 +58,10 @@
                         document.getElementById('diet-tabs-wrapper').style.display = 'block';
 
                     updateAllUI();
-                    switchDietTab('brf');
+                    switchDietTab(activeTab);
                 }
             }
-        } catch (e) {
-            console.log("No cloud data or error:", e);
-        }
+        } catch (e) { console.log("Cloud load info:", e); }
     }
 
     // --- CORE LOGIC ---
@@ -82,9 +82,9 @@
             targetKcal: Math.round(((10 * w) + (6.25 * h) - (5 * a) + 5) * mult),
             mode,
             water: (w * 0.035).toFixed(1),
-            p: Math.round((w * 2)),
-            f: Math.round((w * 0.9)),
-            c: Math.round((w * 3))
+            p: Math.round(w * 2),
+            f: Math.round(w * 0.9),
+            c: Math.round(w * 3)
         };
 
         updateAllUI();
@@ -102,7 +102,6 @@
         ];
 
         slots.forEach(slot => {
-            // ПЕРЕДАЄМО selectedSpeed сюди
             currentDailyPlan[slot.id] = pickMeals(slot.key, currentAnalysis.targetKcal * slot.pct, selectedSpeed);
         });
 
@@ -118,7 +117,6 @@
     function pickMeals(key, target, speed) {
         let currentKcal = 0;
         let selected = [];
-        // Фільтруємо саме за переданою швидкістю
         let available = [...dietDatabase[key].filter(m => m.speed === speed)];
         if (available.length === 0) available = [...dietDatabase[key]];
 
@@ -145,12 +143,17 @@
 
         const currentNames = currentDailyPlan[activeTab].map(m => m.name);
         let available = dietDatabase[dbKey].filter(m => m.speed === newSpeed && !currentNames.includes(m.name));
-
+        
         if (available.length === 0) available = dietDatabase[dbKey];
 
         if (available.length > 0) {
             let meal = available[Math.floor(Math.random() * available.length)];
-            currentDailyPlan[activeTab][index] = { ...meal, kcal: Math.round((meal.p*4)+(meal.f*9)+(meal.c*4)), eaten: false, uid: Math.random().toString(36).substr(2, 9) };
+            currentDailyPlan[activeTab][index] = { 
+                ...meal, 
+                kcal: Math.round((meal.p*4)+(meal.f*9)+(meal.c*4)), 
+                eaten: false, 
+                uid: Math.random().toString(36).substr(2, 9) 
+            };
             renderMealList();
             updateAllUI();
             await saveToFirebase();
@@ -160,7 +163,7 @@
     function renderMealList() {
         const meals = currentDailyPlan[activeTab];
         const box = document.getElementById('diet-tab-content');
-        if (!box) return;
+        if (!box || !meals) return;
 
         box.innerHTML = meals.map(meal => `
             <div style="background:transparent; padding:10px 0; border-bottom:1px solid #1a1a1a; display:flex; justify-content:space-between; align-items:center;">
@@ -204,16 +207,19 @@
 
     function updateAllUI() {
         if (!currentAnalysis) return;
-        const all = [...currentDailyPlan.brf, ...currentDailyPlan.lnc, ...currentDailyPlan.din];
-        const eaten = all.filter(m => m.eaten).reduce((acc, m) => {
+
+        const allMeals = [...currentDailyPlan.brf, ...currentDailyPlan.lnc, ...currentDailyPlan.din];
+        const eaten = allMeals.filter(m => m.eaten).reduce((acc, m) => {
             acc.k += m.kcal; acc.p += m.p; acc.f += m.f; acc.c += m.c; return acc;
         }, {k:0, p:0, f:0, c:0});
 
-        const leftKcal = currentAnalysis.targetKcal - eaten.k;
+        const leftKcal = Math.max(0, currentAnalysis.targetKcal - eaten.k);
+        const leftP = Math.max(0, currentAnalysis.p - eaten.p);
+        const leftF = Math.max(0, currentAnalysis.f - eaten.f);
+        const leftC = Math.max(0, currentAnalysis.c - eaten.c);
         
         const topBox = document.getElementById('athlete-recommendation-box');
         if (topBox) {
-            // ОНОВЛЕНИЙ ДАШБОРД: КАЛОРІЇ + ЖБУ + ВОДА
             topBox.innerHTML = `
                 <div style="background:#000; padding:15px; border-radius:12px; border:1px solid #FFC72C;">
                     <div style="font-size:9px; color:#FFC72C; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">PAC ANALYTICS • ${currentAnalysis.mode}</div>
@@ -231,16 +237,16 @@
 
                     <div style="display:flex; gap:15px; margin-top:15px; padding-top:10px; border-top:1px solid #1a1a1a;">
                         <div style="flex:1;">
-                            <div style="font-size:8px; color:#555;">PRO</div>
-                            <div style="font-size:13px; color:#fff; font-weight:bold;">${currentAnalysis.p}g</div>
+                            <div style="font-size:8px; color:#555;">LEFT PRO</div>
+                            <div style="font-size:13px; color:#fff; font-weight:bold;">${leftP}g</div>
                         </div>
                         <div style="flex:1;">
-                            <div style="font-size:8px; color:#555;">FAT</div>
-                            <div style="font-size:13px; color:#fff; font-weight:bold;">${currentAnalysis.f}g</div>
+                            <div style="font-size:8px; color:#555;">LEFT FAT</div>
+                            <div style="font-size:13px; color:#fff; font-weight:bold;">${leftF}g</div>
                         </div>
                         <div style="flex:1;">
-                            <div style="font-size:8px; color:#555;">CARB</div>
-                            <div style="font-size:13px; color:#fff; font-weight:bold;">${currentAnalysis.c}g</div>
+                            <div style="font-size:8px; color:#555;">LEFT CARB</div>
+                            <div style="font-size:13px; color:#fff; font-weight:bold;">${leftC}g</div>
                         </div>
                     </div>
                 </div>`;
