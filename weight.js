@@ -4,8 +4,7 @@
     let activeTab = 'brf';
     let selectedSpeed = 'Easy';
     
-    // Отримуємо ID користувача (якщо використовуєте Firebase Auth)
-    // Якщо Auth не налаштовано, використовуємо заглушку або Device ID
+    // Отримуємо ID користувача (з вашого firebase-config.js)
     const getUserId = () => (window.auth && window.auth.currentUser) ? window.auth.currentUser.uid : "guest_athlete_1";
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -20,12 +19,11 @@
             if (btn) btn.onclick = () => switchDietTab(id);
         });
 
-        // Завантаження з Firebase при старті
-        setTimeout(loadFromFirebase, 1000); // невелика затримка для ініціалізації БД
+        // Завантаження даних з Firebase
+        setTimeout(loadFromFirebase, 1000);
     });
 
     // --- FIREBASE OPERATIONS ---
-
     async function saveToFirebase() {
         if (!currentAnalysis) return;
         try {
@@ -37,7 +35,7 @@
                 lastUpdate: new Date().toISOString(),
                 serverDate: new Date().toDateString()
             });
-            console.log("🚀 PAC: Plan synced with Cloud");
+            console.log("🚀 PAC: Дані синхронізовано");
         } catch (e) {
             console.error("Firebase Save Error:", e);
         }
@@ -60,16 +58,13 @@
                         document.getElementById('diet-tabs-wrapper').style.display = 'block';
 
                     updateAllUI();
-                    switchDietTab('brf');
+                    switchDietTab(activeTab);
                 }
             }
-        } catch (e) {
-            console.log("No cloud data or error:", e);
-        }
+        } catch (e) { console.log("Cloud load info:", e); }
     }
 
     // --- CORE LOGIC ---
-
     function handleAthleteAnalysis(e) {
         if (e) e.preventDefault();
         const w = parseFloat(document.getElementById('weight-value')?.value);
@@ -87,9 +82,9 @@
             targetKcal: Math.round(((10 * w) + (6.25 * h) - (5 * a) + 5) * mult),
             mode,
             water: (w * 0.035).toFixed(1),
-            p: Math.round((w * 2)), // Професійний підрахунок протеїну
-            f: Math.round((w * 0.9)),
-            c: Math.round((w * 3))
+            p: Math.round(w * 2),
+            f: Math.round(w * 0.9),
+            c: Math.round(w * 3)
         };
 
         updateAllUI();
@@ -107,7 +102,7 @@
         ];
 
         slots.forEach(slot => {
-            currentDailyPlan[slot.id] = pickMeals(slot.key, currentAnalysis.targetKcal * slot.pct);
+            currentDailyPlan[slot.id] = pickMeals(slot.key, currentAnalysis.targetKcal * slot.pct, selectedSpeed);
         });
 
         document.querySelector('.speed-selector').style.display = 'none';
@@ -119,10 +114,10 @@
         await saveToFirebase();
     };
 
-    function pickMeals(key, target) {
+    function pickMeals(key, target, speed) {
         let currentKcal = 0;
         let selected = [];
-        let available = [...dietDatabase[key].filter(m => m.speed === selectedSpeed)];
+        let available = [...dietDatabase[key].filter(m => m.speed === speed)];
         if (available.length === 0) available = [...dietDatabase[key]];
 
         while (currentKcal < target && available.length > 0) {
@@ -135,18 +130,31 @@
         return selected;
     }
 
+    // ТУТ НОВА ЛОГІКА ЗАМІНИ ЗІ ШВИДКІСТЮ
     window.replaceOneMeal = async function(uid) {
         const slotKeyMap = { 'brf': 'breakfasts', 'lnc': 'lunches', 'din': 'dinners' };
         const dbKey = slotKeyMap[activeTab];
         const index = currentDailyPlan[activeTab].findIndex(m => m.uid === uid);
         if (index === -1) return;
 
+        const choice = prompt("Оберіть складність приготування для заміни:\n1 - ⚡ Easy\n2 - 🥗 Medium\n3 - 👨‍🍳 Hard", "1");
+        let newSpeed = "Easy";
+        if (choice === "2") newSpeed = "Medium";
+        if (choice === "3") newSpeed = "Hard";
+
         const currentNames = currentDailyPlan[activeTab].map(m => m.name);
-        let available = dietDatabase[dbKey].filter(m => m.speed === selectedSpeed && !currentNames.includes(m.name));
+        let available = dietDatabase[dbKey].filter(m => m.speed === newSpeed && !currentNames.includes(m.name));
+        
+        if (available.length === 0) available = dietDatabase[dbKey];
 
         if (available.length > 0) {
             let meal = available[Math.floor(Math.random() * available.length)];
-            currentDailyPlan[activeTab][index] = { ...meal, kcal: Math.round((meal.p*4)+(meal.f*9)+(meal.c*4)), eaten: false, uid: Math.random().toString(36).substr(2, 9) };
+            currentDailyPlan[activeTab][index] = { 
+                ...meal, 
+                kcal: Math.round((meal.p*4)+(meal.f*9)+(meal.c*4)), 
+                eaten: false, 
+                uid: Math.random().toString(36).substr(2, 9) 
+            };
             renderMealList();
             updateAllUI();
             await saveToFirebase();
@@ -156,20 +164,20 @@
     function renderMealList() {
         const meals = currentDailyPlan[activeTab];
         const box = document.getElementById('diet-tab-content');
-        if (!box) return;
+        if (!box || !meals) return;
 
         box.innerHTML = meals.map(meal => `
-            <div style="background:transparent; padding:10px 0; border-bottom:1px solid #1a1a1a; display:flex; justify-content:space-between; align-items:center;">
+            <div style="background:transparent; padding:8px 0; border-bottom:1px solid #1a1a1a; display:flex; justify-content:space-between; align-items:center;">
                 <div style="opacity: ${meal.eaten ? '0.2' : '1'}; flex: 1;">
-                    <div style="color:#fff; font-size:13px; font-weight:600;">${meal.name.toUpperCase()}</div>
+                    <div style="color:#fff; font-size:13px; font-weight:600; letter-spacing:0.3px;">${meal.name.toUpperCase()}</div>
                     <div style="color:#555; font-size:9px; font-family:monospace; margin-top:2px;">
                         ${meal.p}P ${meal.f}F ${meal.c}C <span style="color:#FFC72C; opacity:0.7;">• ${meal.kcal}K</span>
                     </div>
                 </div>
                 <div style="display:flex; gap:12px; align-items:center;">
-                    <button onclick="window.replaceOneMeal('${meal.uid}')" style="background:transparent; border:none; color:#444; font-size:9px; font-weight:bold; cursor:pointer;">ALT</button>
-                    <button onclick="window.toggleMealStatus('${meal.uid}')" style="background:${meal.eaten ? '#FFC72C' : 'transparent'}; border:1px solid ${meal.eaten ? '#FFC72C' : '#333'}; width:22px; height:22px; border-radius:4px; cursor:pointer; display:flex; align-items:center; justify-content:center;">
-                        ${meal.eaten ? '<span style="color:#000; font-size:14px; font-weight:bold;">✓</span>' : ''}
+                    <button onclick="window.replaceOneMeal('${meal.uid}')" style="background:transparent; border:none; color:#444; font-size:9px; font-weight:bold; cursor:pointer; padding:5px;">ALT</button>
+                    <button onclick="window.toggleMealStatus('${meal.uid}')" style="background:${meal.eaten ? '#FFC72C' : 'transparent'}; border:1px solid ${meal.eaten ? '#FFC72C' : '#333'}; width:20px; height:20px; border-radius:3px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition: 0.2s;">
+                        ${meal.eaten ? '<span style="color:#000; font-size:12px; font-weight:bold;">✓</span>' : ''}
                     </button>
                 </div>
             </div>
@@ -193,6 +201,7 @@
             if (b) {
                 b.style.color = (t === id) ? "#FFC72C" : "#444";
                 b.style.borderBottom = (t === id) ? "2px solid #FFC72C" : "none";
+                b.style.fontWeight = (t === id) ? "bold" : "normal";
             }
         });
         renderMealList();
@@ -206,15 +215,20 @@
         }, {k:0, p:0, f:0, c:0});
 
         const leftKcal = currentAnalysis.targetKcal - eaten.k;
-        
         const topBox = document.getElementById('athlete-recommendation-box');
         if (topBox) {
             topBox.innerHTML = `
-                <div style="background:#000; padding:15px; border-radius:12px; border:1px solid #FFC72C;">
-                    <div style="font-size:9px; color:#FFC72C; text-transform:uppercase;">PAC • ${currentAnalysis.mode}</div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
-                        <div style="font-size:28px; color:#fff; font-weight:800;">${leftKcal} <span style="font-size:12px; color:#FFC72C;">KCAL</span></div>
-                        <div style="text-align:right;"><div style="font-size:18px; color:#fff;">💧 ${currentAnalysis.water}L</div></div>
+                <div style="background:#000; padding:15px; border-radius:12px; border:1px solid #FFC72C; margin-bottom:15px;">
+                    <div style="font-size:9px; color:#FFC72C; text-transform:uppercase; letter-spacing:1px;">PAC ANALYTICS • ${currentAnalysis.mode}</div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+                        <div>
+                            <div style="font-size:28px; color:#fff; font-weight:800; line-height:1;">${leftKcal} <span style="font-size:12px; color:#FFC72C;">KCAL</span></div>
+                            <div style="font-size:10px; color:#444; margin-top:4px;">ЗАЛИШИЛОСЬ</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:20px; color:#fff; font-weight:700;">💧 ${currentAnalysis.water}L</div>
+                            <div style="font-size:8px; color:#40E0D0;">WATER</div>
+                        </div>
                     </div>
                 </div>`;
         }
@@ -223,9 +237,13 @@
     window.setSpeed = (s, btn) => {
         selectedSpeed = s;
         document.querySelectorAll('.speed-btn').forEach(b => {
-            b.style.background = "transparent"; b.style.color = "#555";
+            b.style.background = "transparent"; b.style.color = "#555"; b.style.borderColor = "#222";
         });
-        if (btn) { btn.style.background = "#FFC72C"; btn.style.color = "#000"; }
+        if (btn) { 
+            btn.style.background = "#FFC72C"; 
+            btn.style.color = "#000"; 
+            btn.style.borderColor = "#FFC72C";
+        }
     };
 
 })();
