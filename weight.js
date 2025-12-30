@@ -9,11 +9,18 @@
         if (weightForm) weightForm.addEventListener('submit', handleAthleteAnalysis);
         
         const planBtn = document.getElementById('get-diet-plan-btn');
-        if (planBtn) planBtn.addEventListener('click', window.generateWeeklyPlan);
+        if (planBtn) planBtn.addEventListener('click', generateWeeklyPlan);
+
+        // Налаштування вкладок Сніданок/Обід/Вечеря
+        ['brf', 'lnc', 'din'].forEach(id => {
+            const btn = document.getElementById('btn-' + id);
+            if (btn) btn.onclick = () => switchDietTab(id);
+        });
 
         checkSavedPlan();
     });
 
+    // 1. АНАЛІЗ (PAC STYLE)
     function handleAthleteAnalysis(e) {
         if (e) e.preventDefault();
         const w = parseFloat(document.getElementById('weight-value')?.value);
@@ -22,9 +29,6 @@
         if (!w || !h || !a) return;
 
         const bmi = (w / ((h / 100) ** 2)).toFixed(1);
-        const bmiDisplay = document.getElementById('bmi-value');
-        if (bmiDisplay) bmiDisplay.textContent = bmi;
-
         let mode = "MAINTENANCE";
         let mult = 1.55;
         if (bmi < 18.5) { mode = "MASS GAIN"; mult = 1.85; }
@@ -41,14 +45,12 @@
             c: Math.round(targetKcal * 0.45 / 4)
         };
 
-        const fatDisplay = document.getElementById('fat-percentage-value');
-        if (fatDisplay) fatDisplay.textContent = (bmi * 0.8 + 2).toFixed(1) + "%";
-
         updateAllUI();
         const genBtn = document.getElementById('get-diet-plan-btn');
         if (genBtn) genBtn.style.display = "block";
     }
 
+    // 2. ГЕНЕРАЦІЯ
     window.generateWeeklyPlan = function() {
         if (!currentAnalysis || typeof dietDatabase === 'undefined') return;
 
@@ -62,16 +64,17 @@
             currentDailyPlan[slot.id] = pickMeals(slot.key, currentAnalysis.targetKcal * slot.pct);
         });
 
+        // ПРИХОВУЄМО ТІЛЬКИ ВИБІР ШВИДКОСТІ
         const speedSelector = document.querySelector('.speed-selector');
         if (speedSelector) speedSelector.style.display = 'none';
 
         const tabsWrapper = document.getElementById('diet-tabs-wrapper');
         if (tabsWrapper) tabsWrapper.style.display = 'block';
-
+        
         const genBtn = document.getElementById('get-diet-plan-btn');
         if (genBtn) genBtn.style.display = 'none';
 
-        window.switchDietTab(activeTab || 'brf');
+        switchDietTab('brf');
         updateAllUI();
         saveToLocal();
     };
@@ -90,7 +93,7 @@
         return selected;
     }
 
-    // НОВА ФУНКЦІЯ ЗАМІНИ ОДНІЄЇ СТРАВИ (ALT)
+    // 3. ТОЧКОВА ЗАМІНА СТРАВИ (ALT)
     window.replaceOneMeal = function(uid) {
         const slotKeyMap = { 'brf': 'breakfasts', 'lnc': 'lunches', 'din': 'dinners' };
         const dbKey = slotKeyMap[activeTab];
@@ -110,37 +113,37 @@
         }
     };
 
-    window.switchDietTab = function(id) {
+    // 4. КОМПАКТНИЙ UI
+    function switchDietTab(id) {
         activeTab = id;
-        const ids = ['brf', 'lnc', 'din'];
-        ids.forEach(t => {
+        ['brf', 'lnc', 'din'].forEach(t => {
             const b = document.getElementById('btn-' + t);
             if (b) {
-                b.style.background = (t === id) ? "#FFC72C" : "#111";
-                b.style.color = (t === id) ? "#000" : "#fff";
+                b.style.color = (t === id) ? "#FFC72C" : "#555";
+                b.style.borderBottom = (t === id) ? "2px solid #FFC72C" : "none";
                 b.style.fontWeight = (t === id) ? "bold" : "normal";
             }
         });
         renderMealList();
-    };
+    }
 
     function renderMealList() {
         const meals = currentDailyPlan[activeTab];
         const box = document.getElementById('diet-tab-content');
-        if (!box || !meals) return;
+        if (!box) return;
 
         box.innerHTML = meals.map(meal => `
-            <div style="background:#0a0a0a; padding:15px; border-radius:12px; border:1px solid #1a1a1a; display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <div style="opacity: ${meal.eaten ? '0.2' : '1'}; transition: 0.3s; flex: 1;">
-                    <div style="color:#fff; font-size:15px; font-weight:600;">${meal.name.toUpperCase()}</div>
-                    <div style="color:#FFC72C; font-size:11px; font-family:monospace; margin-top:4px;">
-                        Б:${meal.p} Ж:${meal.f} В:${meal.c} • ${meal.kcal} ккал
+            <div style="background:transparent; padding:8px 0; border-bottom:1px solid #1a1a1a; display:flex; justify-content:space-between; align-items:center;">
+                <div style="opacity: ${meal.eaten ? '0.2' : '1'}; transition: 0.3s; flex: 1; padding-right:10px;">
+                    <div style="color:#fff; font-size:13px; font-weight:500; letter-spacing:0.2px;">${meal.name.toUpperCase()}</div>
+                    <div style="color:#555; font-size:9px; font-family:monospace; margin-top:2px;">
+                        ${meal.p}P ${meal.f}F ${meal.c}C <span style="color:#FFC72C; opacity:0.6;">• ${meal.kcal}K</span>
                     </div>
                 </div>
-                <div style="display:flex; gap:8px;">
-                    <button onclick="window.replaceOneMeal('${meal.uid}')" style="background:transparent; border:1px solid #333; color:#FFC72C; width:35px; height:35px; border-radius:8px; cursor:pointer; font-size:10px;">ALT</button>
-                    <button onclick="window.toggleMealStatus('${meal.uid}')" style="background:${meal.eaten ? '#FFC72C' : 'transparent'}; border:2px solid #FFC72C; width:35px; height:35px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center;">
-                        <span style="color:${meal.eaten ? '#000' : '#FFC72C'}; font-weight:bold;">${meal.eaten ? '✓' : ''}</span>
+                <div style="display:flex; gap:12px; align-items:center;">
+                    <button onclick="window.replaceOneMeal('${meal.uid}')" style="background:transparent; border:none; color:#444; font-size:9px; font-weight:bold; cursor:pointer; padding:4px;">ALT</button>
+                    <button onclick="window.toggleMealStatus('${meal.uid}')" style="background:${meal.eaten ? '#FFC72C' : 'transparent'}; border:1px solid ${meal.eaten ? '#FFC72C' : '#333'}; width:20px; height:20px; border-radius:3px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition: 0.2s;">
+                        ${meal.eaten ? '<span style="color:#000; font-size:12px; font-weight:900;">✓</span>' : ''}
                     </button>
                 </div>
             </div>
@@ -157,14 +160,6 @@
         }
     };
 
-    window.setSpeed = function(s, btn) {
-        selectedSpeed = s;
-        document.querySelectorAll('.speed-btn').forEach(b => {
-            b.style.background = "#222"; b.style.color = "#fff"; b.style.fontWeight = "normal";
-        });
-        if (btn) { btn.style.background = "#FFC72C"; btn.style.color = "#000"; btn.style.fontWeight = "bold"; }
-    };
-
     function updateAllUI() {
         if (!currentAnalysis) return;
         const allMeals = [...currentDailyPlan.brf, ...currentDailyPlan.lnc, ...currentDailyPlan.din];
@@ -172,25 +167,50 @@
             acc.k += m.kcal; acc.p += m.p; acc.f += m.f; acc.c += m.c; return acc;
         }, {k:0, p:0, f:0, c:0});
 
-        const leftKcal = currentAnalysis.targetKcal - eaten.k;
-        if (document.getElementById('total-daily-kcal')) document.getElementById('total-daily-kcal').textContent = currentAnalysis.targetKcal;
-        if (document.getElementById('calories-left')) document.getElementById('calories-left').textContent = leftKcal;
-        
-        const bjuDisp = document.getElementById('bju-left-display');
-        if (bjuDisp) bjuDisp.innerHTML = `<span>Б: ${currentAnalysis.p - eaten.p}г</span> <span>Ж: ${currentAnalysis.f - eaten.f}г</span> <span>В: ${currentAnalysis.c - eaten.c}г</span>`;
+        const left = {
+            k: currentAnalysis.targetKcal - eaten.k,
+            p: currentAnalysis.p - eaten.p,
+            f: currentAnalysis.f - eaten.f,
+            c: currentAnalysis.c - eaten.c
+        };
 
         const topBox = document.getElementById('athlete-recommendation-box');
         if (topBox) {
             topBox.innerHTML = `
-                <div style="background:#000; padding:15px; border-radius:10px; border:1px solid #FFC72C;">
-                    <div style="font-size:10px; color:#FFC72C; text-transform:uppercase;">PAC • ${currentAnalysis.mode}</div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
-                        <div style="font-size:24px; color:#fff; font-weight:800;">${leftKcal} <span style="font-size:12px; color:#FFC72C;">ККАЛ</span></div>
-                        <div style="text-align:right;"><div style="font-size:18px; color:#fff;">💧 ${currentAnalysis.water}л</div></div>
+                <div style="background:#000; padding:15px; border-radius:12px; border:1px solid #FFC72C; margin-bottom:15px;">
+                    <div style="font-size:9px; color:#FFC72C; text-transform:uppercase; letter-spacing:1px;">PAC ANALYTICS • ${currentAnalysis.mode}</div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+                        <div>
+                            <div style="font-size:28px; color:#fff; font-weight:800; line-height:1;">${left.k} <span style="font-size:12px; color:#FFC72C;">KCAL</span></div>
+                            <div style="font-size:10px; color:#444; margin-top:4px;">REMAINING TARGET</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:20px; color:#fff; font-weight:700;">💧 ${currentAnalysis.water}L</div>
+                            <div style="font-size:8px; color:#40E0D0;">WATER</div>
+                        </div>
                     </div>
                 </div>`;
         }
+
+        if (document.getElementById('calories-left')) document.getElementById('calories-left').textContent = left.k;
+        if (document.getElementById('total-daily-kcal')) document.getElementById('total-daily-kcal').textContent = currentAnalysis.targetKcal;
+        const bju = document.getElementById('bju-left-display');
+        if (bju) bju.innerHTML = `<span>P: ${left.p}g</span> <span>F: ${left.f}g</span> <span>C: ${left.c}g</span>`;
     }
+
+    // 5. КНОПКИ ШВИДКОСТІ
+    window.setSpeed = (s, btn) => {
+        selectedSpeed = s;
+        document.querySelectorAll('.speed-btn').forEach(b => {
+            b.style.color = "#555"; b.style.background = "transparent"; b.style.borderColor = "#222";
+        });
+        if (btn) { 
+            btn.style.color = "#000"; 
+            btn.style.background = "#FFC72C"; 
+            btn.style.borderColor = "#FFC72C";
+            btn.style.fontWeight = "bold"; 
+        }
+    };
 
     function saveToLocal() {
         localStorage.setItem('pac_pro_v3', JSON.stringify({ plan: currentDailyPlan, analysis: currentAnalysis, date: new Date().toDateString(), speed: selectedSpeed }));
@@ -201,12 +221,13 @@
         if (saved) {
             const d = JSON.parse(saved);
             if (d.date === new Date().toDateString()) {
-                currentDailyPlan = d.plan; currentAnalysis = d.analysis; selectedSpeed = d.speed || 'Easy';
+                currentDailyPlan = d.plan; currentAnalysis = d.analysis;
+                selectedSpeed = d.speed || 'Easy';
                 const speedSelector = document.querySelector('.speed-selector');
                 if (speedSelector) speedSelector.style.display = 'none';
                 const wrapper = document.getElementById('diet-tabs-wrapper');
                 if (wrapper) wrapper.style.display = 'block';
-                updateAllUI(); window.switchDietTab('brf');
+                updateAllUI(); switchDietTab('brf');
             }
         }
     }
