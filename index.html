@@ -1,87 +1,59 @@
-<!DOCTYPE html>
-<html lang="uk">
-<head>
+<!DOCTYPE html><html lang="uk"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProAthleteCare | Онлайн-догляд за спортсменами</title>
-    <meta name="description" content="ProAthleteCare — професійна платформа для спортсменів: моніторинг, відновлення та індивідуальні програми тренувань. Контроль травм, wellness, load і ваги.">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/navigation-mobile.css">
+    <title>ProAthleteCare | Артем Кулик</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="navigation-mobile.css">
 </head>
 <body>
-    <!-- HEADER -->
     <header>
-        <a href="index.html" class="logo-link">
-            <img src="assets/images/AK_logo.png" alt="ProAthleteCare Logo" class="logo">
-        </a>
+        <img src="AK_logo.png" alt="ProAthleteCare Logo" class="logo">
         <h1 class="project-title">ProAthleteCare</h1>
         <p class="tagline">Онлайн-тренінг та професійний супровід атлетів</p>
-        <button class="menu-toggle" id="menu-toggle-button">☰</button>
+
+        <button class="menu-toggle" id="menu-toggle-button" aria-label="Toggle Navigation">
+            ☰
+        </button>
     </header>
-
-    <!-- WRAPPER -->
+    
     <div class="content-wrapper">
-        <!-- SIDEBAR -->
-        <nav class="sidebar" id="main-sidebar">
-            <a href="index.html"> Про нас <img src="assets/images/AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="pages/wellness.html">Wellness Control <img src="assets/images/AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="pages/injury.html">Injury Story <img src="assets/images/AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="pages/load-season.html">Load Season <img src="assets/images/AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="pages/daily-individual.html">Daily Individual <img src="assets/images/AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="pages/weekly-individual.html">Weekly Individual <img src="assets/images/AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="pages/weight-control.html">Weight Control <img src="assets/images/AK_logo.png" class="menu-icon" alt="АК"></a>
-            <a href="pages/velocity-control.html">Velocity Control <img src="assets/images/AK_logo.png" class="menu-icon" alt="АК"></a>
-        </nav>
+       <nav class="sidebar" id="main-sidebar">
+    <a href="index.html"> About Us <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
 
-        <!-- MAIN -->
+    <a href="wellness.html">Wellness Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a> 
+    
+    <a href="injury.html">Injury Story <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+    
+    <a href="load-season.html">Load Season <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+    
+    <a href="daily-individual.html">Daily Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+    
+    <a href="weekly-individual.html">Weekly Individual <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+    
+    <a href="weight-control.html">Weight Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+    
+    <a href="velocity-control.html">Velocity Control <img src="AK_logo.png" class="menu-icon" alt="АК"></a>
+</nav>
+        
         <main class="main-content">
-            <!-- HERO -->
             <div class="hero">
-                <img src="assets/images/main_image.jpg" alt="Професійний футболіст в дії" class="hero-image">
+                <img src="main_image.jpg" alt="Професійний футболіст в дії" class="hero-image">
                 <div class="hero-overlay">
-                    <h2>Ласкаво просимо, <span id="user-name">Athlete</span>!</h2>
+                    <h2>Ласкаво просимо, Артем Кулик!</h2>
                     <p>Це головний центр професійного догляду за спортсменами. Використовуй меню зліва для доступу до персональних програм, контролю навантажень та відновлення.</p>
-                    <p><strong>Твої напрямки:</strong> Регбіст → Тренер у Шахтарі → Кіпр → Німеччина → <strong>ProAthleteCare</strong>.</p>
+                    <p><strong>Твої напрямки:</strong> Регбіст → Тренер у Шахтарі → Кіпр → Німеччина → **ProAthleteCare**.</p>
                 </div>
             </div>
-
-            <!-- ABOUT US -->
-            <section class="about-us">
-                <h1>Про нас</h1>
-                <p><strong>ProAthleteCare</strong> — це онлайн-платформа для спортсменів і тренерів, яка обʼєднує контроль навантажень, профілактику травм та індивідуальне планування тренувального процесу. Наша мета — допомогти спортсменам розуміти свій стан, відновлюватися правильно та прогресувати без перевантажень.</p>
-
-                <h2>Наша філософія</h2>
-                <p>Сучасний спорт вимагає не лише сили та швидкості, а й контролю. Контролю навантаження, самопочуття, болю, відновлення та готовності до змагань. Ми виходимо з принципу: <strong>здоровий спортсмен = стабільний результат</strong>.</p>
-
-                <h2>Для кого ми працюємо</h2>
-                <ul>
-                    <li>⚽ Футболісти (професійні та напівпрофесійні)</li>
-                    <li>🏉 Регбісти та інші ігрові види спорту</li>
-                    <li>🏃 Атлети, які хочуть контролювати своє тіло</li>
-                    <li>🎓 Тренери, які цінують дані, а не інтуїцію</li>
-                </ul>
-
-                <h2>Що ви отримуєте з ProAthleteCare</h2>
-                <ul>
-                    <li>📊 Щоденний wellness-моніторинг</li>
-                    <li>🦴 Ведення історії травм та болю</li>
-                    <li>📅 Індивідуальне планування (Daily / Weekly)</li>
-                    <li>⚖️ Контроль ваги та фізичного стану</li>
-                    <li>📈 Аналіз навантаження протягом сезону</li>
-                </ul>
-
-                <h2>Наша місія</h2>
-                <p>Ми прагнемо змінити підхід до тренувального процесу, зробивши його <strong>безпечним, прозорим та індивідуальним</strong>. ProAthleteCare — це партнер у розвитку спортсмена.</p>
-            </section>
         </main>
     </div>
-
-    <!-- FOOTER -->
+    
     <footer>
-        &copy; 2025 ProAthleteCare.
+        &copy; 2025 ProAthleteCare. 
     </footer>
 
-    <!-- SCRIPTS -->
-    <script type="module" src="js/navigation-common.js"></script>
+    <script src="navigation-common.js"></script>
+    
 </body>
 </html>
+
+
