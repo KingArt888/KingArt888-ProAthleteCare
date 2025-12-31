@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProAthleteCare | Реєстрація</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/navigation-mobile.css">
+    <link rel="stylesheet" href="../css/index.css">
+    <style>
+        .container { max-width: 500px; margin: 50px auto; padding: 20px; background: #1a1a1a; color: gold; border: 1px solid gold; border-radius: 12px; }
+        input, select { width: 100%; margin: 10px 0; padding: 10px; border-radius: 6px; border: 1px solid gold; background: #333; color: white; }
+        button { padding: 12px 20px; border: none; border-radius: 6px; background: gold; color: black; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
+        #profile-form { display: none; margin-top: 20px; }
+        #avatar-preview { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin: 10px 0; border: 2px solid gold; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Вхід до ProAthleteCare</h2>
+    <button id="google-signin">Увійти через Google</button>
+
+    <form id="profile-form">
+        <h3>Доповніть ваш профіль</h3>
+        <img id="avatar-preview" src="" alt="Аватар" style="display:none;">
+        <input type="text" id="firstName" placeholder="Ім’я" required>
+        <input type="text" id="lastName" placeholder="Прізвище" required>
+        <input type="text" id="club" placeholder="Клуб (опційно)">
+        <select id="country">
+            <option value="">Виберіть країну (опційно)</option>
+            <option value="Ukraine">Україна</option>
+            <option value="Germany">Німеччина</option>
+            <option value="Other">Інша</option>
+        </select>
+        <label>Змінити аватар: <input type="file" id="avatar" accept="image/*"></label>
+        <label style="display: block; margin: 10px 0;">
+            <input type="checkbox" id="agree" required> Я погоджуюсь на збір даних
+        </label>
+        <button type="submit">Зберегти та продовжити</button>
+    </form>
+
+    <button id="go-next" style="display:none; background: #28a745; color: white;">Перейти до кабінету</button>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+<script src="../config/firebase-config.js"></script>
+
+<script>
+// Використовуємо глобальні змінні з вашого firebase-config.js
+const auth = window.auth;
+const db = window.db;
+const storage = window.storage;
+
+// 1. Вхід через Google
+document.getElementById('google-signin').addEventListener('click', async () => {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    try {
+        const result = await auth.signInWithPopup(provider);
+        checkProfile(result.user);
+    } catch (err) {
+        console.error(err);
+        alert("Помилка входу: " + err.message);
+    }
+});
+
+// 2. Перевірка профілю у Firestore
+async function checkProfile(user) {
+    const doc = await db.collection('users').doc(user.uid).get();
+    
+    if (doc.exists) {
+        // Профіль вже є, пропускаємо форму
+        showFinalStep();
+    } else {
+        // Перший вхід: показуємо форму та передзаповнюємо ім'я
+        document.getElementById('google-signin').style.display = 'none';
+        document.getElementById('profile-form').style.display = 'block';
+        
+        if (user.displayName) {
+            const names = user.displayName.split(' ');
+            document.getElementById('firstName').value = names[0] || "";
+            document.getElementById('lastName').value = names.slice(1).join(' ') || "";
+        }
+        if (user.photoURL) {
+            const img = document.getElementById('avatar-preview');
+            img.src = user.photoURL;
+            img.style.display = 'block';
+        }
+    }
+}
+
+// 3. Збереження доповнених даних
+document.getElementById('profile-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const user = auth.currentUser;
+    
+    let avatarURL = user.photoURL || "";
+    const avatarFile = document.getElementById('avatar').files[0];
+
+    // Якщо завантажено новий файл аватара
+    if (avatarFile) {
+        const ref = storage.ref().child(`avatars/${user.uid}`);
+        await ref.put(avatarFile);
+        avatarURL = await ref.getDownloadURL();
+    }
+
+    await db.collection('users').doc(user.uid).set({
+        firstName: document.getElementById('firstName').value,
+        lastName: document.getElementById('lastName').value,
+        club: document.getElementById('club').value,
+        country: document.getElementById('country').value,
+        avatarURL: avatarURL,
+        email: user.email,
+        setupComplete: true,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    alert("Профіль створено!");
+    showFinalStep();
+});
+
+function showFinalStep() {
+    document.getElementById('profile-form').style.display = 'none';
+    document.getElementById('google-signin').style.display = 'none';
+    const nextBtn = document.getElementById('go-next');
+    nextBtn.style.display = 'block';
+    nextBtn.onclick = () => window.location.href = "wellness.html";
+}
+</script>
+</body>
+</html>
