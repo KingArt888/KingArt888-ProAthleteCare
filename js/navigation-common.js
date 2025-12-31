@@ -1,41 +1,24 @@
 // ==============================================
-// navigation-common.js
-// УНІВЕРСАЛЬНА ЛОГІКА ДЛЯ НАВІГАЦІЇ
+// navigation-common.js — ProAtletCare (FINAL)
 // ==============================================
 
 /**
- * 1. Логіка для перемикання бічної панелі на мобільних пристроях.
+ * 1. Логіка мобільного меню (sidebar)
  */
 function setupMenuToggle() {
     const toggleButton = document.getElementById('menu-toggle-button');
     const sidebar = document.getElementById('main-sidebar'); 
     
-    // КРИТИЧНА ПЕРЕВІРКА НА NULL
     if (toggleButton && sidebar) {
-        
-        // Обробник кліку на кнопку-бургер
         toggleButton.addEventListener('click', (event) => {
-            event.stopPropagation(); // Запобігаємо спливанню події
+            event.stopPropagation();
             sidebar.classList.toggle('active');
-            
-            // Зміна іконки 
             toggleButton.textContent = sidebar.classList.contains('active') ? '✕' : '☰';
         });
         
-        // Обробник кліку на пункт меню (для мобільного: закрити після вибору)
-        sidebar.addEventListener('click', (event) => {
-            if (event.target.tagName === 'A') {
-                sidebar.classList.remove('active');
-                toggleButton.textContent = '☰';
-            }
-        });
-        
-        // Обробник кліку поза меню (ДУЖЕ ВАЖЛИВО ДЛЯ МОБІЛЬНОГО UX)
+        // Закриття меню при кліку поза ним
         document.addEventListener('click', (event) => {
-            const isClickInsideSidebar = sidebar.contains(event.target);
-            const isClickOnToggle = toggleButton.contains(event.target);
-            
-            if (!isClickInsideSidebar && !isClickOnToggle && sidebar.classList.contains('active')) {
+            if (!sidebar.contains(event.target) && !toggleButton.contains(event.target)) {
                 sidebar.classList.remove('active');
                 toggleButton.textContent = '☰';
             }
@@ -44,56 +27,46 @@ function setupMenuToggle() {
 }
 
 /**
- * 2. Динамічно встановлює клас 'active' для посилання в меню.
+ * 2. Підсвічування активної сторінки в меню
  */
 function highlightActiveLink() {
-    // Отримуємо поточний шлях, видаляючи все до '/'
     let currentPath = window.location.pathname.split('/').pop();
-    
-    // Видаляємо параметри запиту (?param=value)
-    if (currentPath.includes('?')) {
-        currentPath = currentPath.split('?')[0];
-    }
-    
-    // Обробка index.html (якщо path пустий, припускаємо, що активний Wellness)
-    if (currentPath === "" || currentPath === "/") {
-        currentPath = "wellness.html"; 
-    }
+    if (currentPath.includes('?')) currentPath = currentPath.split('?')[0];
+    if (currentPath === "" || currentPath === "/") currentPath = "index.html"; 
     
     const sidebarLinks = document.querySelectorAll('.sidebar a');
-
     sidebarLinks.forEach(link => {
         link.classList.remove('active');
         const linkPath = link.getAttribute('href');
-        
-        if (linkPath === currentPath) {
+        // Перевіряємо чи шлях посилається на поточну сторінку
+        if (linkPath && (linkPath === currentPath || linkPath.includes(currentPath))) {
             link.classList.add('active');
         }
     });
 }
-// Обробка назви користувача
-import { auth } from "../config/firebase-config.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-    const userNameElement = document.getElementById("user-name");
-
-    const userName =
-    user.displayName ||
-    user.email?.split("@")[0] ||
-    "Athlete";
-
-    if (userNameElement) {
-    userNameElement.textContent = userName;
+/**
+ * 3. Відображення імені користувача (БЕЗ IMPORT)
+ * Використовує глобальний об'єкт firebase, ініціалізований у firebase-config.js
+ */
+function setupUserDisplay() {
+    // Чекаємо, поки Firebase Auth стане доступним
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+        firebase.auth().onAuthStateChanged((user) => {
+            const userNameElement = document.getElementById("user-name");
+            if (user && userNameElement) {
+                // Пріоритет: Ім'я профілю -> Частина Email -> Замовчування
+                const userName = user.displayName || (user.email ? user.email.split("@")[0] : "Athlete");
+                userNameElement.textContent = userName;
+                console.log("✅ ProAtletCare: Вітаємо,", userName);
+            }
+        });
     }
-    }
-});
+}
 
-// ==============================================
-// ЗАПУСК ПРИ ЗАВАНТАЖЕННІ СТОРІНКИ
-// ==============================================
+// ЗАПУСК ПІСЛЯ ЗАВАНТАЖЕННЯ СТОРІНКИ
 document.addEventListener('DOMContentLoaded', () => {
-    setupMenuToggle(); 
+    setupMenuToggle();
     highlightActiveLink();
+    setupUserDisplay();
 });
