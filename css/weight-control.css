@@ -137,6 +137,10 @@
     top: 0;
     animation: scanMove 3s infinite linear;
     box-shadow: 0 0 15px #FFC72C;
+    animation: scanMove 3s 2 forwards ease-in-out; 
+    box-shadow: 0 0 15px #FFC72C;
+    z-index: 2;
+    opacity: 0; /* Початковий стан — невидимий */
 }
 
 @keyframes scanMove {
