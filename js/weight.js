@@ -79,7 +79,18 @@
         const w = parseFloat(document.getElementById('weight-value')?.value);
         const h = parseFloat(document.getElementById('user-height')?.value);
         const a = parseInt(document.getElementById('user-age')?.value);
-        if (!w || !h || !a) return;
+       if (!w || !h || !a) {
+        alert("Будь ласка, вкажіть коректні дані");
+        return;
+    }
+
+    // --- ТУТ ПЕРЕЗАПУСКАЄМО СКАНУВАННЯ (Приблизно 88-90 рядок) ---
+    const beam = document.querySelector('.scan-beam');
+    if (beam) {
+        beam.style.animation = 'none';
+        beam.offsetHeight; // Reflow
+        beam.style.animation = 'scanMove 3s 2 forwards ease-in-out';
+    }
 
         const bmi = (w / ((h / 100) ** 2)).toFixed(1);
         let status, statusColor, calorieModifier, pRatio, fRatio, cRatio;
