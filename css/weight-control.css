@@ -166,12 +166,3 @@
 .chart-container {
     height: 250px;
 }
-<div class="form-card diet-card">
-    <h3>🍽 ПЕРСОНАЛЬНИЙ ПЛАН ХАРЧУВАННЯ</h3>
-    <div id="diet-container">
-        <p style="color: #666; text-align: center;">Введіть параметри тіла для розрахунку дієти</p>
-    </div>
-    <div class="remaining-calories">
-        ЗАЛИШИЛОСЯ: <span id="calories-left">0</span> ккал
-    </div>
-</div>
