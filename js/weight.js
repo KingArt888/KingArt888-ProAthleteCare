@@ -165,9 +165,13 @@
         const mainValue = document.getElementById('fat-percentage-value');
         if (mainValue) {
             mainValue.innerHTML = `
-                <span style="font-size: 10px; color: #666; text-transform: uppercase;">Current Weight</span>
-                <span style="font-size: 34px; color: #FFC72C; font-weight: bold;">${currentAnalysis.weight}kg</span>
-                <span style="font-size: 15px; color: ${currentAnalysis.statusColor}; font-weight: bold; margin-top: 8px;">BMI: ${currentAnalysis.bmi}</span>
+                <div style="margin-bottom: 10px;">
+                    <span style="font-size: 10px; color: #666; text-transform: uppercase; display: block;">Current Weight</span>
+                    <span style="font-size: 34px; color: #FFC72C; font-weight: bold; line-height: 1;">${currentAnalysis.weight}kg</span>
+                </div>
+                <div style="border-top: 1px solid #1a1a1a; padding-top: 10px;">
+                    <span style="font-size: 15px; color: ${currentAnalysis.statusColor}; font-weight: bold;">BMI: ${currentAnalysis.bmi}</span>
+                </div>
             `;
         }
     }
