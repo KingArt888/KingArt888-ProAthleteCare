@@ -108,7 +108,7 @@
     background: #151515;
     padding: 8px 15px;
     text-align: center;
-    border-left: 3px solid #FFC72C;
+    border-left: 7px solid #FFC72C;
     margin-top: 20px;
     font-size: 12px;
     color: #aaa;
@@ -137,12 +137,19 @@
     top: 0;
     animation: scanMove 3s infinite linear;
     box-shadow: 0 0 15px #FFC72C;
+    animation: scanMove 3s 2 forwards ease-in-out; 
+    box-shadow: 0 0 15px #FFC72C;
+    z-index: 2;
+    opacity: 0; /* Початковий стан — невидимий */
 }
 
 @keyframes scanMove {
-    0% { top: 0; }
-    100% { top: 100%; }
+    0% { top: 0%; opacity: 0; }
+    20% { opacity: 1; }
+    80% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
 }
+
 
 .main-circle {
     width: 130px;
@@ -153,17 +160,9 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    text-align: center;
 }
 
 .chart-container {
     height: 250px;
 }
-<div class="form-card diet-card">
-    <h3>🍽 ПЕРСОНАЛЬНИЙ ПЛАН ХАРЧУВАННЯ</h3>
-    <div id="diet-container">
-        <p style="color: #666; text-align: center;">Введіть параметри тіла для розрахунку дієти</p>
-    </div>
-    <div class="remaining-calories">
-        ЗАЛИШИЛОСЯ: <span id="calories-left">0</span> ккал
-    </div>
-</div>

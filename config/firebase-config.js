@@ -5,14 +5,15 @@ const firebaseConfig = {
   storageBucket: "proathletecare-8eaba.firebasestorage.app",
   messagingSenderId: "769667753086",
   appId: "1:769667753086:web:c2dde1935f80596758a42f"
+  
 };
 
-// Ініціалізація
+// Ініціалізація Firebase
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 
-// Глобальні змінні (важливо для роботи скриптів)
+// Створюємо глобальні змінні, щоб інші скрипти їх бачили
 window.db = firebase.firestore();
 window.auth = firebase.auth();
 window.storage = typeof firebase.storage === "function" ? firebase.storage() : null;

@@ -12,12 +12,16 @@
     </head>
 <body>
     <header>
-    <a href="index.html" class="logo-link">
+    <a href="../index.html" class="logo-link">
         <img src="../assets/images/AK_logo.png" alt="ProAthleteCare Logo" class="logo">
         </a>
         <h1 class="project-title">ProAthleteCare</h1>
         <p class="tagline">Онлайн-тренінг та професійний супровід атлетів</p>
-        <button class="menu-toggle" id="menu-toggle-button">☰</button>
+        <button class="menu-toggle" id="menu-toggle-button">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
     </header>
 
     <div class="content-wrapper">
@@ -63,7 +67,7 @@
                     <div class="hologram-viewport">
                         <div class="scan-beam"></div>
                         <div class="main-circle">
-                            <small>---</small>
+                            <small></small>
                             <strong id="fat-percentage-value">--</strong>
                         </div>
                     </div>
@@ -116,13 +120,15 @@
         &copy; 2025 ProAthleteCare. 
     </footer>
     
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
     <script src="../config/firebase-config.js"></script>
     <script src="../js/diet-data.js"></script> <script src="../js/weight.js"></script>
     <script src="../js/navigation-common.js"></script>
+    
 </body>
+
 </html>

@@ -17,7 +17,11 @@
         </a>
         <h1 class="project-title">ProAthleteCare</h1>
         <p class="tagline">Онлайн-тренінг та професійний супровід атлетів</p>
-        <button class="menu-toggle" id="menu-toggle-button">☰</button>
+        <button class="menu-toggle" id="menu-toggle-button">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
     </header>
 
     <!-- WRAPPER -->
@@ -45,7 +49,7 @@
                 <div class="hero-overlay">
                     <h2>Ласкаво просимо, <span id="user-name">Athlete</span>!</h2>
                     <p>Це головний центр професійного догляду за спортсменами.</p>
-                    <a href="pages/login.html" class="cta-button">Реєстрація / логін</a>
+                    <a href="pages/regist.html" class="cta-button">Реєстрація / логін</a>
                 </div>
             </div>
 
@@ -86,6 +90,18 @@
     </footer>
 
     <!-- SCRIPTS -->
-    <script type="module" src="js/navigation-common.js"></script>
-</body>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+<script src="config/firebase-config.js"></script>
+<script src="js/regist.js"></script>
+
+<!-- Логіка меню та користувача -->
+    <script src="js/navigation-common.js"></script>
+
+
+</body> 
+
 </html>

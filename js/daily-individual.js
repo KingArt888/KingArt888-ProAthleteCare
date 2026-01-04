@@ -57,17 +57,41 @@
             }
 
             try {
+                // 1. Спочатку затягуємо дані профілю, щоб побачити чи є "Override" (коригування) від тренера
+                const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
+                const userData = userDoc.exists ? userDoc.data() : {};
+
+                // 2. Затягуємо тижневий план
                 const doc = await firebase.firestore().collection('weekly_plans').doc(`${user.uid}_${weekId}`).get();
                 const fbData = doc.exists ? doc.data().planData : {};
-                const todayIdx = (new Date().getDay() === 0) ? 6 : new Date().getDay() - 1;
-                const mdStatus = calculateStatus(fbData, todayIdx);
                 
-                document.getElementById('status-pill').textContent = mdStatus;
-                document.getElementById('advice-text').querySelector('span:last-child').textContent = MD_RECS[mdStatus] || MD_RECS['TRAIN'];
+                const todayIdx = (new Date().getDay() === 0) ? 6 : new Date().getDay() - 1;
 
-                renderExercises(fbData[`status_plan_${mdStatus}`]?.exercises || [], listContainer);
+                // 3. ГОЛОВНА ЛОГІКА: Перевіряємо, чи є примусовий статус від тебе (з адмінки)
+                const calculatedStatus = calculateStatus(fbData, todayIdx);
+                const mdStatus = userData.overrideStatus || calculatedStatus; 
+                
+                // Відображаємо статус у кружечку (pill)
+                document.getElementById('status-pill').textContent = mdStatus;
+
+                // 4. ПОРАДА ТРЕНЕРА: Якщо ти написав коментар в адмінці, він буде головним
+                const adviceSpan = document.getElementById('advice-text').querySelector('span:last-child');
+                if (userData.coachNote) {
+                    adviceSpan.innerHTML = `<b style="color:#d4af37;">ПЕРСОНАЛЬНО:</b> ${userData.coachNote}`;
+                } else {
+                    adviceSpan.textContent = MD_RECS[mdStatus] || MD_RECS['TRAIN'];
+                }
+
+                // 5. ЗАВАНТАЖЕННЯ ВПРАВ: Беремо план саме для mdStatus
+                // Якщо mdStatus став 'RECOVERY' через адмінку, підтягнеться план recovery
+                const currentPlan = fbData[`status_plan_${mdStatus}`] || { exercises: [] };
+                renderExercises(currentPlan.exercises, listContainer);
+                
                 renderFeedbackForm(feedbackContainer, user.uid, weekId, todayIdx);
-            } catch (err) { console.error(err); }
+
+            } catch (err) { 
+                console.error("Помилка завантаження даних:", err); 
+            }
         });
     }
 

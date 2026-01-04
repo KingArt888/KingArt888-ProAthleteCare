@@ -184,21 +184,6 @@ header {
         display: none;
     }
 
-    .menu-toggle {
-        display: block;
-        position: fixed;
-        top: 15px;
-        right: 15px;
-        z-index: 1010;
-        background: #FFD700;
-        color: #000;
-        border: none;
-        padding: 6px 10px;
-        font-size: 1.5em;
-        border-radius: 6px;
-        cursor: pointer;
-    }
-
     .content-wrapper {
         padding-top: 55px;
         flex-direction: column;

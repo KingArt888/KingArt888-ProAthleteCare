@@ -3,71 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProAtletCare Admin - Моніторинг</title>
-    <style>
-        body { background-color: #000; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; }
-        header { 
-            background: #111; padding: 20px 40px; border-bottom: 2px solid #FFC72C; 
-            display: flex; justify-content: space-between; align-items: center; 
-            box-shadow: 0 4px 15px rgba(255, 199, 44, 0.1); 
-        }
-        .logo { color: #FFC72C; font-weight: bold; font-size: 1.6em; letter-spacing: 2px; }
-        
-        .container { padding: 30px; max-width: 1400px; margin: 0 auto; width: 100%; box-sizing: border-box; }
-        h2 { font-weight: 300; letter-spacing: 1px; margin-bottom: 25px; text-transform: uppercase; font-size: 1.2em; color: #FFC72C; }
+    <title>PAC Admin | Моніторинг</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
 
-        .monitor-table { width: 100%; border-collapse: collapse; background: #0a0a0a; border-radius: 12px; overflow: hidden; border: 1px solid #1a1a1a; }
-        .monitor-table th { background: #FFC72C; color: #000; padding: 18px 10px; text-align: center; text-transform: uppercase; font-size: 0.7em; letter-spacing: 1px; font-weight: 900; }
-        .monitor-table th:first-child { text-align: left; padding-left: 25px; }
-        
-        .monitor-table td { padding: 12px 10px; border-bottom: 1px solid #1a1a1a; vertical-align: middle; transition: 0.2s; }
-        .monitor-table tr:hover { background: #111; }
-
-        /* Компактні колонки Wellness */
-        .wellness-col { width: 60px; text-align: center !important; padding: 12px 2px !important; }
-        
-        .btn-action { 
-            background: #FFC72C; color: #000; border: none; border-radius: 6px; cursor: pointer; 
-            font-weight: bold; text-decoration: none; font-size: 0.8em; transition: 0.3s; 
-            display: inline-block; padding: 8px 12px;
-        }
-        .btn-action:hover { background: #fff; transform: translateY(-2px); }
-
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-thumb { background: #FFC72C; border-radius: 10px; }
-    </style>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
-    <header>
-        <div class="logo">PRO ATLET CARE <span style="font-weight: 300; color: #fff;">| MONITORING</span></div>
-        <button onclick="firebase.auth().signOut()" class="btn-action" style="background:transparent; color:#FFC72C; border:1px solid #FFC72C;">ВИХІД</button>
-    </header>
 
-    <div class="container">
-        <h2>КОМАНДНИЙ МОНІТОРИНГ</h2>
-        <table class="monitor-table">
-            <thead>
-                <tr>
-                    <th>АТЛЕТ / КЛУБ</th>
-                    <th>СТАТУС</th>
-                    <th>РИЗИК (ACWR)</th>
-                    <th class="wellness-col">СОН</th>
-                    <th class="wellness-col">СТРЕС</th>
-                    <th class="wellness-col">М'ЯЗИ</th>
-                    <th class="wellness-col">ГОТОВ.</th>
-                    <th style="text-align: right; padding-right: 25px;">ДІЇ</th>
-                </tr>
-            </thead>
-            <tbody id="athletes-tbody">
-                <tr><td colspan="8" style="text-align: center; padding: 100px; color: #444;">Завантаження профілів атлетів...</td></tr>
-            </tbody>
-        </table>
-    </div>
+<header>
+    <a href="index.html" class="logo-link">
+        <img src="assets/images/AK_logo.png" alt="ProAthleteCare Logo" class="logo">
+    </a>
+    <h1 class="project-title">ProAthleteCare</h1>
+    <button class="menu-toggle" id="menu-toggle-button">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+</header>
 
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-    <script src="firebase-config.js"></script>
-    <script src="admin.js"></script>
+<div class="content-wrapper">
+    <aside class="sidebar" id="main-sidebar">
+        <nav>
+            <a href="index.html">🏠 Головна</a>
+            <a href="admin.html" class="active">📊 Моніторинг</a>
+            <a href="wellness.html">🧠 Wellness</a>
+            <a href="injury.html">🩹 Травми</a>
+        </nav>
+        <div style="margin-top: auto; padding: 20px;">
+            <div id="user-name" style="color: #FFC72C; font-weight: bold; margin-bottom: 10px;">Завантаження...</div>
+            <button id="logout-btn" style="background:transparent; color:#ff4d4d; border:1px solid #ff4d4d; padding:8px 10px; border-radius:4px; cursor:pointer; width:100%; font-weight: bold;">ВИХІД</button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="admin-card">
+            <h2 class="gold-title">📊 КОМАНДНИЙ МОНІТОРИНГ</h2>
+            <div class="sticky-table-container">
+                <table class="monitor-table">
+                    <thead>
+                        <tr>
+                            <th class="sticky-col">АТЛЕТ / ТИП</th>
+                            <th>СТАТУС</th>
+                            <th>РИЗИК (ACWR)</th>
+                            <th>ОСТАННІЙ ВХІД</th>
+                            <th>ГОТОВНІСТЬ</th>
+                            <th>ДІЇ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="athletes-tbody">
+                        <tr><td colspan="6" style="text-align:center; padding:50px;">Завантаження даних...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="config/firebase-config.js"></script>
+<script src="js/navigation-common.js"></script>
+<script src="js/admin.js"></script>
+
 </body>
 </html>

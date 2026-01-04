@@ -154,13 +154,14 @@
         const mainValue = document.getElementById('fat-percentage-value');
         if (mainValue) {
             mainValue.innerHTML = `
-                <span style="font-size: 10px; color: #666; text-transform: uppercase;">Current Weight</span>
-                <span style="font-size: 34px; color: #FFC72C; font-weight: bold;">${currentAnalysis.weight}kg</span>
-                <span style="font-size: 15px; color: ${currentAnalysis.statusColor}; font-weight: bold; margin-top: 8px;">BMI: ${currentAnalysis.bmi}</span>
+                <div style="line-height: 1.1;">
+                    <span style="font-size: 10px; color: #666; text-transform: uppercase; display: block; margin-bottom: 2px;">Current Weight</span>
+                    <span style="font-size: 34px; color: #FFC72C; font-weight: bold; display: block;">${currentAnalysis.weight}kg</span>
+                    <span style="font-size: 14px; color: ${currentAnalysis.statusColor}; font-weight: 700; display: block; margin-top: 4px;">BMI: ${currentAnalysis.bmi}</span>
+                </div>
             `;
         }
     }
-
     // --- 6. ПЛАН ХАРЧУВАННЯ ТА ГРАФІК ---
     window.generateWeeklyPlan = async function() {
         if (!currentAnalysis || typeof dietDatabase === 'undefined') return;

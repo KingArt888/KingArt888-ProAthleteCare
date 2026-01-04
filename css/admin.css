@@ -1,0 +1,67 @@
+/* admin.css — Тільки стилі, жодного HTML! */
+.admin-card {
+    background: #0d0d0d;
+    border: 1px solid #1a1a1a;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.gold-title {
+    color: #FFC72C;
+    margin-bottom: 20px;
+    font-size: 1.2em;
+    text-transform: uppercase;
+}
+
+.sticky-table-container {
+    width: 100%;
+    overflow-x: auto;
+    position: relative;
+    border-radius: 8px;
+    border: 1px solid #1a1a1a;
+}
+
+.monitor-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 850px;
+}
+
+/* ФІКСОВАНА КОЛОНКА ПРИ СКРОЛІ */
+.sticky-col {
+    position: sticky;
+    left: 0;
+    z-index: 10;
+    background-color: #0d0d0d !important;
+    border-right: 2px solid #FFC72C;
+    min-width: 180px;
+    padding-left: 15px !important;
+    text-align: left !important;
+}
+
+.monitor-table th.sticky-col {
+    background-color: #FFC72C !important;
+    color: #000 !important;
+    z-index: 11;
+}
+
+.monitor-table td, .monitor-table th {
+    padding: 15px 10px;
+    border-bottom: 1px solid #1a1a1a;
+    white-space: nowrap;
+}
+
+.athlete-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.athlete-img {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1px solid #FFC72C;
+    flex-shrink: 0;
+}

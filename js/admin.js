@@ -1,108 +1,166 @@
-// admin.js — ФІНАЛ: 10 атлетів з ГАРАНТОВАНО різними показниками
-
+// admin.js — PRO ATLET CARE: COMMAND CENTER (FINAL OPTIMIZED)
 const USERS_COL = 'users';
-const LOAD_COL = 'load_season_reports'; 
+const INJURY_COL = 'injuries';
+const WEIGHT_COL = 'weight_reports';
+const PLANS_COL = 'weekly_plans';
 
-// 1. Створення спідометра
-function createMiniGauge(value, color, uid) {
-    const val = parseFloat(value) || 0;
-    const percent = Math.min(Math.max(val / 2, 0), 1);
-    const rotation = -90 + (percent * 180);
-    const gradId = `grad_unique_${uid.replace(/\W/g, '')}`;
+/** 1. ТАЙМЕР ОНЛАЙНА **/
+function getTimeSince(ts) {
+    if (!ts) return '<span style="color:#444">off</span>';
+    const diff = Date.now() - ts;
+    const mins = Math.floor(diff / 60000);
+    if (mins < 5) return '<b style="color:#00ff00; text-shadow: 0 0 5px #00ff00;">● Online</b>';
+    if (mins < 60) return `${mins}м`;
+    const hours = Math.floor(diff / 3600000);
+    if (hours < 24) return `${hours}ч`;
+    return Math.floor(diff / 86400000) + 'д';
+}
+
+/** 2. КОМПАКТНИЙ WELLNESS **/
+function getInteractiveWellness(uid, data) {
+    const metrics = [
+        { key: 'sleep', icon: '💤', val: data?.sleep, page: 'wellness-stats.html' },
+        { key: 'stress', icon: '🧠', val: data?.stress, page: 'wellness-stats.html' },
+        { key: 'soreness', icon: '💪', val: data?.soreness, page: 'injury.html' },
+        { key: 'ready', icon: '⚡', val: data?.ready, page: 'daily-individual.html' }
+    ];
 
     return `
-        <div style="position: relative; width: 75px; height: 42px; margin: 0 auto;">
-            <svg viewBox="0 0 100 50" style="width: 100%; height: 100%;">
-                <defs>
-                    <linearGradient id="${gradId}" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stop-color="#888" />
-                        <stop offset="40%" stop-color="#00ff00" />
-                        <stop offset="65%" stop-color="#FFC72C" />
-                        <stop offset="90%" stop-color="#ff4d4d" />
-                    </linearGradient>
-                </defs>
-                <path d="M 10 45 A 40 40 0 0 1 90 45" fill="none" stroke="#222" stroke-width="8" stroke-linecap="round" />
-                <path d="M 10 45 A 40 40 0 0 1 90 45" fill="none" stroke="url(#${gradId})" stroke-width="8" stroke-linecap="round" opacity="0.8" />
-                <g style="transform-origin: 50px 45px; transform: rotate(${rotation}deg); transition: transform 1.5s ease-out;">
-                    <line x1="50" y1="45" x2="50" y2="10" stroke="#fff" stroke-width="3" stroke-linecap="round" />
-                    <circle cx="50" cy="45" r="4" fill="#fff" />
-                </g>
-            </svg>
-            <div style="font-size: 11px; font-weight: bold; color: ${color}; margin-top: -5px;">${value}</div>
+        <div style="display: flex; gap: 4px; justify-content: center;">
+            ${metrics.map(m => {
+                let isGood = (m.key === 'sleep' || m.key === 'ready') ? (m.val >= 7) : (m.val <= 4);
+                let color = m.val ? (isGood ? '#00ff00' : (m.val >= 8 || m.val <= 3 ? '#ff4d4d' : '#FFC72C')) : '#222';
+                return `
+                    <a href="${m.page}?userId=${uid}&focus=${m.key}" 
+                       title="Аналіз ${m.key}"
+                       style="text-decoration:none; display:flex; flex-direction:column; align-items:center; width:34px; height:42px; background:${color}15; border:1px solid ${color}40; border-radius:6px; justify-content:center; transition:0.2s;">
+                        <span style="font-size:14px;">${m.icon}</span>
+                        <b style="font-size:11px; color:${color}">${m.val || '-'}</b>
+                    </a>
+                `;
+            }).join('')}
         </div>`;
 }
 
-// 2. Wellness статуси
-function getStatusEmoji(type, value) {
-    if (value === '-' || value === undefined) return '<span style="opacity: 0.1;">➖</span>';
-    const val = parseInt(value);
-    let color = (type === 'sleep' || type === 'ready') ? (val >= 7 ? '#00ff00' : '#ff4d4d') : (val <= 4 ? '#00ff00' : '#ff4d4d');
-    const icons = { sleep: '💤', stress: '🧠', soreness: '💪', ready: '⚡' };
-    return `<div style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:6px; background:${color}15; border:1px solid ${color}44;"><span>${icons[type]}</span></div>`;
+/** 3. КОРЕКТУВАННЯ ПЛАНУ **/
+async function openAdjustment(uid, name, currentStatus) {
+    const statuses = ['MD', 'MD+1', 'MD+2', 'MD-4', 'MD-3', 'MD-2', 'MD-1', 'REST', 'RECOVERY', 'TRAIN'];
+    const newStatus = prompt(`Змінити план для ${name}?\nПоточний: ${currentStatus}\nДоступно: ${statuses.join(', ')}`);
+    
+    if (newStatus && statuses.includes(newStatus.toUpperCase())) {
+        const coachNote = prompt("Вказівка атлету:");
+        try {
+            await db.collection(USERS_COL).doc(uid).update({
+                'overrideStatus': newStatus.toUpperCase(),
+                'coachNote': coachNote || "",
+                'lastAdjustment': Date.now()
+            });
+            alert(`План змінено!`);
+            loadAdminDashboard();
+        } catch (e) { alert("Помилка: " + e.message); }
+    }
 }
 
-// 3. Розрахунок ACWR з різними даними
-async function getAthleteLoadMetrics(uid, demoLoad = null) {
-    if (!demoLoad) return { acwr: '1.00', color: '#00ff00' };
-    
-    // Складна логіка розрахунку, щоб цифри були реальними
-    const acute = demoLoad.filter(d => d.period === 'acute').reduce((s, d) => s + (d.dur * d.rpe), 0) / 7;
-    const chronic = demoLoad.filter(d => d.period === 'chronic').reduce((s, d) => s + (d.dur * d.rpe), 0) / 28;
-    
-    const acwr = chronic > 0 ? (acute / chronic) : 1.0;
-    let color = acwr > 1.5 ? '#ff4d4d' : acwr > 1.3 ? '#FFC72C' : acwr >= 0.8 ? '#00ff00' : '#888';
-    return { acwr: acwr.toFixed(2), color };
+/** 4. РЕНДЕР РЯДКА АТЛЕТА **/
+async function renderAthleteRow(a, isReal = false) {
+    const st = a.injuryStatus || { label: 'HEALTHY', color: '#00ff00', pain: 0 };
+    const acwr = parseFloat(a.acwr || 1.00).toFixed(2);
+    const acwrColor = (acwr < 0.8 || acwr > 1.3) ? '#ff4d4d' : (acwr >= 1.2 ? '#FFC72C' : '#00ff00');
+    const currentStatus = a.overrideStatus || a.currentPlanStatus || 'TRAIN';
+
+    return `
+        <tr>
+            <td class="sticky-col">
+                <div class="athlete-info">
+                    <img src="${a.photo}" class="athlete-img" style="border: 2px solid ${isReal && (Date.now()-a.lastSeen < 300000) ? '#00ff00' : '#444'}">
+                    <div>
+                        <div style="font-weight:bold; color:#fff; font-size:13px;">${a.name}</div>
+                        <div style="font-size:9px; color:#FFC72C;">${currentStatus}</div>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <div style="text-align:center;">
+                    <div style="font-weight:bold; color:#fff; font-size:13px;">${a.weight?.val || '-'}kg</div>
+                    <div style="font-size:9px; color:${a.weight?.diff < 0 ? '#00ff00' : '#ff4d4d'}">
+                        ${a.weight?.diff ? (a.weight.diff > 0 ? '↑' : '↓') + Math.abs(a.weight.diff) : ''}
+                    </div>
+                </div>
+            </td>
+            <td><b style="color:${acwrColor}">${acwr}</b></td>
+            <td>${getInteractiveWellness(a.uid, a.wellness)}</td>
+            <td>
+                <div style="padding:4px; border-radius:4px; background:${st.color}15; border:1px solid ${st.color}44; text-align:center;">
+                    <b style="font-size:9px; color:${st.color}">${st.label}</b>
+                </div>
+            </td>
+            <td style="text-align:center; font-size:10px;">${isReal ? getTimeSince(a.lastSeen) : '—'}</td>
+            <td style="text-align:right;">
+                <button onclick="openAdjustment('${a.uid}', '${a.name}', '${currentStatus}')" 
+                        style="background:#000; border:1px solid #FFC72C; color:#FFC72C; padding:5px 8px; border-radius:4px; font-size:10px; cursor:pointer; font-weight:bold;">
+                    PLAN
+                </button>
+                <a href="weekly-individual.html?userId=${a.uid}" style="padding:5px 8px; font-size:10px; background:#FFC72C; color:#000; text-decoration:none; border-radius:4px; font-weight:bold; margin-left:5px;">STATS</a>
+            </td>
+        </tr>`;
 }
 
-// 4. Рендер таблиці
-async function renderAdminTable(map) {
+/** 5. ЗАВАНТАЖЕННЯ ДАНИХ **/
+async function loadAdminDashboard() {
     const tbody = document.getElementById('athletes-tbody');
     if (!tbody) return;
-    let html = "";
-    for (const a of Object.values(map)) {
-        const load = await getAthleteLoadMetrics(a.uid, a.demoLoad);
-        const st = a.injuryStatus || { label: 'ЗДОРОВИЙ', color: '#00ff00', pain: 0 };
-        html += `
-            <tr style="border-bottom: 1px solid #111;">
-                <td style="padding: 10px;">
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <img src="${a.photo}" style="width:38px; height:38px; border-radius:50%; border:1px solid #FFC72C;">
-                        <div><div style="font-weight:bold; color:#FFC72C; font-size:0.9em;">${a.name}</div><div style="font-size:0.7em; color:#666;">${a.club}</div></div>
-                    </div>
-                </td>
-                <td>
-                    <div style="font-size: 0.65em; padding: 4px; border-radius: 4px; text-align: center; background: ${st.color}15; color: ${st.color}; border: 1px solid ${st.color}44;">
-                        <div style="font-weight: bold; text-transform: uppercase;">${st.label}</div>
-                        ${st.pain > 0 ? `<div style="font-size: 0.85em; color: #fff;">${st.bodyPart} (${st.pain})</div>` : ''}
-                    </div>
-                </td>
-                <td style="text-align:center;">${createMiniGauge(load.acwr, load.color, a.uid)}</td>
-                <td style="text-align:center;">${getStatusEmoji('sleep', a.wellness.sleep)}</td>
-                <td style="text-align:center;">${getStatusEmoji('stress', a.wellness.stress)}</td>
-                <td style="text-align:center;">${getStatusEmoji('soreness', a.wellness.soreness)}</td>
-                <td style="text-align:center;">${getStatusEmoji('ready', a.wellness.ready)}</td>
-                <td style="text-align:right; padding-right:15px;"><a href="injury.html?userId=${a.uid}" style="background:#FFC72C; color:#000; padding:5px 10px; border-radius:4px; text-decoration:none; font-size:0.75em; font-weight:bold;">ДЕТАЛІ</a></td>
-            </tr>`;
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:50px; color:#FFC72C;">LOADING...</td></tr>';
+
+    try {
+        const snap = await db.collection(USERS_COL).get();
+        let users = [];
+
+        for (const doc of snap.docs) {
+            const u = doc.data();
+            
+            // Спрощене отримання ваги (без зайвих orderBy для уникнення помилок індексів)
+            let weightInfo = null;
+            try {
+                const wSnap = await db.collection(WEIGHT_COL).where("userId", "==", doc.id).limit(5).get();
+                if (!wSnap.empty) {
+                    const logs = wSnap.docs.map(d => d.data()).sort((a,b) => b.timestamp - a.timestamp);
+                    const cur = logs[0].value;
+                    const prev = logs[1] ? logs[1].value : cur;
+                    weightInfo = { val: cur, diff: (cur - prev).toFixed(1) };
+                }
+            } catch(e) { console.warn("Weight error:", e); }
+
+            users.push({
+                uid: doc.id,
+                name: u.name || u.displayName || u.email || "Unknown",
+                photo: u.photoURL || "assets/images/AK_logo.png",
+                lastSeen: u.lastSeen || 0,
+                wellness: u.lastWellness || {},
+                acwr: u.currentACWR || "1.00",
+                overrideStatus: u.overrideStatus,
+                weight: weightInfo,
+                injuryStatus: u.injuryStatus
+            });
+        }
+
+        users.sort((a, b) => b.lastSeen - a.lastSeen);
+
+        let html = "";
+        for (const u of users) html += await renderAthleteRow(u, true);
+        tbody.innerHTML = html || '<tr><td colspan="7" style="text-align:center; padding:20px;">No athletes found.</td></tr>';
+
+    } catch (e) { 
+        console.error("Dashboard error:", e); 
+        tbody.innerHTML = `<td colspan="7" style="color:red; text-align:center;">Error: ${e.message}</td>`; 
     }
-    tbody.innerHTML = html;
 }
 
-// 5. 10 атлетів з УНІКАЛЬНИМИ даними тренувань
-async function loadAdminDashboard() {
-    const demo = {
-        "at1": { uid: "at1", name: "Артем Кулик", club: "ProAtletCare", photo: "https://i.pravatar.cc/150?u=1", wellness:{sleep:9,stress:1,soreness:1,ready:10}, demoLoad: [{period:'chronic', dur:60, rpe:5}, {period:'acute', dur:60, rpe:5}] }, // 1.00
-        "at2": { uid: "at2", name: "Максим Тренер", club: "Paphos FC", photo: "https://i.pravatar.cc/150?u=2", injuryStatus:{label:'УВАГА',color:'#FFC72C',pain:4,bodyPart:'Коліно'}, wellness:{sleep:6,stress:4,soreness:5,ready:7}, demoLoad: [{period:'chronic', dur:50, rpe:4}, {period:'acute', dur:90, rpe:8}] }, // ~1.40
-        "at3": { uid: "at3", name: "Дмитро Регбі", club: "Shakhtar", photo: "https://i.pravatar.cc/150?u=3", injuryStatus:{label:'ТРАВМА',color:'#ff4d4d',pain:9,bodyPart:'Ахілл'}, wellness:{sleep:4,stress:9,soreness:8,ready:3}, demoLoad: [{period:'chronic', dur:30, rpe:3}, {period:'acute', dur:120, rpe:10}] }, // ~1.90
-        "at4": { uid: "at4", name: "Олександр Сила", club: "FitBox", photo: "https://i.pravatar.cc/150?u=4", wellness:{sleep:8,stress:2,soreness:2,ready:9}, demoLoad: [{period:'chronic', dur:100, rpe:9}, {period:'acute', dur:30, rpe:2}] }, // ~0.40
-        "at5": { uid: "at5", name: "Іван Бокс", club: "MMA Club", photo: "https://i.pravatar.cc/150?u=5", wellness:{sleep:7,stress:5,soreness:4,ready:6}, demoLoad: [{period:'chronic', dur:60, rpe:6}, {period:'acute', dur:70, rpe:7}] }, // ~1.10
-        "at6": { uid: "at6", name: "Микола Р", club: "ProAtletCare", photo: "https://i.pravatar.cc/150?u=6", wellness:{sleep:10,stress:1,soreness:1,ready:10}, demoLoad: [{period:'chronic', dur:40, rpe:4}, {period:'acute', dur:55, rpe:6}] }, // ~1.25
-        "at7": { uid: "at7", name: "Олег Швидкість", club: "Paphos FC", photo: "https://i.pravatar.cc/150?u=7", injuryStatus:{label:'УВАГА',color:'#FFC72C',pain:2,bodyPart:'Спина'}, wellness:{sleep:7,stress:3,soreness:6,ready:7}, demoLoad: [{period:'chronic', dur:70, rpe:5}, {period:'acute', dur:110, rpe:9}] }, // ~1.65
-        "at8": { uid: "at8", name: "Сергій Атлет", club: "Shakhtar", photo: "https://i.pravatar.cc/150?u=8", wellness:{sleep:8,stress:2,soreness:3,ready:8}, demoLoad: [{period:'chronic', dur:80, rpe:7}, {period:'acute', dur:40, rpe:4}] }, // ~0.85
-        "at9": { uid: "at9", name: "Віктор Сила", club: "FitBox", photo: "https://i.pravatar.cc/150?u=9", wellness:{sleep:9,stress:2,soreness:2,ready:9}, demoLoad: [{period:'chronic', dur:120, rpe:10}, {period:'acute', dur:20, rpe:2}] }, // ~0.25
-        "at10": { uid: "at10", name: "Андрій ММА", club: "MMA Club", photo: "https://i.pravatar.cc/150?u=10", injuryStatus:{label:'ТРАВМА',color:'#ff4d4d',pain:7,bodyPart:'Плече'}, wellness:{sleep:5,stress:7,soreness:9,ready:5}, demoLoad: [{period:'chronic', dur:30, rpe:2}, {period:'acute', dur:130, rpe:10}] } // ~2.10
-    };
-
-    renderAdminTable(demo);
-}
-
-firebase.auth().onAuthStateChanged(u => { if(u) loadAdminDashboard(); else window.location.href="auth.html"; });
+// Авторизація
+firebase.auth().onAuthStateChanged(user => { 
+    if(user) {
+        console.log("Admin logged in:", user.uid);
+        loadAdminDashboard(); 
+    } else {
+        window.location.href = "login.html";
+    }
+});
