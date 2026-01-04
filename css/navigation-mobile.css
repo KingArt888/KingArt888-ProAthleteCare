@@ -67,13 +67,14 @@
         display: block !important;
         -webkit-appearance: none;
         position: fixed;
-        top: 12px;     /* Трохи підняли вище */
-        right: 12px;    /* Трохи посунули до краю */
+        /* ТУТ КОРЕКЦІЯ: підбираємо top, щоб кнопка була в одну лінію з лого */
+        top: 13px;       
+        right: 15px;    /* Відступ від правого краю як у лого зліва */
         z-index: 1010;
         background: #FFD700;
         border: none;
-        width: 34px;    /* Зменшено з 40px */
-        height: 34px;   /* Зменшено з 40px */
+        width: 34px;
+        height: 34px;
         border-radius: 5px;
         padding: 0;
         cursor: pointer;
