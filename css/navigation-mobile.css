@@ -62,40 +62,44 @@
     }
 
     /* КНОПКА БУРГЕР */
-    @media (max-width: 900px) {
+  
     .menu-toggle {
         display: block !important;
-        -webkit-appearance: none; /* Скидання стилів Apple */
         position: fixed;
         top: 15px;
         right: 15px;
         z-index: 1010;
-        background: #FFD700;
+        background: #FFD700; /* Твоє золото */
         border: none;
         width: 40px;
         height: 40px;
         border-radius: 6px;
         padding: 0;
-        margin: 0;
-        line-height: 0; /* Щоб текст не псував центрування */
+        cursor: pointer;
+        -webkit-appearance: none; /* Скидання для iOS */
     }
 
     .menu-toggle span {
         display: block;
         position: absolute;
-        width: 24px;      /* Довжина лінії */
-        height: 2px;      /* Товщина лінії */
+        width: 24px;
+        height: 2px;
         background: #000;
-        left: 8px;        /* (40px - 24px) / 2 = рівно по центру */
+        left: 8px;
         border-radius: 2px;
-        padding: 0;
+        transition: 0.3s;
     }
 
-    /* Точне розташування кожної лінії без похибок */
+    /* Рівні відступи між лініями */
     .menu-toggle span:nth-child(1) { top: 13px; }
     .menu-toggle span:nth-child(2) { top: 19px; }
     .menu-toggle span:nth-child(3) { top: 25px; }
-}
+
+    /* Ефект хрестика при відкритті */
+    .menu-toggle.is-open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+    .menu-toggle.is-open span:nth-child(2) { opacity: 0; }
+    .menu-toggle.is-open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+    }
 
     /* ОБГОРТКА */
     .content-wrapper {
