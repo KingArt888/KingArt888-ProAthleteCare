@@ -3,37 +3,30 @@
 // УНІВЕРСАЛЬНА ЛОГІКА ДЛЯ НАВІГАЦІЇ
 // ==============================================
 
-/**
- * 1. Логіка для перемикання бічної панелі на мобільних пристроях.
- */
+
 function setupMenuToggle() {
     const toggleButton = document.getElementById('menu-toggle-button');
     const sidebar = document.getElementById('main-sidebar'); 
     
     if (toggleButton && sidebar) {
-        // Обробник кліку на кнопку-бургер
         toggleButton.addEventListener('click', (event) => {
             event.stopPropagation();
             sidebar.classList.toggle('active');
-            toggleButton.textContent = sidebar.classList.contains('active') ? '✕' : '☰';
+            // ВИДАЛИВ toggleButton.textContent — тепер він не псує лінії!
+            toggleButton.classList.toggle('is-open'); // Додаємо клас для хрестика
         });
         
-        // Закрити при кліку на пункт меню
         sidebar.addEventListener('click', (event) => {
             if (event.target.tagName === 'A') {
                 sidebar.classList.remove('active');
-                toggleButton.textContent = '☰';
+                toggleButton.classList.remove('is-open');
             }
         });
         
-        // Закрити при кліку поза меню
         document.addEventListener('click', (event) => {
-            const isClickInsideSidebar = sidebar.contains(event.target);
-            const isClickOnToggle = toggleButton.contains(event.target);
-            
-            if (!isClickInsideSidebar && !isClickOnToggle && sidebar.classList.contains('active')) {
+            if (!sidebar.contains(event.target) && !toggleButton.contains(event.target)) {
                 sidebar.classList.remove('active');
-                toggleButton.textContent = '☰';
+                toggleButton.classList.remove('is-open');
             }
         });
     }
