@@ -63,28 +63,42 @@
 
     /* КНОПКА БУРГЕР */
     .menu-toggle {
-    display: flex !important;      /* Залишаємо flex для центрування */
-    align-items: center;           /* Центр по вертикалі */
-    justify-content: center;       /* Центр по горизонталі */
-    
-    position: fixed;
-    top: 15px;
-    right: 15px;
-    z-index: 1010;
-    background: #FFD700;
-    color: #000;
-    border: none;
-    
-    /* Компактні розміри, близькі до твоїх оригінальних */
-    width: 36px;                   
-    height: 32px;                  /* Робимо її трохи нижчою, як ти хотів */
-    
-    font-size: 1.2em;              /* Трохи зменшив шрифт, щоб влізло */
-    cursor: pointer;
-    border-radius: 6px;
-    padding: 0;                    /* Прибираємо padding, бо розмір тепер фіксований */
-    line-height: 1;
-}
+        display: block !important;    /* Змінюємо на block для точного позиціювання спанів */
+        position: fixed;
+        top: 13px;                    /* Підібрали, щоб було в лінію з лого */
+        right: 15px;
+        z-index: 1010;
+        background: #FFD700;          /* Твоє золото */
+        border: none;
+        width: 36px;                  /* Твої розміри, які спрацювали */
+        height: 32px;
+        cursor: pointer;
+        border-radius: 6px;
+        padding: 0;
+        -webkit-appearance: none;     /* Фікс для iPhone */
+    }
+
+    /* МАЛЮЄМО ЛІНІЇ (span) */
+    .menu-toggle span {
+        display: block;
+        position: absolute;
+        width: 20px;                  /* Довжина ліній */
+        height: 2px;                  /* Товщина ліній */
+        background: #000;             /* Чорний колір ліній */
+        left: 8px;                    /* Центруємо по горизонталі */
+        border-radius: 2px;
+        transition: 0.3s;
+    }
+
+    /* Розставляємо 3 лінії по вертикалі всередині кнопки 32px */
+    .menu-toggle span:nth-child(1) { top: 9px; }
+    .menu-toggle span:nth-child(2) { top: 15px; }
+    .menu-toggle span:nth-child(3) { top: 21px; }
+
+    /* Анімація хрестика (якщо в JS додається клас is-open) */
+    .menu-toggle.is-open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+    .menu-toggle.is-open span:nth-child(2) { opacity: 0; }
+    .menu-toggle.is-open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
 
     /* ОБГОРТКА */
     .content-wrapper {
