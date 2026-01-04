@@ -96,6 +96,9 @@ input[type="date"], input[type="number"] {
     border-radius: 5px;
     box-sizing: border-box;
     transition: border-color 0.3s;
+    
+    /* 🔥 ЦЕЙ РЯДОК ПРИБИРАЄ ЗУМ НА IPHONE ТА ANDROID */
+    font-size: 16px !important; 
 }
 
 input[type="date"]:focus, input[type="number"]:focus {
