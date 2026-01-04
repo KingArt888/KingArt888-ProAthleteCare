@@ -33,77 +33,57 @@
 /* ======================================================= */
 /* 1. MOBILE / TABLET */
 /* ======================================================= */
+@media (max-width: 900px) {
 
-   @media (max-width: 900px) {
-    /* ХЕДЕР — ТЕПЕР ІДЕАЛЬНО РІВНИЙ */
-   header {
+    /* ХЕДЕР */
+    header {
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
-        height: 60px; /* Чітка висота хедера */
-        background-color: #000;
         z-index: 1000;
-        display: flex;         /* Вмикаємо гнучкість */
-        align-items: center;    /* Центруємо лого і кнопку по вертикалі */
-        justify-content: space-between; /* Лого зліва, кнопка справа */
-        padding: 0 15px;       /* Відступи від країв екрана */
-        box-sizing: border-box;
-    }
-
-    /* Контейнер для лого та назви, щоб вони були поруч */
-    .logo-link {
-        display: flex;
-        align-items: center;
-        text-decoration: none;
+        padding: 10px 10px;
+        background-color: #000;
     }
 
     header .logo { 
         width: 40px; 
         height: 40px;
-        display: block;
     }
 
     header .project-title {
         font-size: 1.1em; 
-        color: #fff;
         margin-left: 10px;
-        white-space: nowrap; /* Щоб назва не розривалася на два рядки */
+        flex-shrink: 1;
     }
+
     header .tagline {
         display: none;
     }
 
     /* КНОПКА БУРГЕР */
-  
     .menu-toggle {
-        display: block !important;
-        position: relative; /* ВАЖЛИВО: прибираємо fixed */
-        width: 34px;
-        height: 34px;
-        background: #FFD700;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        padding: 0;
-        flex-shrink: 0;    /* Щоб кнопка не стискалася */
-        -webkit-appearance: none;
-    }
-
-    /* Лінії всередині кнопки (без змін, вони вже ідеальні) */
-    .menu-toggle span {
-        display: block;
-        position: absolute;
-        width: 20px;
-        height: 2px;
-        background: #000;
-        left: 7px;
-        border-radius: 2px;
-        transition: 0.3s;
-    }
-    .menu-toggle span:nth-child(1) { top: 10px; }
-    .menu-toggle span:nth-child(2) { top: 16px; }
-    .menu-toggle span:nth-child(3) { top: 22px; }
+    display: flex !important;      /* Залишаємо flex для центрування */
+    align-items: center;           /* Центр по вертикалі */
+    justify-content: center;       /* Центр по горизонталі */
+    
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    z-index: 1010;
+    background: #FFD700;
+    color: #000;
+    border: none;
+    
+    /* Компактні розміри, близькі до твоїх оригінальних */
+    width: 36px;                   
+    height: 32px;                  /* Робимо її трохи нижчою, як ти хотів */
+    
+    font-size: 1.2em;              /* Трохи зменшив шрифт, щоб влізло */
+    cursor: pointer;
+    border-radius: 6px;
+    padding: 0;                    /* Прибираємо padding, бо розмір тепер фіксований */
+    line-height: 1;
 }
 
     /* ОБГОРТКА */
