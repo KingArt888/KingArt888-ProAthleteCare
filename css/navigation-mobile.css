@@ -33,28 +33,32 @@
 /* ======================================================= */
 /* 1. MOBILE / TABLET */
 /* ======================================================= */
-@media (max-width: 900px) {
 
-    /* ХЕДЕР */
+   @media (max-width: 900px) {
+    /* ХЕДЕР — ТЕПЕР ІДЕАЛЬНО РІВНИЙ */
     header {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        z-index: 1000;
-        padding: 10px 10px;
-        background-color: #000;
+     position: fixed;
+     top: 0;
+     left: 0;
+     width: 100%;
+     height: 60px;      /* Фіксуємо висоту для стабільності */
+     z-index: 1000;
+     padding: 0 15px;   /* Тільки бокові відступи */
+     background-color: #000;
+     display: flex;     /* Вмикаємо Flexbox */
+     align-items: center; /* ЦЕНТРУЄМО ВСЕ ПО ВЕРТИКАЛІ АВТОМАТИЧНО */
     }
 
     header .logo { 
         width: 40px; 
         height: 40px;
+        margin: 0;         /* Прибираємо зайві відступи */
     }
 
     header .project-title {
         font-size: 1.1em; 
-        margin-left: 10px;
-        flex-shrink: 1;
+        margin-left: 12px;
+        flex-grow: 1;      /* Займає вільний простір */
     }
 
     header .tagline {
@@ -65,12 +69,8 @@
   
     .menu-toggle {
         display: block !important;
+        position: relative; /* Змінюємо з fixed на relative */
         -webkit-appearance: none;
-        position: fixed;
-        /* ТУТ КОРЕКЦІЯ: підбираємо top, щоб кнопка була в одну лінію з лого */
-        top: 13px;       
-        right: 15px;    /* Відступ від правого краю як у лого зліва */
-        z-index: 1010;
         background: #FFD700;
         border: none;
         width: 34px;
@@ -78,6 +78,7 @@
         border-radius: 5px;
         padding: 0;
         cursor: pointer;
+        margin-left: auto; /* Цей рядок притисне кнопку до правого краю */
     }
 
     .menu-toggle span {
