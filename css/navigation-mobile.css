@@ -36,31 +36,40 @@
 
    @media (max-width: 900px) {
     /* ХЕДЕР — ТЕПЕР ІДЕАЛЬНО РІВНИЙ */
-    header {
-     position: fixed;
-     top: 0;
-     left: 0;
-     width: 100%;
-     height: 60px;      /* Фіксуємо висоту для стабільності */
-     z-index: 1000;
-     padding: 0 15px;   /* Тільки бокові відступи */
-     background-color: #000;
-     display: flex;     /* Вмикаємо Flexbox */
-     align-items: center; /* ЦЕНТРУЄМО ВСЕ ПО ВЕРТИКАЛІ АВТОМАТИЧНО */
+   header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 60px; /* Чітка висота хедера */
+        background-color: #000;
+        z-index: 1000;
+        display: flex;         /* Вмикаємо гнучкість */
+        align-items: center;    /* Центруємо лого і кнопку по вертикалі */
+        justify-content: space-between; /* Лого зліва, кнопка справа */
+        padding: 0 15px;       /* Відступи від країв екрана */
+        box-sizing: border-box;
+    }
+
+    /* Контейнер для лого та назви, щоб вони були поруч */
+    .logo-link {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
     }
 
     header .logo { 
         width: 40px; 
         height: 40px;
-        margin: 0;         /* Прибираємо зайві відступи */
+        display: block;
     }
 
     header .project-title {
         font-size: 1.1em; 
-        margin-left: 12px;
-        flex-grow: 1;      /* Займає вільний простір */
+        color: #fff;
+        margin-left: 10px;
+        white-space: nowrap; /* Щоб назва не розривалася на два рядки */
     }
-
     header .tagline {
         display: none;
     }
@@ -69,38 +78,32 @@
   
     .menu-toggle {
         display: block !important;
-        position: relative; /* Змінюємо з fixed на relative */
-        -webkit-appearance: none;
-        background: #FFD700;
-        border: none;
+        position: relative; /* ВАЖЛИВО: прибираємо fixed */
         width: 34px;
         height: 34px;
+        background: #FFD700;
+        border: none;
         border-radius: 5px;
-        padding: 0;
         cursor: pointer;
-        margin-left: auto; /* Цей рядок притисне кнопку до правого краю */
+        padding: 0;
+        flex-shrink: 0;    /* Щоб кнопка не стискалася */
+        -webkit-appearance: none;
     }
 
+    /* Лінії всередині кнопки (без змін, вони вже ідеальні) */
     .menu-toggle span {
         display: block;
         position: absolute;
-        width: 20px;      /* Зменшено з 24px */
-        height: 2px;      /* Товщина залишається чіткою */
+        width: 20px;
+        height: 2px;
         background: #000;
-        left: 7px;        /* Центруємо: (34-20)/2 = 7 */
+        left: 7px;
         border-radius: 2px;
         transition: 0.3s;
     }
-
-    /* Нові точні координати для трьох ліній у меншій кнопці */
     .menu-toggle span:nth-child(1) { top: 10px; }
     .menu-toggle span:nth-child(2) { top: 16px; }
     .menu-toggle span:nth-child(3) { top: 22px; }
-
-    /* Корекція хрестика для нових розмірів */
-    .menu-toggle.is-open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
-    .menu-toggle.is-open span:nth-child(2) { opacity: 0; }
-    .menu-toggle.is-open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
 }
 
     /* ОБГОРТКА */
