@@ -1,10 +1,10 @@
-// daily-individual.js — ProAtletCare (PREMIUM FINAL STRUCTURE)
+// daily-individual.js — ProAtletCare (PREMIUM FINAL WITH LOCAL LOGO)
 
 (function() {
-    const YOUTUBE_BASE = 'https://www.youtube.com/embed/';
     const STAGES_LIST = ['Pre-Training', 'Main Training', 'Post-Training'];
     let selectedRPE = 0;
     let selectedStars = 0;
+    let players = {}; 
 
     const MD_RECS = {
         'MD': 'День гри! Максимальна концентрація. Тільки цільові рухи.',
@@ -13,6 +13,13 @@
         'TRAIN': 'Стандартне тренування: якість понад усе.',
         'REST': 'Повне відновлення. Тіло будується під час спокою.'
     };
+
+    if (!window.YT) {
+        const tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    }
 
     function getFullDateString() {
         const d = new Date();
@@ -57,46 +64,34 @@
             }
 
             try {
-                // 1. Спочатку затягуємо дані профілю, щоб побачити чи є "Override" (коригування) від тренера
                 const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
                 const userData = userDoc.exists ? userDoc.data() : {};
-
-                // 2. Затягуємо тижневий план
                 const doc = await firebase.firestore().collection('weekly_plans').doc(`${user.uid}_${weekId}`).get();
                 const fbData = doc.exists ? doc.data().planData : {};
-                
                 const todayIdx = (new Date().getDay() === 0) ? 6 : new Date().getDay() - 1;
 
-                // 3. ГОЛОВНА ЛОГІКА: Перевіряємо, чи є примусовий статус від тебе (з адмінки)
                 const calculatedStatus = calculateStatus(fbData, todayIdx);
                 const mdStatus = userData.overrideStatus || calculatedStatus; 
                 
-                // Відображаємо статус у кружечку (pill)
                 document.getElementById('status-pill').textContent = mdStatus;
-
-                // 4. ПОРАДА ТРЕНЕРА: Якщо ти написав коментар в адмінці, він буде головним
                 const adviceSpan = document.getElementById('advice-text').querySelector('span:last-child');
+                
                 if (userData.coachNote) {
                     adviceSpan.innerHTML = `<b style="color:#d4af37;">ПЕРСОНАЛЬНО:</b> ${userData.coachNote}`;
                 } else {
                     adviceSpan.textContent = MD_RECS[mdStatus] || MD_RECS['TRAIN'];
                 }
 
-                // 5. ЗАВАНТАЖЕННЯ ВПРАВ: Беремо план саме для mdStatus
-                // Якщо mdStatus став 'RECOVERY' через адмінку, підтягнеться план recovery
                 const currentPlan = fbData[`status_plan_${mdStatus}`] || { exercises: [] };
                 renderExercises(currentPlan.exercises, listContainer);
-                
                 renderFeedbackForm(feedbackContainer, user.uid, weekId, todayIdx);
-
-            } catch (err) { 
-                console.error("Помилка завантаження даних:", err); 
-            }
+            } catch (err) { console.error(err); }
         });
     }
 
     function renderExercises(exercises, container) {
         if (!exercises.length) { container.innerHTML = "<p style='color:#444;text-align:center;padding:40px;font-weight:700;'>REST DAY</p>"; return; }
+        
         container.innerHTML = STAGES_LIST.map(stage => {
             const stageExs = exercises.filter(ex => ex.stage === stage);
             if (!stageExs.length) return '';
@@ -106,41 +101,71 @@
                         <span>${stage.toUpperCase()}</span><span>▼</span>
                     </div>
                     <div style="display:none; padding:10px 0;">
-                        ${stageExs.map(ex => `
+                        ${stageExs.map((ex, index) => {
+                            const cleanId = ex.videoKey ? ex.videoKey.toString().trim() : "";
+                            const exId = `v-${stage.charAt(0)}-${index}`;
+                            return `
                             <div class="ex-card" style="background: linear-gradient(145deg, #070707 0%, #020202 100%); border:1px solid #111; border-radius:16px; padding:15px; margin-bottom:12px; transition: all 0.4s ease;">
-                                
                                 <div style="display:flex; gap:12px; align-items:flex-start;">
                                     
                                     <div style="flex:1;">
                                         <h4 style="color:#fff; margin:0 0 4px 0; font-size:1rem; font-weight:800;">${ex.name}</h4>
                                         <p style="color:#d4af37; margin:0 8px 0 0; font-size:0.7rem; font-weight:700; text-transform:uppercase;">${ex.sets || '3'} SETS × ${ex.reps || '12'} REPS</p>
-                                        ${ex.description ? `
-                                            <div style="margin-top:8px; background:rgba(255,255,255,0.02); padding:8px; border-radius:8px; border-left:2px solid #333;">
-                                                <p style="color:#aaa; font-size:0.75rem; margin:0; line-height:1.3;">${ex.description}</p>
-                                            </div>
-                                        ` : ''}
+                                        ${ex.description ? `<p style="color:#aaa; font-size:0.75rem; margin:8px 0 0 0; line-height:1.3; border-left:2px solid #333; padding-left:8px;">${ex.description}</p>` : ''}
                                     </div>
 
-                                    <div style="width:120px; display:flex; flex-direction:column; gap:8px; align-items:center;">
-                                        ${ex.videoKey ? `
-                                            <div style="width:120px; aspect-ratio:16/9; border-radius:8px; overflow:hidden; border:1px solid #222;">
-                                                <iframe src="${YOUTUBE_BASE}${ex.videoKey}" style="width:100%; height:100%; border:0;" allowfullscreen></iframe>
+                                    <div style="width:200px; display:flex; flex-direction:column; gap:8px; align-items:center;">
+                                        <div style="width:200px; aspect-ratio:16/9; border-radius:10px; overflow:hidden; border:1.5px solid #d4af37; position:relative; background:#000; isolation: isolate;">
+                                            <div id="player-${exId}" style="width:100%; height:180%; transform: scale(1.8); margin-top:-25%;"></div>
+                                            
+                                            <div id="logo-end-${exId}" style="position:absolute; inset:0; background:#000; z-index:9; display:none; align-items:center; justify-content:center;">
+                                                <img src="../assets/images/AK_logo.png" style="width:70px; filter: drop-shadow(0 0 10px #d4af37);">
                                             </div>
-                                        ` : ''}
-                                        
-                                        <label style="cursor:pointer; display:flex; align-items:center; gap:5px; background:#111; padding:4px 8px; border-radius:6px; border:1px solid #222; width:fit-content;">
-                                            <input type="checkbox" style="accent-color:#d4af37; width:12px; height:12px;" onchange="const card = this.closest('.ex-card'); card.style.opacity = this.checked ? '0.15' : '1'; card.style.filter = this.checked ? 'grayscale(100%)' : 'none';">
-                                            <span style="color:#666; font-size:0.55rem; font-weight:900; text-transform:uppercase;">Done</span>
+
+                                            <div id="ctrl-${exId}" onclick="togglePlayState('${exId}')" style="position:absolute; inset:0; z-index:8; cursor:pointer; display:none;"></div>
+                                            <div style="position:absolute; inset:0; z-index:5; pointer-events:none; background: radial-gradient(circle, transparent 30%, rgba(0,0,0,0.8) 100%);"></div>
+                                            <div id="poster-${exId}" onclick="startExerciseVideo('${cleanId}', '${exId}')" style="position:absolute; inset:0; background:#000; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:10;">
+                                                <img src="https://img.youtube.com/vi/${cleanId}/mqdefault.jpg" style="width:100%; height:100%; object-fit:cover; opacity:0.5;">
+                                                <div style="position:absolute; width:35px; height:35px; background:#d4af37; border-radius:50%; display:flex; align-items:center; justify-content:center;">
+                                                    <div style="width: 0; height: 0; border-top: 6px solid transparent; border-bottom: 6px solid transparent; border-left: 10px solid black; margin-left:3px;"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <label style="cursor:pointer; display:flex; align-items:center; gap:5px; background:#111; padding:4px 10px; border-radius:8px; border:1px solid #222; width:fit-content;">
+                                            <input type="checkbox" style="accent-color:#d4af37; width:14px; height:14px;" onchange="const card = this.closest('.ex-card'); card.style.opacity = this.checked ? '0.2' : '1';">
+                                            <span style="color:#666; font-size:0.6rem; font-weight:900; text-transform:uppercase;">Done</span>
                                         </label>
                                     </div>
-
                                 </div>
-                            </div>
-                        `).join('')}
+                            </div>`;
+                        }).join('')}
                     </div>
                 </div>`;
         }).join('');
     }
+
+    window.startExerciseVideo = function(videoId, exId) {
+        if (!window.YT) return;
+        document.getElementById(`poster-${exId}`).style.display = 'none';
+        document.getElementById(`ctrl-${exId}`).style.display = 'block';
+        players[exId] = new YT.Player(`player-${exId}`, {
+            videoId: videoId,
+            playerVars: { 'autoplay': 1, 'controls': 0, 'modestbranding': 1, 'rel': 0, 'mute': 1, 'playsinline': 1 },
+            events: {
+                'onStateChange': (e) => {
+                    if (e.data === 0) {
+                        document.getElementById(`logo-end-${exId}`).style.display = 'flex';
+                    }
+                }
+            }
+        });
+    };
+
+    window.togglePlayState = function(exId) {
+        const p = players[exId]; if (!p) return;
+        p.getPlayerState() === 1 ? p.pauseVideo() : p.playVideo();
+    };
 
     function renderFeedbackForm(container, uid, weekId, dayIdx) {
         if (!container) return;
@@ -159,7 +184,7 @@
                     </div>
                 </div>
                 <div style="display: flex; gap: 8px; margin-top: 5px;">
-                    <input id="coach-comment" placeholder="Коментар для тренера..." style="flex: 1; background:#000; border:1px solid #222; color:#fff; padding:10px; border-radius:10px; font-size:0.8rem; outline:none;">
+                    <input id="coach-comment" placeholder="Коментар..." style="flex: 1; background:#000; border:1px solid #222; color:#fff; padding:10px; border-radius:10px; font-size:0.8rem; outline:none;">
                     <button onclick="submitTrainingReport('${uid}', '${weekId}', ${dayIdx})" id="save-btn" style="background:#d4af37; color:#000; border:0; padding:0 15px; border-radius:10px; font-weight:900; text-transform:uppercase; cursor:pointer; font-size:0.65rem; min-width:65px;">OK</button>
                 </div>
             </div>
@@ -181,16 +206,16 @@
     };
 
     window.submitTrainingReport = async (uid, weekId, dayIdx) => {
-        if (selectedRPE === 0) { alert("Обери RPE"); return; }
-        const comment = document.getElementById('coach-comment').value;
+        if (selectedRPE === 0) { alert("Оберіть RPE"); return; }
         const btn = document.getElementById('save-btn');
         btn.innerText = "...";
         try {
             await firebase.firestore().collection('athlete_reports').add({
-                uid, weekId, dayIdx, rpe: selectedRPE, stars: selectedStars, comment, timestamp: new Date()
+                uid, weekId, dayIdx, rpe: selectedRPE, stars: selectedStars, 
+                comment: document.getElementById('coach-comment').value, 
+                timestamp: new Date()
             });
-            btn.style.background = "#2ecc71";
-            btn.innerText = "✓";
+            btn.style.background = "#2ecc71"; btn.innerText = "✓";
             setTimeout(() => { btn.style.background = "#d4af37"; btn.innerText = "OK"; }, 3000);
         } catch (e) { btn.innerText = "!"; }
     };
