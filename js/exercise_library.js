@@ -39,7 +39,7 @@ const EXERCISE_LIBRARY = {
                  { name: "Кішка-Корова (Cat-Cow Stretch)", description: "15 повільних повторень, синхронізуючи з диханням.", videoKey: "cat_cow_v1" },
                  { name: "Динамічні випади з поворотом", description: "5 повторень на кожну ногу, затримуючись у нижній точці.", videoKey: "lunge_twist_v1" },
                  { name: "Рух 'Світч-Кік'", description: "20 змін ніг. Контролюйте амплітуду.", videoKey: "switch_kick_v2" },
-                 { name: "Розкриття грудної клітки лежачи", description: "10 повторень на кожну сторону. Фокус на ротації.", videoKey: "t_spine_rotation_v1" },
+                 { name: "Розкриття грудної клітки лежачи", description: "10 повторень на кожну сторону. Фокус на ротації.", videoKey: "wa5sFRZ6dUU" },
                  { name: "Присідання 'Горила' (Goblet Squat Mobility)", description: "2 підходи по 15 повторень, використовуючи лікті для розширення колін.", videoKey: "gorilla_squat_v1" },
                  { name: "Мостик з ротацією (Thoracic Bridge)", description: "3 підходи по 5 повільних ротацій на кожну сторону.", videoKey: "thoracic_bridge_v1" },
                  { name: "Розтяжка задньої поверхні стегна лежачи з ременем", description: "45 секунд утримання на кожну ногу.", videoKey: "hamstring_strap_v1" },
